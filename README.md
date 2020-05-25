@@ -57,11 +57,11 @@ Recommended: ubuntu LTS x64 server
 2. `apt update` - update repos (optional since 18.04 and you used bintray repo)
 3. `apt install trusted-cgi` or for minimal `apt install --no-install-recommends trusted-cgi`  
 
-For Ubuntu 18.04
+For Ubuntu (should be for all LTS)
 
 ```bash
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
-echo "deb https://dl.bintray.com/reddec/debian bionic main" | sudo tee -a /etc/apt/sources.list
+echo "deb https://dl.bintray.com/reddec/debian all main" | sudo tee -a /etc/apt/sources.list
 sudo apt update
 sudo apt install trusted-cgi
 ```

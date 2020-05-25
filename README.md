@@ -43,14 +43,31 @@ Add nice logo, license everything under MIT and you will get Trusted-CGI.
 
 # Installation
 
-## Direct to server
+## Play locally
+
+Just download and run `trusted-cgi --dev`
+
+## Direct to server (recommended)
 
 Recommended: ubuntu LTS x64 server
 
-Please see in bintray or in [releases](https://github.com/reddec/trusted-cgi/releases) page
-
+0. Add bintray key `sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61`
+1. Download from [releases](https://github.com/reddec/trusted-cgi/releases) page, or (better) use bintray repo
 [![Download](https://api.bintray.com/packages/reddec/debian/trusted-cgi/images/download.svg)](https://bintray.com/reddec/debian/trusted-cgi/_latestVersion)
+2. `apt update` - update repos (optional since 18.04 and you used bintray repo)
+3. `apt install trusted-cgi` or for minimal `apt install --no-install-recommends trusted-cgi`  
 
+For Ubuntu 18.04
+
+```bash
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
+echo "deb https://dl.bintray.com/reddec/debian bionic main" | sudo tee -a /etc/apt/sources.list
+sudo apt install trusted-cgi
+```
+
+Configuration files will be placed under `/etc/trusted-cgi`, functions files under `/var/trusted-cgi`,
+systemd service will be launched as `trusted-cgi` and all new services will be run under `trusted-cgi` system
+user.
 
 ## Docker
 
@@ -74,6 +91,5 @@ make embed_ui
 
 ## TODO
 
-* Service file for Ubuntu + user generation for chroot
 * Upload/download tarball
 * CLI control

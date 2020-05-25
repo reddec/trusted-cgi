@@ -28,6 +28,21 @@ nfpms:
     license: MIT License
     formats:
       - deb
+    recommends:
+      - python3
+      - nodejs
+      - npm
+      - php
+      - python3-requests
+    scripts:
+      postinstall: "debian/postinstall.sh"
+      preremove: "debian/preremove.sh"
+    empty_folders:
+      - /var/trusted-cgi
+      - /etc/trusted-cgi
+    files:
+      "debian/trusted-cgi.service": "/etc/systemd/system/trusted-cgi.service"
+      "debian/trusted-cgi.env": "/etc/trusted-cgi/trusted-cgi.env"
 uploads:
   - name: bintray
     method: PUT

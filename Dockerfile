@@ -1,5 +1,5 @@
 FROM alpine
-RUN apk add --no-cache python3 py3-setuptools php nodejs npm && pip3 install requests && npm install -g axios
+RUN apk add --no-cache python3 py3-setuptools py3-virtualenv php nodejs npm make && pip3 install requests && npm install -g axios
 EXPOSE 3434
 VOLUME /data
 WORKDIR /data

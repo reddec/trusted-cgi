@@ -88,7 +88,8 @@ func ListEmbedded() map[string]*Template {
 			Description: "Python basic function",
 			Check:       []string{"which", "python3"},
 			Files: map[string]string{
-				"app.py": pythonScript,
+				"app.py":   pythonScript,
+				"Makefile": pythonMake,
 			},
 			Manifest: types.Manifest{
 				Name: "Example Python Function",
@@ -105,13 +106,16 @@ Replace url to the real
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
 				},
+				PostClone: "install",
 			},
 		},
 		"Node JS": {
 			Description: "Node JS basic function",
 			Check:       []string{"which", "node"},
 			Files: map[string]string{
-				"app.js": nodeJsScript,
+				"app.js":       nodeJsScript,
+				"package.json": nodeJsManifest,
+				"Makefile":     nodeJsMake,
 			},
 			Manifest: types.Manifest{
 				Name: "Example NodeJS Function",
@@ -128,6 +132,7 @@ Replace url to the real
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
 				},
+				PostClone: "install",
 			},
 		},
 		"PHP": {
@@ -165,6 +170,12 @@ response = ['hello', 'world']
 json.dump(response, sys.stdout)
 `
 
+const pythonMake = `
+install:
+	python3 -m venv venv
+	./venv/bin/pip install -r requirements.txt
+`
+
 const nodeJsScript = `
 async function run(request) {
      return ["hello", "world"];
@@ -184,6 +195,27 @@ process.stdin.on('end', function () {
 	})
 });
 `
+
+const nodeJsMake = `
+install:
+	npm install .
+`
+
+const nodeJsManifest = `{
+  "name": "",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
+}`
+
 const phpScript = `
 <?php
 $request = json_decode(stream_get_contents(STDIN));

@@ -160,13 +160,13 @@ func (project *Project) Credentials() *syscall.Credential {
 	return project.creds
 }
 
-func (project *Project) Create() (*App, error) {
-	return project.CreateFromTemplate(&templates.Template{
+func (project *Project) Create(ctx context.Context) (*App, error) {
+	return project.CreateFromTemplate(ctx, &templates.Template{
 		Manifest: types.Manifest{},
 	})
 }
 
-func (project *Project) CreateFromTemplate(template *templates.Template) (*App, error) {
+func (project *Project) CreateFromTemplate(ctx context.Context, template *templates.Template) (*App, error) {
 	project.appsLock.Lock()
 	defer project.appsLock.Unlock()
 
@@ -185,6 +185,15 @@ func (project *Project) CreateFromTemplate(template *templates.Template) (*App, 
 			return nil, err
 		}
 	}
+
+	if template.Manifest.PostClone != "" {
+		err = app.InvokeAction(ctx, template.Manifest.PostClone)
+		if err != nil {
+			_ = os.RemoveAll(app.location)
+			return nil, err
+		}
+	}
+
 	project.apps[uid] = app
 
 	return app, nil

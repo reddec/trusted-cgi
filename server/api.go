@@ -63,7 +63,7 @@ func (srv *apiImpl) AllTemplates(ctx context.Context, token *Token) ([]*Template
 }
 
 func (srv *apiImpl) Create(ctx context.Context, token *Token) (*application.App, error) {
-	return srv.project.Create()
+	return srv.project.Create(ctx)
 }
 
 func (srv *apiImpl) List(ctx context.Context, token *Token) ([]*application.App, error) {
@@ -119,7 +119,7 @@ func (srv *apiImpl) CreateFromTemplate(ctx context.Context, token *Token, templa
 	if !tpl.IsAvailable(ctx) {
 		return nil, fmt.Errorf("template %s is not supported", templateName)
 	}
-	return srv.project.CreateFromTemplate(tpl)
+	return srv.project.CreateFromTemplate(ctx, tpl)
 }
 
 func (srv *apiImpl) Templates(ctx context.Context, token *Token) ([]*Template, error) {

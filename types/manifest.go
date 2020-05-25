@@ -23,16 +23,7 @@ type Manifest struct {
 	AllowedOrigin  JsonStringSet     `json:"allowed_origin,omitempty"`  // limit incoming connections by origin header
 	Public         bool              `json:"public"`                    // if public, tokens are ignores
 	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
-}
-
-func ExampleManifest() Manifest {
-	return Manifest{
-		Name: "example-app",
-		Run:  []string{"echo", "<html><body><h1>Hello world</h1></body></html>"},
-		OutputHeaders: map[string]string{
-			"Content-Type": "text/html",
-		},
-	}
+	PostClone      string            `json:"post_clone,omitempty"`      // action (make target) name that should be invoked after clone
 }
 
 func (mf *Manifest) SaveAs(filename string) error {

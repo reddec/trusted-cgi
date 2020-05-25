@@ -1,0 +1,15 @@
+url: "https://127.0.0.1:3434/u/"
+package: jsonrpc
+custom_type_handler:
+  - '*github.com/reddec/trusted-cgi/server@Token'
+file: ./interface.go
+wrapper: "registerAPI"
+python: 'clients/python/client.py'
+js:  'clients/js/client.js'
+ts:  'clients/ts/client.ts'
+ts_shim_file: "tsshim.yaml"
+doc: 'docs/api.md'
+output: "./api_generated.go"
+go: 'clients/go/client.go'
+go_package: "{{.Generator.TypeName | lower}}"
+go_linked: true

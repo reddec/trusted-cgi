@@ -1,0 +1,66 @@
+project_name: trusted-cgi
+builds:
+- main: ./cmd/trusted-cgi/main.go
+  binary: trusted-cgi
+  env:
+  - CGO_ENABLED=0
+  goarch:
+    - amd64
+    - arm
+    - arm64
+  goarm:
+    - 5
+    - 6
+    - 7
+  goos:
+    - linux
+  flags:
+    - -trimpath
+nfpms:
+  - id: debian
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    replacements:
+      Linux: linux
+      386: i386
+    homepage: https://github.com/reddec/trusted-cgi
+    maintainer: Baryshnikov Aleksandr <owner@reddec.net>
+    description:  Lightweigt runner for lambda functions/apps in CGI like mode
+    license: MIT License
+    formats:
+      - deb
+uploads:
+  - name: bintray
+    method: PUT
+    mode: archive
+    username: reddec
+    custom_artifact_name: true
+    ids:
+      - debian
+    target: 'https://api.bintray.com/content/reddec/debian/{{ .ProjectName }}/{{ .Version }}/{{ .ArtifactName }};publish=1;deb_component=main;deb_distribution=all;deb_architecture={{ .Arch }}'
+archives:
+- replacements:
+    Linux: linux
+    386: i386
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  files:
+    - LICENSE
+    - README.md
+  format: tar.gz
+dockers:
+  - image_templates:
+      - "reddec/trusted-cgi:{{ .Tag }}"
+      - "reddec/trusted-cgi:v{{ .Major }}"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}"
+      - "reddec/trusted-cgi:latest"
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^doc:'
+      - '^test:'
+      - '^build:'

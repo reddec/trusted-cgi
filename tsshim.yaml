@@ -1,0 +1,9 @@
+---
+qual: "time@Time"
+content: "type Time = string; // RFC3339"
+---
+qual: "github.com/reddec/trusted-cgi/types@JsonDuration"
+content: "type JsonDuration = string; // suffixes: ns, us, ms, s, m, h"
+---
+qual: "github.com/reddec/trusted-cgi/server@Token"
+content: "type Token = string;"

@@ -62,6 +62,7 @@ For Ubuntu 18.04
 ```bash
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
 echo "deb https://dl.bintray.com/reddec/debian bionic main" | sudo tee -a /etc/apt/sources.list
+sudo apt update
 sudo apt install trusted-cgi
 ```
 

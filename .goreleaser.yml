@@ -30,10 +30,11 @@ nfpms:
       - deb
     recommends:
       - python3
+      - php-cli
+      - python3-requests
+    suggests:
       - nodejs
       - npm
-      - php
-      - python3-requests
     scripts:
       postinstall: "debian/postinstall.sh"
       preremove: "debian/preremove.sh"

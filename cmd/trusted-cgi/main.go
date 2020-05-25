@@ -22,6 +22,7 @@ type Config struct {
 	Templates string `long:"templates" env:"TEMPLATES" description:"Templates directory" default:".templates"`
 	//
 	InitialAdminPassword string        `long:"initial-admin-password" env:"INITIAL_ADMIN_PASSWORD" description:"Initial admin password" default:"admin"`
+	InitialChrootUser    string        `long:"initial-chroot-user" env:"INITIAL_CHROOT_USER" description:"Initial user for service" default:""`
 	DisableChroot        bool          `long:"disable-chroot" env:"DISABLE_CHROOT" description:"Disable use different user for spawn"`
 	Dev                  bool          `long:"dev" env:"DEV" description:"Enabled dev mode (disables chroot)"`
 	StatsCache           uint          `long:"stats-cache" env:"STATS_CACHE" description:"Maximum cache for stats" default:"8192"`
@@ -96,6 +97,7 @@ func run(ctx context.Context, config Config) error {
 	go dumpTracker(ctx, config.StatsInterval, tracker)
 
 	var defCfg application.ProjectConfig
+	defCfg.User = config.InitialChrootUser
 
 	if config.Dev {
 		log.Println("Warning! Development mode enabled")

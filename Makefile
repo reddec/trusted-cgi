@@ -1,10 +1,13 @@
 clean:
-	rm -rf dist ui/dist
+	rm -rf dist ui/*
 
 bindata:
 	GO111MODULE=off go get -u -v github.com/go-bindata/go-bindata/...
 
-ui/dist:
+ui/src:
+	cd ui && git reset --hard && git pull origin master
+
+ui/dist: ui/src
 	cd ui && npm install . && npx quasar build
 
 

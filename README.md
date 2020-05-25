@@ -61,3 +61,10 @@ initial admin password is `admin` (change it!).
 
 The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
 functions.
+
+
+## TODO
+
+* Service file for Ubuntu + user generation for chroot
+* Upload/download tarball
+* CLI control

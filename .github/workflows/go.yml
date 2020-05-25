@@ -14,22 +14,11 @@ jobs:
       with:
         go-version: 1.13
       id: go
-    - name: Use Node.js
-      uses: actions/setup-node@v1
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
       with:
         submodules: 'recursive'
-
-    - name: Build UI
-      run: cd ui && npm install . && npx quasar build
-
-    - name: Install bindata
-      run: GO111MODULE=off go get -u -v github.com/go-bindata/go-bindata/...
-
-    - name: Build assets
-      run: cd assets && $(go env GOPATH)/bin/go-bindata -pkg assets -prefix ../ui/dist/spa -fs ../ui/dist/spa/...
 
     - uses: azure/docker-login@v1
       with:

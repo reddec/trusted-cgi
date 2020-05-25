@@ -62,6 +62,14 @@ initial admin password is `admin` (change it!).
 The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
 functions.
 
+# Development
+
+## Embedding UI
+
+```shell script
+make clean
+make embed_ui
+`
 
 ## TODO
 

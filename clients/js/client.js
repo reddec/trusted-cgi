@@ -308,6 +308,30 @@ export class API {
         }));
     }
 
+    /**
+    Make link/alias for app
+    **/
+    async link(token, uid, alias){
+        return (await this.__call('Link', {
+            "jsonrpc" : "2.0",
+            "method" : "API.Link",
+            "id" : this.__next_id(),
+            "params" : [token, uid, alias]
+        }));
+    }
+
+    /**
+    Remove link
+    **/
+    async unlink(token, alias){
+        return (await this.__call('Unlink', {
+            "jsonrpc" : "2.0",
+            "method" : "API.Unlink",
+            "id" : this.__next_id(),
+            "params" : [token, alias]
+        }));
+    }
+
 
 
     __next_id() {

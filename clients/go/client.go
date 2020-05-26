@@ -162,3 +162,15 @@ func (impl *APIClient) Invoke(ctx context.Context, token *server.Token, uid stri
 	err = client.CallHTTP(ctx, impl.BaseURL, "API.Invoke", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid, action)
 	return
 }
+
+// Make link/alias for app
+func (impl *APIClient) Link(ctx context.Context, token *server.Token, uid string, alias string) (reply *application.App, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "API.Link", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid, alias)
+	return
+}
+
+// Remove link
+func (impl *APIClient) Unlink(ctx context.Context, token *server.Token, alias string) (reply *application.App, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "API.Unlink", atomic.AddUint64(&impl.sequence, 1), &reply, token, alias)
+	return
+}

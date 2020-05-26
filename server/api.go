@@ -243,3 +243,11 @@ func (srv *apiImpl) Invoke(ctx context.Context, token *Token, uid string, action
 	err := app.InvokeAction(ctx, action)
 	return err == nil, err
 }
+
+func (srv *apiImpl) Link(ctx context.Context, token *Token, uid string, alias string) (*application.App, error) {
+	return srv.project.Link(uid, alias)
+}
+
+func (srv *apiImpl) Unlink(ctx context.Context, token *Token, alias string) (*application.App, error) {
+	panic("implement me")
+}

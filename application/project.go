@@ -101,11 +101,11 @@ func (project *ProjectConfig) LoadOrCreate(file string) (*Project, error) {
 
 type Project struct {
 	ProjectConfig
-	creds *syscall.Credential
-	file  string
-
+	creds      *syscall.Credential
+	file       string
 	appsLock   sync.RWMutex
 	apps       map[string]*App
+	links      map[string]*App // custom path to UID
 	configLock sync.Mutex
 }
 
@@ -162,6 +162,40 @@ func (project *Project) Create(ctx context.Context) (*App, error) {
 	})
 }
 
+func (project *Project) Link(uid string, alias string) (*App, error) {
+	project.appsLock.Lock()
+	defer project.appsLock.Unlock()
+	app := project.apps[uid]
+	if app == nil {
+		return nil, fmt.Errorf("app %s not found", uid)
+	}
+	if anotherApp, ok := project.links[alias]; ok {
+		return nil, fmt.Errorf("alias %s already used by %s", alias, anotherApp)
+	}
+	if app.Manifest.Aliases == nil {
+		app.Manifest.Aliases = make(types.JsonStringSet)
+	}
+	if project.links == nil {
+		project.links = make(map[string]*App)
+	}
+	app.Manifest.Aliases.Set(alias)
+	project.links[alias] = app
+	return app, app.Manifest.SaveAs(app.ManifestFile())
+}
+
+func (project *Project) Unlink(alias string) (*App, error) {
+	project.appsLock.Lock()
+	defer project.appsLock.Unlock()
+	anotherApp, ok := project.links[alias]
+	if !ok {
+		return nil, fmt.Errorf("alias %s already used by %s", alias, anotherApp)
+	}
+	delete(project.links, alias)
+
+	anotherApp.Manifest.Aliases.Del(alias)
+	return anotherApp, anotherApp.Manifest.SaveAs(anotherApp.ManifestFile())
+}
+
 func (project *Project) CreateFromTemplate(ctx context.Context, template *templates.Template) (*App, error) {
 	project.appsLock.Lock()
 	defer project.appsLock.Unlock()
@@ -207,6 +241,12 @@ func (project *Project) FindApp(uid string) *App {
 	project.appsLock.RLock()
 	defer project.appsLock.RUnlock()
 	return project.apps[uid]
+}
+
+func (project *Project) FindAppByAlias(alias string) *App {
+	project.appsLock.RLock()
+	defer project.appsLock.RUnlock()
+	return project.links[alias]
 }
 
 func (project *Project) Upload(ctx context.Context, uid string, tarGzBall io.Reader) error {
@@ -261,6 +301,13 @@ func (project *Project) Remove(ctx context.Context, uid string) error {
 	if app == nil {
 		return nil
 	}
+	var links = make(map[string]*App)
+	for alias, tapp := range project.links {
+		if tapp != app {
+			links[alias] = tapp
+		}
+	}
+	project.links = links
 	return os.RemoveAll(app.location)
 }
 

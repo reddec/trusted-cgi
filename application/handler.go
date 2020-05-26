@@ -46,6 +46,34 @@ func (project *Project) Handler(ctx context.Context, tracker stats.Recorder) (ht
 	}, nil
 }
 
+// Handler for incoming requests
+func (project *Project) HandlerAlias(ctx context.Context, tracker stats.Recorder) (http.HandlerFunc, error) {
+	creds := project.Credentials()
+	if project.User == "" {
+		creds = nil //dev mode
+	}
+	return func(writer http.ResponseWriter, request *http.Request) {
+		sections := strings.SplitN(request.URL.Path, "/", 2)
+		appName := sections[0]
+		if len(sections) > 1 {
+			request.URL.Path = sections[1]
+		} else {
+			request.URL.Path = "/"
+		}
+		app := project.FindAppByAlias(appName)
+
+		if app == nil {
+			http.NotFound(writer, request)
+			return
+		}
+
+		start := time.Now()
+		app.Run(ctx, tracker, creds, writer, request)
+		end := time.Now()
+		log.Println("[INFO]", "("+appName+")", end.Sub(start))
+	}, nil
+}
+
 // Run application with parameters defined in manifest in directory
 //
 func (app *App) Run(ctx context.Context, tracker stats.Recorder, creds *syscall.Credential, w http.ResponseWriter, r *http.Request) {

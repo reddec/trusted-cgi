@@ -100,6 +100,11 @@ func (srv *Server) Handler(ctx context.Context, project *application.Project, te
 		return nil, err
 	}
 
+	links, err := project.HandlerAlias(ctx, tracker)
+	if err != nil {
+		return nil, err
+	}
+
 	var userApi jsonrpc2.Router
 	registerAPI(&userApi, &apiImpl{
 		server:       srv,
@@ -111,6 +116,7 @@ func (srv *Server) Handler(ctx context.Context, project *application.Project, te
 	var mux http.ServeMux
 	mux.Handle("/a/", openedHandler(http.StripPrefix("/a/", apps)))
 	mux.Handle("/u/", secureHttpHandler(dev, jsonrpc2.HandlerRestContext(ctx, &userApi)))
+	mux.Handle("/l/", openedHandler(http.StripPrefix("/l/", links)))
 	mux.Handle("/", http.FileServer(assets.AssetFile()))
 	return &mux, nil
 }

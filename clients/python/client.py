@@ -45,6 +45,7 @@ class Manifest:
     public: 'bool'
     tokens: 'Optional[Any]'
     post_clone: 'Optional[str]'
+    aliases: 'Optional[Any]'
 
     def to_json(self) -> dict:
         return {
@@ -65,6 +66,7 @@ class Manifest:
             "public": self.public,
             "tokens": self.tokens,
             "post_clone": self.post_clone,
+            "aliases": self.aliases,
         }
 
     @staticmethod
@@ -87,6 +89,7 @@ class Manifest:
                 public=payload['public'],
                 tokens=payload['tokens'],
                 post_clone=payload['post_clone'],
+                aliases=payload['aliases'],
         )
 
 
@@ -630,6 +633,38 @@ class APIClient:
             raise APIError.from_json('invoke', payload['error'])
         return payload['result']
 
+    async def link(self, token: Any, uid: str, alias: str) -> App:
+        """
+        Make link/alias for app
+        """
+        response = await self._invoke({
+            "jsonrpc": "2.0",
+            "method": "API.Link",
+            "id": self.__next_id(),
+            "params": [token, uid, alias, ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise APIError.from_json('link', payload['error'])
+        return App.from_json(payload['result'])
+
+    async def unlink(self, token: Any, alias: str) -> App:
+        """
+        Remove link
+        """
+        response = await self._invoke({
+            "jsonrpc": "2.0",
+            "method": "API.Unlink",
+            "id": self.__next_id(),
+            "params": [token, alias, ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise APIError.from_json('unlink', payload['error'])
+        return App.from_json(payload['result'])
+
     async def _invoke(self, request):
         return await self.__request('POST', self.__url, json=request)
 
@@ -841,6 +876,22 @@ class APIBatch:
         params = [token, uid, action, ]
         method = "API.Invoke"
         self.__add_request(method, params, lambda payload: payload)
+
+    def link(self, token: Any, uid: str, alias: str):
+        """
+        Make link/alias for app
+        """
+        params = [token, uid, alias, ]
+        method = "API.Link"
+        self.__add_request(method, params, lambda payload: App.from_json(payload))
+
+    def unlink(self, token: Any, alias: str):
+        """
+        Remove link
+        """
+        params = [token, alias, ]
+        method = "API.Unlink"
+        self.__add_request(method, params, lambda payload: App.from_json(payload))
 
     def __add_request(self, method: str, params, factory):
         request_id = self.__next_id()

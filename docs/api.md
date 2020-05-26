@@ -27,6 +27,8 @@
 * [API.Stats](#apistats) - Stats for the app
 * [API.Actions](#apiactions) - Actions available for the app
 * [API.Invoke](#apiinvoke) - Invoke action in the app (if make installed)
+* [API.Link](#apilink) - Make link/alias for app
+* [API.Unlink](#apiunlink) - Remove link
 
 
 
@@ -633,6 +635,7 @@ EOF
 | public | `bool` |  |
 | tokens | `map[string]string` |  |
 | post_clone | `string` |  |
+| aliases | `JsonStringSet` |  |
 ### Token
 
 ```go
@@ -889,6 +892,81 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+### Token
+
+```go
+type Token struct {
+}
+```
+
+## API.Link
+
+Make link/alias for app
+
+* Method: `API.Link`
+* Returns: `*application.App`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | token | `*Token` |
+| 1 | uid | `string` |
+| 2 | alias | `string` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:3434/u/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "API.Link",
+    "params" : []
+}
+EOF
+```
+### App
+
+| Json | Type | Comment |
+|------|------|---------|
+| uid | `string` |  |
+| manifest | `types.Manifest` |  |
+### Token
+
+```go
+type Token struct {
+}
+```
+
+## API.Unlink
+
+Remove link
+
+* Method: `API.Unlink`
+* Returns: `*application.App`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | token | `*Token` |
+| 1 | alias | `string` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:3434/u/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "API.Unlink",
+    "params" : []
+}
+EOF
+```
+### App
+
+| Json | Type | Comment |
+|------|------|---------|
+| uid | `string` |  |
+| manifest | `types.Manifest` |  |
 ### Token
 
 ```go

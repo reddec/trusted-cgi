@@ -24,6 +24,7 @@ type Manifest struct {
 	Public         bool              `json:"public"`                    // if public, tokens are ignores
 	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
 	PostClone      string            `json:"post_clone,omitempty"`      // action (make target) name that should be invoked after clone
+	Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
 }
 
 func (mf *Manifest) SaveAs(filename string) error {

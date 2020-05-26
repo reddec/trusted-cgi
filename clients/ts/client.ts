@@ -35,6 +35,7 @@ export interface Manifest {
     public: boolean
     tokens: any | null
     post_clone: string | null
+    aliases: JsonStringSet | null
 }
 
 export type JsonDuration = string; // suffixes: ns, us, ms, s, m, h
@@ -528,6 +529,30 @@ export class API {
             "id" : this.__next_id(),
             "params" : [token, uid, action]
         })) as boolean;
+    }
+
+    /**
+    Make link/alias for app
+    **/
+    async link(token: Token, uid: string, alias: string): Promise<App> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "API.Link",
+            "id" : this.__next_id(),
+            "params" : [token, uid, alias]
+        })) as App;
+    }
+
+    /**
+    Remove link
+    **/
+    async unlink(token: Token, alias: string): Promise<App> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "API.Unlink",
+            "id" : this.__next_id(),
+            "params" : [token, alias]
+        })) as App;
     }
 
 

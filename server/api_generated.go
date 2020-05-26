@@ -521,5 +521,48 @@ func registerAPI(router *jsonrpc2.Router, wrap API, typeHandler interface {
 		return wrap.Invoke(ctx, args.Arg0, args.Arg1, args.Arg2)
 	})
 
-	return []string{"API.Login", "API.ChangePassword", "API.Create", "API.Config", "API.Apply", "API.AllTemplates", "API.CreateFromTemplate", "API.Upload", "API.Download", "API.Push", "API.Pull", "API.List", "API.Remove", "API.Templates", "API.Files", "API.Info", "API.Update", "API.CreateFile", "API.RemoveFile", "API.RenameFile", "API.GlobalStats", "API.Stats", "API.Actions", "API.Invoke"}
+	router.RegisterFunc("API.Link", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
+		var args struct {
+			Arg0 *Token `json:"token"`
+			Arg1 string `json:"uid"`
+			Arg2 string `json:"alias"`
+		}
+		var err error
+		if positional {
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1, &args.Arg2)
+		} else {
+			err = json.Unmarshal(params, &args)
+		}
+		if err != nil {
+			return nil, err
+		}
+		err = typeHandler.ValidateToken(ctx, args.Arg0)
+		if err != nil {
+			return nil, err
+		}
+		return wrap.Link(ctx, args.Arg0, args.Arg1, args.Arg2)
+	})
+
+	router.RegisterFunc("API.Unlink", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
+		var args struct {
+			Arg0 *Token `json:"token"`
+			Arg1 string `json:"alias"`
+		}
+		var err error
+		if positional {
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1)
+		} else {
+			err = json.Unmarshal(params, &args)
+		}
+		if err != nil {
+			return nil, err
+		}
+		err = typeHandler.ValidateToken(ctx, args.Arg0)
+		if err != nil {
+			return nil, err
+		}
+		return wrap.Unlink(ctx, args.Arg0, args.Arg1)
+	})
+
+	return []string{"API.Login", "API.ChangePassword", "API.Create", "API.Config", "API.Apply", "API.AllTemplates", "API.CreateFromTemplate", "API.Upload", "API.Download", "API.Push", "API.Pull", "API.List", "API.Remove", "API.Templates", "API.Files", "API.Info", "API.Update", "API.CreateFile", "API.RemoveFile", "API.RenameFile", "API.GlobalStats", "API.Stats", "API.Actions", "API.Invoke", "API.Link", "API.Unlink"}
 }

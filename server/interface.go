@@ -86,4 +86,8 @@ type API interface {
 	Actions(ctx context.Context, token *Token, uid string) ([]string, error)
 	// Invoke action in the app (if make installed)
 	Invoke(ctx context.Context, token *Token, uid string, action string) (bool, error)
+	// Make link/alias for app
+	Link(ctx context.Context, token *Token, uid string, alias string) (*application.App, error)
+	// Remove link
+	Unlink(ctx context.Context, token *Token, alias string) (*application.App, error)
 }

@@ -44,6 +44,7 @@ class Manifest:
     allowed_origin: 'Optional[Any]'
     public: 'bool'
     tokens: 'Optional[Any]'
+    post_clone: 'Optional[str]'
 
     def to_json(self) -> dict:
         return {
@@ -63,6 +64,7 @@ class Manifest:
             "allowed_origin": self.allowed_origin,
             "public": self.public,
             "tokens": self.tokens,
+            "post_clone": self.post_clone,
         }
 
     @staticmethod
@@ -84,6 +86,7 @@ class Manifest:
                 allowed_origin=payload['allowed_origin'],
                 public=payload['public'],
                 tokens=payload['tokens'],
+                post_clone=payload['post_clone'],
         )
 
 
@@ -581,7 +584,7 @@ class APIClient:
 
     async def stats(self, token: Any, uid: str, limit: int) -> List[Record]:
         """
-        Stats
+        Stats for the app
         """
         response = await self._invoke({
             "jsonrpc": "2.0",
@@ -594,6 +597,38 @@ class APIClient:
         if 'error' in payload:
             raise APIError.from_json('stats', payload['error'])
         return [Record.from_json(x) for x in (payload['result'] or [])]
+
+    async def actions(self, token: Any, uid: str) -> List[str]:
+        """
+        Actions available for the app
+        """
+        response = await self._invoke({
+            "jsonrpc": "2.0",
+            "method": "API.Actions",
+            "id": self.__next_id(),
+            "params": [token, uid, ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise APIError.from_json('actions', payload['error'])
+        return payload['result'] or []
+
+    async def invoke(self, token: Any, uid: str, action: str) -> bool:
+        """
+        Invoke action in the app (if make installed)
+        """
+        response = await self._invoke({
+            "jsonrpc": "2.0",
+            "method": "API.Invoke",
+            "id": self.__next_id(),
+            "params": [token, uid, action, ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise APIError.from_json('invoke', payload['error'])
+        return payload['result']
 
     async def _invoke(self, request):
         return await self.__request('POST', self.__url, json=request)
@@ -785,11 +820,27 @@ class APIBatch:
 
     def stats(self, token: Any, uid: str, limit: int):
         """
-        Stats
+        Stats for the app
         """
         params = [token, uid, limit, ]
         method = "API.Stats"
         self.__add_request(method, params, lambda payload: [Record.from_json(x) for x in (payload or [])])
+
+    def actions(self, token: Any, uid: str):
+        """
+        Actions available for the app
+        """
+        params = [token, uid, ]
+        method = "API.Actions"
+        self.__add_request(method, params, lambda payload: payload or [])
+
+    def invoke(self, token: Any, uid: str, action: str):
+        """
+        Invoke action in the app (if make installed)
+        """
+        params = [token, uid, action, ]
+        method = "API.Invoke"
+        self.__add_request(method, params, lambda payload: payload)
 
     def __add_request(self, method: str, params, factory):
         request_id = self.__next_id()

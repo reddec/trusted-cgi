@@ -24,7 +24,9 @@
 * [API.RemoveFile](#apiremovefile) - Remove file or directory
 * [API.RenameFile](#apirenamefile) - Rename file or directory
 * [API.GlobalStats](#apiglobalstats) - Global last records
-* [API.Stats](#apistats) - Stats
+* [API.Stats](#apistats) - Stats for the app
+* [API.Actions](#apiactions) - Actions available for the app
+* [API.Invoke](#apiinvoke) - Invoke action in the app (if make installed)
 
 
 
@@ -630,6 +632,7 @@ EOF
 | allowed_origin | `JsonStringSet` |  |
 | public | `bool` |  |
 | tokens | `map[string]string` |  |
+| post_clone | `string` |  |
 ### Token
 
 ```go
@@ -784,7 +787,7 @@ type Token struct {
 
 ## API.Stats
 
-Stats
+Stats for the app
 
 * Method: `API.Stats`
 * Returns: `[]stats.Record`
@@ -823,6 +826,69 @@ EOF
 | token | `string` |  |
 | begin | `time.Time` |  |
 | end | `time.Time` |  |
+### Token
+
+```go
+type Token struct {
+}
+```
+
+## API.Actions
+
+Actions available for the app
+
+* Method: `API.Actions`
+* Returns: `[]string`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | token | `*Token` |
+| 1 | uid | `string` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:3434/u/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "API.Actions",
+    "params" : []
+}
+EOF
+```
+### Token
+
+```go
+type Token struct {
+}
+```
+
+## API.Invoke
+
+Invoke action in the app (if make installed)
+
+* Method: `API.Invoke`
+* Returns: `bool`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | token | `*Token` |
+| 1 | uid | `string` |
+| 2 | action | `string` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:3434/u/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "API.Invoke",
+    "params" : []
+}
+EOF
+```
 ### Token
 
 ```go

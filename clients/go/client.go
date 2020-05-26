@@ -145,8 +145,20 @@ func (impl *APIClient) GlobalStats(ctx context.Context, token *server.Token, lim
 	return
 }
 
-// Stats
+// Stats for the app
 func (impl *APIClient) Stats(ctx context.Context, token *server.Token, uid string, limit int) (reply []stats.Record, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "API.Stats", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid, limit)
+	return
+}
+
+// Actions available for the app
+func (impl *APIClient) Actions(ctx context.Context, token *server.Token, uid string) (reply []string, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "API.Actions", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid)
+	return
+}
+
+// Invoke action in the app (if make installed)
+func (impl *APIClient) Invoke(ctx context.Context, token *server.Token, uid string, action string) (reply bool, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "API.Invoke", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid, action)
 	return
 }

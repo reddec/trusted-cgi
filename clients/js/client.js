@@ -273,7 +273,7 @@ export class API {
     }
 
     /**
-    Stats
+    Stats for the app
     **/
     async stats(token, uid, limit){
         return (await this.__call('Stats', {
@@ -281,6 +281,30 @@ export class API {
             "method" : "API.Stats",
             "id" : this.__next_id(),
             "params" : [token, uid, limit]
+        }));
+    }
+
+    /**
+    Actions available for the app
+    **/
+    async actions(token, uid){
+        return (await this.__call('Actions', {
+            "jsonrpc" : "2.0",
+            "method" : "API.Actions",
+            "id" : this.__next_id(),
+            "params" : [token, uid]
+        }));
+    }
+
+    /**
+    Invoke action in the app (if make installed)
+    **/
+    async invoke(token, uid, action){
+        return (await this.__call('Invoke', {
+            "jsonrpc" : "2.0",
+            "method" : "API.Invoke",
+            "id" : this.__next_id(),
+            "params" : [token, uid, action]
         }));
     }
 

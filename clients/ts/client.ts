@@ -34,6 +34,7 @@ export interface Manifest {
     allowed_origin: JsonStringSet | null
     public: boolean
     tokens: any | null
+    post_clone: string | null
 }
 
 export type JsonDuration = string; // suffixes: ns, us, ms, s, m, h
@@ -494,7 +495,7 @@ export class API {
     }
 
     /**
-    Stats
+    Stats for the app
     **/
     async stats(token: Token, uid: string, limit: number): Promise<Array<Record>> {
         return (await this.__call({
@@ -503,6 +504,30 @@ export class API {
             "id" : this.__next_id(),
             "params" : [token, uid, limit]
         })) as Array<Record>;
+    }
+
+    /**
+    Actions available for the app
+    **/
+    async actions(token: Token, uid: string): Promise<Array<string>> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "API.Actions",
+            "id" : this.__next_id(),
+            "params" : [token, uid]
+        })) as Array<string>;
+    }
+
+    /**
+    Invoke action in the app (if make installed)
+    **/
+    async invoke(token: Token, uid: string, action: string): Promise<boolean> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "API.Invoke",
+            "id" : this.__next_id(),
+            "params" : [token, uid, action]
+        })) as boolean;
     }
 
 

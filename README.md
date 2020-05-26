@@ -114,6 +114,14 @@ Host requirements:
 
 * php
 
+### Nim lang
+
+Host requirements:
+
+* make
+* nim
+* nimble
+
 # Development
 
 ## Embedding UI

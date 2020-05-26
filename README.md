@@ -72,6 +72,8 @@ user.
 
 ## Docker
 
+Notice: due to docker nature it is impossible to make restrictions by IP.
+
 * Pull image: `docker pull reddec/trusted-cgi`
 * Run for test `docker run --rm -p 3434:3434 reddec/trusted-cgi`
 

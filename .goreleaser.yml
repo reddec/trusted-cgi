@@ -25,14 +25,15 @@ nfpms:
     homepage: https://github.com/reddec/trusted-cgi
     maintainer: Baryshnikov Aleksandr <owner@reddec.net>
     description:  Lightweigt runner for lambda functions/apps in CGI like mode
-    license: MIT License
+    license: MIT
     formats:
       - deb
     recommends:
       - make
       - python3
-      - php-cli
       - python3-venv
+    suggests:
+      - php-cli
       - nodejs
       - npm
     scripts:

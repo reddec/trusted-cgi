@@ -158,7 +158,7 @@ func (impl *APIClient) Actions(ctx context.Context, token *server.Token, uid str
 }
 
 // Invoke action in the app (if make installed)
-func (impl *APIClient) Invoke(ctx context.Context, token *server.Token, uid string, action string) (reply bool, err error) {
+func (impl *APIClient) Invoke(ctx context.Context, token *server.Token, uid string, action string) (reply string, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "API.Invoke", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid, action)
 	return
 }

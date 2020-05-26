@@ -2,8 +2,8 @@ from aiohttp import client
 
 from dataclasses import dataclass
 
-from typing import Any, List, Optional
 from base64 import decodebytes, encodebytes
+from typing import Any, List, Optional
 
 
 
@@ -617,7 +617,7 @@ class APIClient:
             raise APIError.from_json('actions', payload['error'])
         return payload['result'] or []
 
-    async def invoke(self, token: Any, uid: str, action: str) -> bool:
+    async def invoke(self, token: Any, uid: str, action: str) -> str:
         """
         Invoke action in the app (if make installed)
         """

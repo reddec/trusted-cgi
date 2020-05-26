@@ -235,13 +235,12 @@ func (srv *apiImpl) Actions(ctx context.Context, token *Token, uid string) ([]st
 	return app.ListActions()
 }
 
-func (srv *apiImpl) Invoke(ctx context.Context, token *Token, uid string, action string) (bool, error) {
+func (srv *apiImpl) Invoke(ctx context.Context, token *Token, uid string, action string) (string, error) {
 	app := srv.project.FindApp(uid)
 	if app == nil {
-		return false, fmt.Errorf("unknown app")
+		return "", fmt.Errorf("unknown app")
 	}
-	err := app.InvokeAction(ctx, action)
-	return err == nil, err
+	return app.InvokeAction(ctx, action)
 }
 
 func (srv *apiImpl) Link(ctx context.Context, token *Token, uid string, alias string) (*application.App, error) {

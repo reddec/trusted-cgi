@@ -872,7 +872,7 @@ type Token struct {
 Invoke action in the app (if make installed)
 
 * Method: `API.Invoke`
-* Returns: `bool`
+* Returns: `string`
 
 * Arguments:
 

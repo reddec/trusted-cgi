@@ -522,13 +522,13 @@ export class API {
     /**
     Invoke action in the app (if make installed)
     **/
-    async invoke(token: Token, uid: string, action: string): Promise<boolean> {
+    async invoke(token: Token, uid: string, action: string): Promise<string> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "API.Invoke",
             "id" : this.__next_id(),
             "params" : [token, uid, action]
-        })) as boolean;
+        })) as string;
     }
 
     /**

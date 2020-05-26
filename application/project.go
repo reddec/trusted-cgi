@@ -9,6 +9,7 @@ import (
 	"github.com/reddec/trusted-cgi/types"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -219,8 +220,9 @@ func (project *Project) CreateFromTemplate(ctx context.Context, template *templa
 	}
 
 	if template.Manifest.PostClone != "" {
-		err = app.InvokeAction(ctx, template.Manifest.PostClone)
+		text, err := app.InvokeAction(ctx, template.Manifest.PostClone)
 		if err != nil {
+			log.Println("action run:", text)
 			_ = os.RemoveAll(app.location)
 			return nil, err
 		}

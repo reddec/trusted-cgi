@@ -2,6 +2,7 @@ package application
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"os"
 	"os/exec"
@@ -36,15 +37,17 @@ func (app *App) ListActions() ([]string, error) {
 }
 
 // Invoke action by name (make target)
-func (app *App) InvokeAction(ctx context.Context, name string) error {
+func (app *App) InvokeAction(ctx context.Context, name string) (string, error) {
+	var out bytes.Buffer
 	cmd := exec.CommandContext(ctx, "make", name)
 	cmd.Dir = app.location
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = &out
+	cmd.Stderr = &out
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Pdeathsig:  syscall.SIGINT,
 		Setpgid:    true,
 		Credential: app.creds,
 	}
-	return cmd.Run()
+	err := cmd.Run()
+	return out.String(), err
 }

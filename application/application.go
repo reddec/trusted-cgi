@@ -53,6 +53,9 @@ func (app *App) ManifestFile() string {
 }
 
 func (app *App) ApplyOwner() error {
+	if app.creds == nil {
+		return nil
+	}
 	uid := int(app.creds.Uid)
 	gid := int(app.creds.Gid)
 	return filepath.Walk(app.location, func(path string, info os.FileInfo, err error) error {
@@ -87,6 +90,9 @@ func (app *App) WriteFile(filename string, content []byte) error {
 	if err != nil {
 		return err
 	}
+	if app.creds == nil {
+		return nil
+	}
 	return os.Chown(f, int(app.creds.Uid), int(app.creds.Gid))
 }
 
@@ -109,6 +115,9 @@ func (app *App) Touch(filename string, dir bool) error {
 	err = os.Mkdir(f, 0755)
 	if err != nil {
 		return err
+	}
+	if app.creds == nil {
+		return nil
 	}
 	return os.Chown(f, int(app.creds.Uid), int(app.creds.Gid))
 }

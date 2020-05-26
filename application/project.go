@@ -57,11 +57,7 @@ func (project *ProjectConfig) TarCommand() []string {
 func (project *ProjectConfig) Credentials() (*syscall.Credential, error) {
 	mappedUser := project.User
 	if project.User == "" {
-		usr, err := user.Current()
-		if err != nil {
-			return nil, err
-		}
-		mappedUser = usr.Username
+		return nil, nil
 	}
 	cred, err := user.Lookup(mappedUser)
 	if err != nil {

@@ -80,6 +80,10 @@ type API interface {
 	RenameFile(ctx context.Context, token *Token, uid string, oldPath, newPath string) (bool, error)
 	// Global last records
 	GlobalStats(ctx context.Context, token *Token, limit int) ([]stats.Record, error)
-	// Stats
+	// Stats for the app
 	Stats(ctx context.Context, token *Token, uid string, limit int) ([]stats.Record, error)
+	// Actions available for the app
+	Actions(ctx context.Context, token *Token, uid string) ([]string, error)
+	// Invoke action in the app (if make installed)
+	Invoke(ctx context.Context, token *Token, uid string, action string) (bool, error)
 }

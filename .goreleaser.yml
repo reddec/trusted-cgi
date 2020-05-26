@@ -28,9 +28,8 @@ nfpms:
     license: MIT License
     formats:
       - deb
-    dependencies:
-      - make
     recommends:
+      - make
       - python3
       - php-cli
       - python3-venv

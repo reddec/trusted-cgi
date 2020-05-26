@@ -226,3 +226,20 @@ func (srv *apiImpl) GlobalStats(ctx context.Context, token *Token, limit int) ([
 func (srv *apiImpl) Stats(ctx context.Context, token *Token, uid string, limit int) ([]stats.Record, error) {
 	return srv.tracker.LastByUID(uid, limit)
 }
+
+func (srv *apiImpl) Actions(ctx context.Context, token *Token, uid string) ([]string, error) {
+	app := srv.project.FindApp(uid)
+	if app == nil {
+		return nil, fmt.Errorf("unknown app")
+	}
+	return app.ListActions()
+}
+
+func (srv *apiImpl) Invoke(ctx context.Context, token *Token, uid string, action string) (bool, error) {
+	app := srv.project.FindApp(uid)
+	if app == nil {
+		return false, fmt.Errorf("unknown app")
+	}
+	err := app.InvokeAction(ctx, action)
+	return err == nil, err
+}

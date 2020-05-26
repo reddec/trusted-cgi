@@ -88,8 +88,9 @@ func ListEmbedded() map[string]*Template {
 			Description: "Python basic function",
 			Check:       []string{"which", "python3"},
 			Files: map[string]string{
-				"app.py":   pythonScript,
-				"Makefile": pythonMake,
+				"app.py":           pythonScript,
+				"Makefile":         pythonMake,
+				"requirements.txt": "requests",
 			},
 			Manifest: types.Manifest{
 				Name: "Example Python Function",
@@ -99,7 +100,7 @@ func ListEmbedded() map[string]*Template {
 
 Replace url to the real
 `,
-				Run:            []string{"python3", "app.py"},
+				Run:            []string{"./venv/bin/python3", "app.py"},
 				TimeLimit:      types.JsonDuration(time.Second),
 				Public:         true,
 				MaximumPayload: 8192,

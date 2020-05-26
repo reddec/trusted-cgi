@@ -1,51 +1,36 @@
 package application
 
 import (
-	"bytes"
+	"bufio"
 	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"syscall"
 )
 
-const (
-	// modified version from https://stackoverflow.com/a/26339924/1195316 that sounds like dark magic but working
-	scriptListMakeTargets = `make -pRrq 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($1 !~ "^[#.]") {print $1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$'`
-)
+var targetsPattern = regexp.MustCompile(`^([\d\w-/]+)\s*:\s*[\d\w-/\s]*$`)
 
 // List Make actions (if Makefile defined)
-func (app *App) ListActions(ctx context.Context) ([]string, error) {
+func (app *App) ListActions() ([]string, error) {
 	makefile := filepath.Join(app.location, "Makefile")
-	if _, err := os.Stat(makefile); err != nil {
-		if os.IsNotExist(err) {
-			return []string{}, nil
-		}
+	f, err := os.Open(makefile)
+	if os.IsNotExist(err) {
+		return []string{}, nil
+	} else if err != nil {
 		return nil, err
 	}
-	var buffer bytes.Buffer
+	defer f.Close()
 
-	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", scriptListMakeTargets)
-	cmd.Dir = app.location
-	cmd.Stdout = &buffer
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Pdeathsig:  syscall.SIGINT,
-		Setpgid:    true,
-		Credential: app.creds,
-	}
-
-	err := cmd.Run()
-	if err != nil {
-		return nil, err
-	}
 	var ans = make([]string, 0)
-	for _, line := range strings.Split(buffer.String(), "\n") {
-		line = strings.TrimSpace(line)
-		if len(line) == 0 {
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		matches := targetsPattern.FindAllStringSubmatch(scanner.Text(), -1)
+		if len(matches) < 1 || len(matches[0]) != 2 {
 			continue
 		}
-		ans = append(ans, line)
+		ans = append(ans, matches[0][1])
 	}
 	return ans, nil
 }

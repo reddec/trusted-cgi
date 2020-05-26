@@ -9,6 +9,7 @@ require (
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee // indirect
 	github.com/philhofer/fwd v1.0.0 // indirect
 	github.com/reddec/jsonrpc2 v0.1.18
+	github.com/stretchr/testify v1.5.1
 	github.com/tinylib/msgp v1.1.2
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31 // indirect
 )

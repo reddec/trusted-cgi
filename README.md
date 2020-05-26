@@ -83,6 +83,37 @@ initial admin password is `admin` (change it!).
 The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
 functions.
 
+# Actions
+
+If function contains Makefile and installed make, it is possible to invoke targets over UI/API (called Actions). Useful
+for installing dependencies or building.
+
+# Templates
+
+## Embedded
+
+### Python 3
+
+Host requirements:
+
+* make
+* python3
+* python3-venv
+
+### Node
+
+Host requirements:
+
+* make
+* node
+* npm
+
+### PHP
+
+Host requirements:
+
+* php
+
 # Development
 
 ## Embedding UI

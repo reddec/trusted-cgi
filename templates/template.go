@@ -27,22 +27,22 @@ func Read(filename string) (*Template, error) {
 type Template struct {
 	Description string            `json:"description" yaml:"description"`
 	Manifest    types.Manifest    `json:"manifest" yaml:"manifest"`               // manifest to copy
-	Check       []string          `json:"check,omitempty" yaml:"check,omitempty"` // check availability
+	Check       [][]string        `json:"check,omitempty" yaml:"check,omitempty"` // check availability (one line - one check)
 	Files       map[string]string `json:"files" yaml:"files,omitempty"`           //only for embedded
 }
 
 func (t *Template) IsAvailable(ctx context.Context) bool {
-	if len(t.Check) == 0 {
-		return true
+	for _, check := range t.Check {
+		cmd := exec.CommandContext(ctx, check[0], check[1:]...)
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Setpgid:   true,
+			Pdeathsig: syscall.SIGINT,
+		}
+		if cmd.Run() != nil {
+			return false
+		}
 	}
-	cmd := exec.CommandContext(ctx, t.Check[0], t.Check[1:]...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid:   true,
-		Pdeathsig: syscall.SIGINT,
-	}
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run() == nil
+	return true
 }
 
 // List embedded and external templates
@@ -86,7 +86,11 @@ func ListEmbedded() map[string]*Template {
 	return map[string]*Template{
 		"Python": {
 			Description: "Python basic function",
-			Check:       []string{"which", "python3"},
+			Check: [][]string{
+				{"which", "make"},
+				{"which", "python3"},
+				{"python3", "-m", "venv", "--help"},
+			},
 			Files: map[string]string{
 				"app.py":           pythonScript,
 				"Makefile":         pythonMake,
@@ -112,7 +116,11 @@ Replace url to the real
 		},
 		"Node JS": {
 			Description: "Node JS basic function",
-			Check:       []string{"which", "node"},
+			Check: [][]string{
+				{"which", "make"},
+				{"which", "node"},
+				{"which", "npm"},
+			},
 			Files: map[string]string{
 				"app.js":       nodeJsScript,
 				"package.json": nodeJsManifest,
@@ -154,7 +162,9 @@ Replace url to the real
 					"Content-Type": "application/json",
 				},
 			},
-			Check: []string{"which", "php"},
+			Check: [][]string{
+				{"which", "php"},
+			},
 			Files: map[string]string{
 				"app.php": phpScript,
 			},

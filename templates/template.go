@@ -169,6 +169,36 @@ Replace url to the real
 				"app.php": phpScript,
 			},
 		},
+		"Nim": {
+			Description: "Nim lang basic function",
+			Manifest: types.Manifest{
+				Name: "Fast python-like function",
+				Description: `### Usage
+
+    curl --data-binary '{"name": "reddec"}' -H 'Content-Type: application/json' "http://example.com/a/xyz"
+
+Replace url to the real
+`,
+				Run:            []string{"./bin/lambda"},
+				TimeLimit:      types.JsonDuration(time.Second),
+				Public:         true,
+				MaximumPayload: 8192,
+				OutputHeaders: map[string]string{
+					"Content-Type": "application/json",
+				},
+				PostClone: "build",
+			},
+			Check: [][]string{
+				{"which", "make"},
+				{"which", "nim"},
+				{"which", "nimble"},
+			},
+			Files: map[string]string{
+				"src/lambda.nim": nimScript,
+				"lambda.nimble":  nimbleManifest,
+				"Makefile":       nimMake,
+			},
+		},
 	}
 }
 
@@ -235,3 +265,30 @@ $response = array("hello", "world");
 
 echo json_encode($response, JSON_PRETTY_PRINT);
 ?>`
+
+const nimScript = `
+import json
+
+let request = stdin.readAll().parseJson()
+
+echo pretty(%*["hello", "world"])
+`
+
+const nimbleManifest = `
+version       = "0.1.0"
+author        = ""
+description   = ""
+license       = ""
+srcDir        = "src"
+bin           = @["lambda"]
+
+# Dependencies
+requires "nim >= 1.2.0"
+`
+
+const nimMake = `
+build:
+	nimble build
+	mkdir -p bin
+	mv -f lambda bin/
+`

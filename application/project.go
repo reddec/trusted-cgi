@@ -172,12 +172,14 @@ func (project *Project) CreateFromTemplate(ctx context.Context, template *templa
 
 	app, err := CreateApp(root, creds, template.Manifest)
 	if err != nil {
+		_ = os.RemoveAll(app.location)
 		return nil, err
 	}
 
 	for fileName, content := range template.Files {
 		err := app.WriteFile(fileName, []byte(content))
 		if err != nil {
+			_ = os.RemoveAll(app.location)
 			return nil, err
 		}
 	}
@@ -188,6 +190,12 @@ func (project *Project) CreateFromTemplate(ctx context.Context, template *templa
 			_ = os.RemoveAll(app.location)
 			return nil, err
 		}
+	}
+
+	err = app.ApplyOwner()
+	if err != nil {
+		_ = os.RemoveAll(app.location)
+		return nil, err
 	}
 
 	project.apps[uid] = app

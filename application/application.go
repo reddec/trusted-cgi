@@ -86,6 +86,10 @@ func (app *App) WriteFile(filename string, content []byte) error {
 	if err != nil {
 		return err
 	}
+	err = os.MkdirAll(filepath.Dir(f), 0755)
+	if err != nil {
+		return err
+	}
 	err = ioutil.WriteFile(f, content, 0755)
 	if err != nil {
 		return err

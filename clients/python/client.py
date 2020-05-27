@@ -46,6 +46,7 @@ class Manifest:
     tokens: 'Optional[Any]'
     post_clone: 'Optional[str]'
     aliases: 'Optional[Any]'
+    cron: 'Optional[List[Schedule]]'
 
     def to_json(self) -> dict:
         return {
@@ -67,6 +68,7 @@ class Manifest:
             "tokens": self.tokens,
             "post_clone": self.post_clone,
             "aliases": self.aliases,
+            "cron": [x.to_json() for x in self.cron],
         }
 
     @staticmethod
@@ -90,6 +92,29 @@ class Manifest:
                 tokens=payload['tokens'],
                 post_clone=payload['post_clone'],
                 aliases=payload['aliases'],
+                cron=[Schedule.from_json(x) for x in (payload['cron'] or [])],
+        )
+
+
+@dataclass
+class Schedule:
+    cron: 'str'
+    action: 'str'
+    time_limit: 'Any'
+
+    def to_json(self) -> dict:
+        return {
+            "cron": self.cron,
+            "action": self.action,
+            "time_limit": self.time_limit,
+        }
+
+    @staticmethod
+    def from_json(payload: dict) -> 'Schedule':
+        return Schedule(
+                cron=payload['cron'],
+                action=payload['action'],
+                time_limit=payload['time_limit'],
         )
 
 

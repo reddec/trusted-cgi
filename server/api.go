@@ -215,6 +215,9 @@ func (srv *apiImpl) Update(ctx context.Context, token *Token, uid string, manife
 	if app == nil {
 		return nil, fmt.Errorf("unknown app")
 	}
+	if err := manifest.Validate(); err != nil {
+		return nil, err
+	}
 	app.Manifest = manifest
 	return app, app.Manifest.SaveAs(app.ManifestFile())
 }
@@ -240,7 +243,7 @@ func (srv *apiImpl) Invoke(ctx context.Context, token *Token, uid string, action
 	if app == nil {
 		return "", fmt.Errorf("unknown app")
 	}
-	return app.InvokeAction(ctx, action)
+	return app.InvokeAction(ctx, action, 0)
 }
 
 func (srv *apiImpl) Link(ctx context.Context, token *Token, uid string, alias string) (*application.App, error) {

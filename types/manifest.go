@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/robfig/cron"
 	"os"
 	"time"
 )
@@ -25,7 +27,22 @@ type Manifest struct {
 	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
 	PostClone      string            `json:"post_clone,omitempty"`      // action (make target) name that should be invoked after clone
 	Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
-	Cron           map[string]string `json:"cron,omitempty"`            // crontab expression and action name to invoke
+	Cron           []Schedule        `json:"cron,omitempty"`            // crontab expression and action name to invoke
+}
+
+type Schedule struct {
+	Cron      string       `json:"cron"`       // crontab expression
+	Action    string       `json:"action"`     // action to invoke
+	TimeLimit JsonDuration `json:"time_limit"` // time limit to execute
+}
+
+func (mf *Manifest) Validate() error {
+	for _, entry := range mf.Cron {
+		if _, err := cron.Parse(entry.Cron); err != nil {
+			return fmt.Errorf("bad cront expression for action %s (%s): %w", entry.Action, entry.Cron, err)
+		}
+	}
+	return nil
 }
 
 func (mf *Manifest) SaveAs(filename string) error {

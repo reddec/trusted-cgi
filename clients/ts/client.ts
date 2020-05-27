@@ -36,11 +36,18 @@ export interface Manifest {
     tokens: any | null
     post_clone: string | null
     aliases: JsonStringSet | null
+    cron: Array<Schedule> | null
 }
 
 export type JsonDuration = string; // suffixes: ns, us, ms, s, m, h
 
 export interface JsonStringSet {
+}
+
+export interface Schedule {
+    cron: string
+    action: string
+    time_limit: JsonDuration
 }
 
 export interface ProjectConfig {

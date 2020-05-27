@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"syscall"
+	"time"
 )
 
 var targetsPattern = regexp.MustCompile(`^([\d\w-/]+)\s*:\s*[\d\w-/\s]*$`)
@@ -37,8 +38,15 @@ func (app *App) ListActions() ([]string, error) {
 }
 
 // Invoke action by name (make target)
-func (app *App) InvokeAction(ctx context.Context, name string) (string, error) {
+func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Duration) (string, error) {
 	var out bytes.Buffer
+
+	if timeLimit > 0 {
+		cctx, cancel := context.WithTimeout(ctx, timeLimit)
+		defer cancel()
+		ctx = cctx
+	}
+
 	cmd := exec.CommandContext(ctx, "make", name)
 	cmd.Dir = app.location
 	cmd.Stdout = &out

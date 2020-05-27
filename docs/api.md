@@ -636,6 +636,7 @@ EOF
 | tokens | `map[string]string` |  |
 | post_clone | `string` |  |
 | aliases | `JsonStringSet` |  |
+| cron | `[]Schedule` |  |
 ### Token
 
 ```go

@@ -17,16 +17,16 @@ func (project *Project) RunCron(ctx context.Context) {
 }
 
 func (app *App) RunScheduled(ctx context.Context, last, now time.Time) {
-	for expr, action := range app.Manifest.Cron {
-		sched, err := cron.Parse(expr)
+	for _, plan := range app.Manifest.Cron {
+		sched, err := cron.Parse(plan.Cron)
 		if err != nil {
-			log.Println(app.UID, expr, "-", err)
+			log.Println(app.UID, plan.Cron, "-", err)
 			continue
 		}
 		if !sched.Next(last).After(now) {
-			_, err = app.InvokeAction(ctx, action)
+			_, err = app.InvokeAction(ctx, plan.Action, time.Duration(plan.TimeLimit))
 			if err != nil {
-				log.Println(app.UID, expr, action, err)
+				log.Println(app.UID, plan.Cron, plan.Action, err)
 			}
 		}
 	}

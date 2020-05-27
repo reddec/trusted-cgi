@@ -46,6 +46,10 @@ func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Du
 		defer cancel()
 		ctx = cctx
 	}
+	environments := os.Environ()
+	for k, v := range app.Manifest.Environment {
+		environments = append(environments, k+"="+v)
+	}
 
 	cmd := exec.CommandContext(ctx, "make", name)
 	cmd.Dir = app.location
@@ -56,6 +60,8 @@ func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Du
 		Setpgid:    true,
 		Credential: app.creds,
 	}
+	cmd.Env = environments
+
 	err := cmd.Run()
 	return out.String(), err
 }

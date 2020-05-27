@@ -164,6 +164,7 @@ func (app *App) Run(ctx context.Context, tracker stats.Recorder, creds *syscall.
 	for k, v := range app.Manifest.Environment {
 		environments = append(environments, k+"="+v)
 	}
+	cmd.Env = environments
 	err = cmd.Run()
 	record.Output = result.Bytes()
 	if err != nil {

@@ -24,7 +24,7 @@ jobs:
       run: git lfs checkout
 
     - name: Pull tag
-      run: git pull --tags origin
+      run: git fetch --tags
 
     - uses: azure/docker-login@v1
       with:

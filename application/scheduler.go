@@ -24,6 +24,7 @@ func (app *App) RunScheduled(ctx context.Context, last, now time.Time) {
 			continue
 		}
 		if !sched.Next(last).After(now) {
+			log.Println("execution", app.UID, plan.Action)
 			_, err = app.InvokeAction(ctx, plan.Action, time.Duration(plan.TimeLimit))
 			if err != nil {
 				log.Println(app.UID, plan.Cron, plan.Action, err)

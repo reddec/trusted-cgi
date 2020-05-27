@@ -23,6 +23,9 @@ jobs:
     - name: Checkout LFS objects
       run: git lfs checkout
 
+    - name: Pull tag
+      run: git pull --tags origin
+
     - uses: azure/docker-login@v1
       with:
         username: 'reddec'

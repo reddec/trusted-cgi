@@ -1,10 +1,17 @@
 # Security
 
+Security checks aimed to restrict access to function to the limited group of clients.
+
 All security checks performed after application resolution. Each rule combined by AND operator.
 For example, if restrictions by IP defined as well as restrictions by Origin, both limitations will
 be applied for a client request.
 
 In case of failure the 403 Access Deny will be returned.
+
+UI:
+ 
+1. click to any created application
+2. click to security tab 
 
 ### Tokens
 

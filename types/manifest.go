@@ -25,6 +25,7 @@ type Manifest struct {
 	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
 	PostClone      string            `json:"post_clone,omitempty"`      // action (make target) name that should be invoked after clone
 	Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
+	Cron           map[string]string `json:"cron,omitempty"`            // crontab expression and action name to invoke
 }
 
 func (mf *Manifest) SaveAs(filename string) error {

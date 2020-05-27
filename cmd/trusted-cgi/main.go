@@ -28,6 +28,7 @@ type Config struct {
 	StatsCache           uint          `long:"stats-cache" env:"STATS_CACHE" description:"Maximum cache for stats" default:"8192"`
 	StatsFile            string        `long:"stats-file" env:"STATS_FILE" description:"Binary file for statistics dump" default:".stats"`
 	StatsInterval        time.Duration `long:"stats-interval" env:"STATS_INTERVAL" description:"Interval for dumping stats to file" default:"30s"`
+	SchedulerInterval    time.Duration `long:"scheduler-interval" env:"SCHEDULER_INTERVAL" description:"Interval to check cron records" default:"30s"`
 }
 
 type HttpServer struct {
@@ -110,6 +111,7 @@ func run(ctx context.Context, config Config) error {
 	if err != nil {
 		return err
 	}
+	go runScheduler(ctx, config.SchedulerInterval, project)
 
 	handler, err := srv.Handler(ctx, project, config.Templates, config.Dev, tracker)
 	if err != nil {
@@ -134,5 +136,20 @@ func dumpTracker(ctx context.Context, each time.Duration, tracker interface {
 		if err != nil {
 			log.Println("[ERROR] failed to dump statistics:", err)
 		}
+	}
+}
+
+func runScheduler(ctx context.Context, each time.Duration, runner interface {
+	RunCron(ctx context.Context)
+}) {
+	t := time.NewTicker(each)
+	defer t.Stop()
+	for {
+		select {
+		case <-t.C:
+		case <-ctx.Done():
+			return
+		}
+		runner.RunCron(ctx)
 	}
 }

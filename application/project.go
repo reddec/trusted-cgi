@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 )
 
 const (
@@ -102,12 +103,13 @@ func (project *ProjectConfig) LoadOrCreate(file string) (*Project, error) {
 
 type Project struct {
 	ProjectConfig
-	creds      *syscall.Credential
-	file       string
-	appsLock   sync.RWMutex
-	apps       map[string]*App
-	links      map[string]*App // custom path to UID
-	configLock sync.Mutex
+	creds         *syscall.Credential
+	file          string
+	appsLock      sync.RWMutex
+	lastScheduler time.Time
+	apps          map[string]*App
+	links         map[string]*App // custom path to UID
+	configLock    sync.Mutex
 }
 
 // Replace project config and do necessary updates.
@@ -161,6 +163,16 @@ func (project *Project) Create(ctx context.Context) (*App, error) {
 	return project.CreateFromTemplate(ctx, &templates.Template{
 		Manifest: types.Manifest{},
 	})
+}
+
+func (project *Project) CloneApps() []*App {
+	project.appsLock.RLock()
+	defer project.appsLock.RUnlock()
+	cp := make([]*App, 0, len(project.apps))
+	for _, app := range project.apps {
+		cp = append(cp, app)
+	}
+	return cp
 }
 
 func (project *Project) Link(uid string, alias string) (*App, error) {

@@ -171,7 +171,7 @@ func (project *Project) Link(uid string, alias string) (*App, error) {
 		return nil, fmt.Errorf("app %s not found", uid)
 	}
 	if anotherApp, ok := project.links[alias]; ok {
-		return nil, fmt.Errorf("alias %s already used by %s", alias, anotherApp)
+		return nil, fmt.Errorf("alias %s already used by %s", alias, anotherApp.UID)
 	}
 	if app.Manifest.Aliases == nil {
 		app.Manifest.Aliases = make(types.JsonStringSet)
@@ -189,7 +189,7 @@ func (project *Project) Unlink(alias string) (*App, error) {
 	defer project.appsLock.Unlock()
 	anotherApp, ok := project.links[alias]
 	if !ok {
-		return nil, fmt.Errorf("alias %s already used by %s", alias, anotherApp)
+		return nil, fmt.Errorf("alias %s is uknown", alias)
 	}
 	delete(project.links, alias)
 
@@ -331,6 +331,10 @@ func (project *Project) scanAppsToCache() error {
 	project.appsLock.Lock()
 	defer project.appsLock.Unlock()
 
+	if project.links == nil {
+		project.links = make(map[string]*App)
+	}
+
 	for _, item := range list {
 		uid := item.Name()
 		if item.IsDir() && isValidUUID(uid) {
@@ -339,6 +343,10 @@ func (project *Project) scanAppsToCache() error {
 				return fmt.Errorf("open app %s: %w", uid, err)
 			}
 			project.apps[uid] = app
+
+			for link := range app.Manifest.Aliases {
+				project.links[link] = app
+			}
 		}
 	}
 	return nil

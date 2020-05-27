@@ -248,5 +248,5 @@ func (srv *apiImpl) Link(ctx context.Context, token *Token, uid string, alias st
 }
 
 func (srv *apiImpl) Unlink(ctx context.Context, token *Token, alias string) (*application.App, error) {
-	panic("implement me")
+	return srv.project.Unlink(alias)
 }

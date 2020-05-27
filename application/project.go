@@ -171,7 +171,7 @@ func (project *Project) Link(uid string, alias string) (*App, error) {
 		return nil, fmt.Errorf("app %s not found", uid)
 	}
 	if anotherApp, ok := project.links[alias]; ok {
-		return nil, fmt.Errorf("alias %s already used by %s", alias, anotherApp.UID)
+		return nil, fmt.Errorf("alias %s already used by %s (%s)", alias, anotherApp.UID, anotherApp.Manifest.Name)
 	}
 	if app.Manifest.Aliases == nil {
 		app.Manifest.Aliases = make(types.JsonStringSet)

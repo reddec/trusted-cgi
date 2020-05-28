@@ -24,6 +24,7 @@ type Config struct {
 	InitialAdminPassword string        `long:"initial-admin-password" env:"INITIAL_ADMIN_PASSWORD" description:"Initial admin password" default:"admin"`
 	InitialChrootUser    string        `long:"initial-chroot-user" env:"INITIAL_CHROOT_USER" description:"Initial user for service" default:""`
 	DisableChroot        bool          `long:"disable-chroot" env:"DISABLE_CHROOT" description:"Disable use different user for spawn"`
+	SSHKey               string        `long:"ssh-key" env:"SSH_KEY" description:"Path to ssh key. If not empty and not exists - it will be generated" default:".id_rsa"`
 	Dev                  bool          `long:"dev" env:"DEV" description:"Enabled dev mode (disables chroot)"`
 	StatsCache           uint          `long:"stats-cache" env:"STATS_CACHE" description:"Maximum cache for stats" default:"8192"`
 	StatsFile            string        `long:"stats-file" env:"STATS_FILE" description:"Binary file for statistics dump" default:".stats"`
@@ -108,6 +109,10 @@ func run(ctx context.Context, config Config) error {
 	}
 
 	project, err := application.OpenProject(config.Dir, defCfg)
+	if err != nil {
+		return err
+	}
+	err = project.SetupSSHKey(config.SSHKey)
 	if err != nil {
 		return err
 	}

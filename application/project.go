@@ -2,7 +2,12 @@ package application
 
 import (
 	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/reddec/trusted-cgi/templates"
@@ -22,6 +27,7 @@ import (
 
 const (
 	ProjectManifest = "project.json"
+	SSHKeySize      = 3072
 )
 
 func OpenProject(location string, defaultConfig ProjectConfig) (*Project, error) {
@@ -89,12 +95,7 @@ func (project *ProjectConfig) LoadOrCreate(file string) (*Project, error) {
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
-	creds, err := srv.ProjectConfig.Credentials()
-	if err != nil {
-		return nil, err
-	}
-	srv.creds = creds
-	err = srv.scanAppsToCache()
+	err = srv.ApplyConfig(srv.ProjectConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +106,8 @@ type Project struct {
 	ProjectConfig
 	creds         *syscall.Credential
 	file          string
+	keyFile       string
+	publicKey     crypto.PublicKey
 	appsLock      sync.RWMutex
 	lastScheduler time.Time
 	apps          map[string]*App
@@ -136,7 +139,7 @@ func (project *Project) ApplyConfig(cfg ProjectConfig) error {
 	}
 
 	project.ProjectConfig = cfg
-	return nil
+	return project.unsafeScanAppsToCache()
 }
 
 // root directory to search for applications
@@ -209,6 +212,23 @@ func (project *Project) Unlink(alias string) (*App, error) {
 	return anotherApp, anotherApp.Manifest.SaveAs(anotherApp.ManifestFile())
 }
 
+func (project *Project) CreateFromGit(ctx context.Context, repo string) (*App, error) {
+	uid := uuid.New().String()
+	creds := project.Credentials()
+	root := filepath.Join(project.Root(), uid)
+
+	app, err := CreateAppGit(ctx, root, repo, project.keyFile, creds)
+	if err != nil {
+		_ = os.RemoveAll(app.location)
+		return nil, err
+	}
+
+	project.appsLock.Lock()
+	defer project.appsLock.Unlock()
+	project.unsafeAttachApp(app)
+	return app, nil
+}
+
 func (project *Project) CreateFromTemplate(ctx context.Context, template *templates.Template) (*App, error) {
 	project.appsLock.Lock()
 	defer project.appsLock.Unlock()
@@ -246,8 +266,7 @@ func (project *Project) CreateFromTemplate(ctx context.Context, template *templa
 		return nil, err
 	}
 
-	project.apps[uid] = app
-
+	project.unsafeAttachApp(app)
 	return app, nil
 }
 
@@ -334,14 +353,18 @@ func (project *Project) read() error {
 	return json.NewDecoder(f).Decode(project)
 }
 
-func (project *Project) scanAppsToCache() error {
+func (project *Project) unsafeAttachApp(app *App) {
+	project.apps[app.UID] = app
+	for alias := range app.Manifest.Aliases {
+		project.links[alias] = app
+	}
+}
+
+func (project *Project) unsafeScanAppsToCache() error {
 	list, err := ioutil.ReadDir(project.Root())
 	if err != nil {
 		return err
 	}
-
-	project.appsLock.Lock()
-	defer project.appsLock.Unlock()
 
 	if project.links == nil {
 		project.links = make(map[string]*App)
@@ -354,14 +377,60 @@ func (project *Project) scanAppsToCache() error {
 			if err != nil {
 				return fmt.Errorf("open app %s: %w", uid, err)
 			}
-			project.apps[uid] = app
 
-			for link := range app.Manifest.Aliases {
-				project.links[link] = app
-			}
+			project.unsafeAttachApp(app)
 		}
 	}
 	return nil
+}
+
+func (project *Project) SetupSSHKey(file string) error {
+	if file == "" {
+		log.Println("GIT disabled - no ssh key defined")
+		return nil
+	} else if pmdata, err := ioutil.ReadFile(file); err == nil {
+		// exists
+		info, _ := pem.Decode(pmdata)
+		priv, err := x509.ParsePKCS1PrivateKey(info.Bytes)
+		if err != nil {
+			return err
+		}
+
+		project.publicKey = priv.Public()
+	} else if os.IsNotExist(err) {
+		// generate SSH keys
+		privateKey, err := project.generateSSHKeys(file)
+		if err != nil {
+			return err
+		}
+		project.publicKey = privateKey.Public()
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (project *Project) generateSSHKeys(file string) (*rsa.PrivateKey, error) {
+	log.Println("generating ssh key to", file)
+	privateKey, err := rsa.GenerateKey(rand.Reader, SSHKeySize)
+	if err != nil {
+		return nil, err
+	}
+	pemdata := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+		},
+	)
+	err = ioutil.WriteFile(file, pemdata, 0600)
+	if err != nil {
+		return privateKey, err
+	}
+
+	if project.creds == nil {
+		return privateKey, nil
+	}
+	return privateKey, os.Chown(file, int(project.creds.Uid), int(project.creds.Gid))
 }
 
 func isValidUUID(u string) bool {

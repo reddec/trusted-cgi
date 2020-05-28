@@ -13,3 +13,10 @@ UI:
  
 1. click to any created application
 2. click to scheduler tab
+
+
+Format:
+
+`[second] [minute] [hour] [day] [month] [week]`
+
+You can use [https://crontab.guru/](https://crontab.guru/) to check, however, add seconds after test

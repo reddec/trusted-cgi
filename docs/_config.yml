@@ -1,1 +1,5 @@
 theme: jekyll-theme-minimal
+title: Trusted CGI
+description: Lightweight self-hosted lambda/applications/cgi/serverless-functions engine
+logo: assets/logo.png
+show_downloads: true

@@ -161,7 +161,7 @@ func (srv *lambdaSrv) Invoke(ctx context.Context, token *api.Token, uid string, 
 	if app == nil {
 		return "", fmt.Errorf("unknown app")
 	}
-	return app.InvokeAction(ctx, action, 0)
+	return app.InvokeAction(ctx, action, 0, srv.project.GlobalEnvironment())
 }
 
 func (srv *lambdaSrv) Link(ctx context.Context, token *api.Token, uid string, alias string) (*application.App, error) {

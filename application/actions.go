@@ -38,7 +38,7 @@ func (app *App) ListActions() ([]string, error) {
 }
 
 // Invoke action by name (make target)
-func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Duration) (string, error) {
+func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Duration, globalEnv map[string]string) (string, error) {
 	var out bytes.Buffer
 
 	if timeLimit > 0 {
@@ -47,6 +47,9 @@ func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Du
 		ctx = cctx
 	}
 	environments := os.Environ()
+	for k, v := range globalEnv {
+		environments = append(environments, k+"="+v)
+	}
 	for k, v := range app.Manifest.Environment {
 		environments = append(environments, k+"="+v)
 	}

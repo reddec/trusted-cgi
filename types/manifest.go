@@ -25,7 +25,6 @@ type Manifest struct {
 	AllowedOrigin  JsonStringSet     `json:"allowed_origin,omitempty"`  // limit incoming connections by origin header
 	Public         bool              `json:"public"`                    // if public, tokens are ignores
 	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
-	PostClone      string            `json:"post_clone,omitempty"`      // action (make target) name that should be invoked after clone
 	Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
 	Cron           []Schedule        `json:"cron,omitempty"`            // crontab expression and action name to invoke
 }

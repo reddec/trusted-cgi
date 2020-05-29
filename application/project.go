@@ -300,8 +300,8 @@ func (project *Project) CreateFromTemplate(ctx context.Context, template *templa
 		}
 	}
 
-	if template.Manifest.PostClone != "" {
-		text, err := app.InvokeAction(ctx, template.Manifest.PostClone, 0, project.config.Environment)
+	if template.PostClone != "" {
+		text, err := app.InvokeAction(ctx, template.PostClone, 0, project.config.Environment)
 		if err != nil {
 			log.Println("action run:", text)
 			_ = os.RemoveAll(app.location)

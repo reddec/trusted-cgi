@@ -27,6 +27,7 @@ func Read(filename string) (*Template, error) {
 type Template struct {
 	Description string            `json:"description" yaml:"description"`
 	Manifest    types.Manifest    `json:"manifest" yaml:"manifest"`               // manifest to copy
+	PostClone   string            `json:"post_clone,omitempty" yaml:"post_clone"` // action (make target) name that should be invoked after clone
 	Check       [][]string        `json:"check,omitempty" yaml:"check,omitempty"` // check availability (one line - one check)
 	Files       map[string]string `json:"files" yaml:"files,omitempty"`           //only for embedded
 }
@@ -111,8 +112,8 @@ Replace url to the real
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
 				},
-				PostClone: "install",
 			},
+			PostClone: "install",
 		},
 		"Node JS": {
 			Description: "Node JS basic function",
@@ -141,8 +142,8 @@ Replace url to the real
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
 				},
-				PostClone: "install",
 			},
+			PostClone: "install",
 		},
 		"PHP": {
 			Description: "PHP basic function",
@@ -186,8 +187,8 @@ Replace url to the real
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
 				},
-				PostClone: "build",
 			},
+			PostClone: "build",
 			Check: [][]string{
 				{"which", "make"},
 				{"which", "nim"},

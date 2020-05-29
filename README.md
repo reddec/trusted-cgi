@@ -9,6 +9,8 @@
 
 Lightweight self-hosted lambda/applications/cgi/serverless-functions engine. 
 
+[see docs](https://trusted-cgi.reddec.net)
+
 **Why?**
  
 Because I want to write small handlers that will be 99% of time just do nothing. I am already paying for the cheapest

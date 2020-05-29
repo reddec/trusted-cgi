@@ -1,9 +1,27 @@
 project_name: trusted-cgi
 builds:
 - main: ./cmd/trusted-cgi/main.go
+  id: server
   binary: trusted-cgi
   env:
   - CGO_ENABLED=0
+  goarch:
+    - amd64
+    - arm
+    - arm64
+  goarm:
+    - 5
+    - 6
+    - 7
+  goos:
+    - linux
+  flags:
+    - -trimpath
+- main: ./cmd/cgi-ctl
+  id: client
+  binary: cgi-ctl
+  env:
+    - CGO_ENABLED=0
   goarch:
     - amd64
     - arm
@@ -32,6 +50,7 @@ nfpms:
       - make
       - python3
       - python3-venv
+      - git
     suggests:
       - php-cli
       - nodejs

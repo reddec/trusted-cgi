@@ -1,4 +1,4 @@
-export class APIError extends Error {
+export class LambdaAPIError extends Error {
     public readonly code: number;
     public readonly details: any;
 
@@ -12,9 +12,15 @@ export class APIError extends Error {
 
 export type Token = string;
 
+export interface File {
+    is_dir: boolean
+    name: string
+}
+
 export interface App {
     uid: string
     manifest: Manifest
+    git: boolean
 }
 
 export interface Manifest {
@@ -48,26 +54,6 @@ export interface Schedule {
     cron: string
     action: string
     time_limit: JsonDuration
-}
-
-export interface ProjectConfig {
-    user: string
-    untar: Array<string> | null
-    tar: Array<string> | null
-}
-
-export interface TemplateStatus {
-    available: boolean
-}
-
-export interface Template {
-    name: string
-    description: string
-}
-
-export interface File {
-    is_dir: boolean
-    name: string
 }
 
 export interface Record {
@@ -222,15 +208,15 @@ class postExecutor {
 }
 
 /**
-
+optional public RSA key for SSH
 **/
-export class API {
+export class LambdaAPI {
 
     private __id: number;
     private __executor:rpcExecutor;
 
 
-    // Create new API handler to API.
+    // Create new API handler to LambdaAPI.
     constructor(base_url : string = 'ws://127.0.0.1:3434/u/') {
         const proto = (new URL(base_url)).protocol;
         switch (proto) {
@@ -251,96 +237,12 @@ export class API {
 
 
     /**
-    Login user by username and password. Returns signed JWT
-    **/
-    async login(login: string, password: string): Promise<Token> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.Login",
-            "id" : this.__next_id(),
-            "params" : [login, password]
-        })) as Token;
-    }
-
-    /**
-    Change password for the user
-    **/
-    async changePassword(token: Token, password: string): Promise<boolean> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.ChangePassword",
-            "id" : this.__next_id(),
-            "params" : [token, password]
-        })) as boolean;
-    }
-
-    /**
-    Create new app (lambda)
-    **/
-    async create(token: Token): Promise<App> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.Create",
-            "id" : this.__next_id(),
-            "params" : [token]
-        })) as App;
-    }
-
-    /**
-    Project configuration
-    **/
-    async config(token: Token): Promise<ProjectConfig> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.Config",
-            "id" : this.__next_id(),
-            "params" : [token]
-        })) as ProjectConfig;
-    }
-
-    /**
-    Apply new configuration and save it
-    **/
-    async apply(token: Token, config: ProjectConfig): Promise<boolean> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.Apply",
-            "id" : this.__next_id(),
-            "params" : [token, config]
-        })) as boolean;
-    }
-
-    /**
-    Get all templates without filtering
-    **/
-    async allTemplates(token: Token): Promise<Array<TemplateStatus>> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.AllTemplates",
-            "id" : this.__next_id(),
-            "params" : [token]
-        })) as Array<TemplateStatus>;
-    }
-
-    /**
-    Create new app/lambda/function using pre-defined template
-    **/
-    async createFromTemplate(token: Token, templateName: string): Promise<App> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.CreateFromTemplate",
-            "id" : this.__next_id(),
-            "params" : [token, templateName]
-        })) as App;
-    }
-
-    /**
     Upload content from .tar.gz archive to app and call Install handler (if defined)
     **/
     async upload(token: Token, uid: string, tarGz: Array<number>): Promise<boolean> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Upload",
+            "method" : "LambdaAPI.Upload",
             "id" : this.__next_id(),
             "params" : [token, uid, tarGz]
         })) as boolean;
@@ -352,7 +254,7 @@ export class API {
     async download(token: Token, uid: string): Promise<Array<number>> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Download",
+            "method" : "LambdaAPI.Download",
             "id" : this.__next_id(),
             "params" : [token, uid]
         })) as Array<number>;
@@ -364,7 +266,7 @@ export class API {
     async push(token: Token, uid: string, file: string, content: Array<number>): Promise<boolean> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Push",
+            "method" : "LambdaAPI.Push",
             "id" : this.__next_id(),
             "params" : [token, uid, file, content]
         })) as boolean;
@@ -376,22 +278,10 @@ export class API {
     async pull(token: Token, uid: string, file: string): Promise<Array<number>> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Pull",
+            "method" : "LambdaAPI.Pull",
             "id" : this.__next_id(),
             "params" : [token, uid, file]
         })) as Array<number>;
-    }
-
-    /**
-    List available apps (lambdas) in a project
-    **/
-    async list(token: Token): Promise<Array<App>> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.List",
-            "id" : this.__next_id(),
-            "params" : [token]
-        })) as Array<App>;
     }
 
     /**
@@ -400,33 +290,21 @@ export class API {
     async remove(token: Token, uid: string): Promise<boolean> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Remove",
+            "method" : "LambdaAPI.Remove",
             "id" : this.__next_id(),
             "params" : [token, uid]
         })) as boolean;
     }
 
     /**
-    Templates with filter by availability including embedded
-    **/
-    async templates(token: Token): Promise<Array<Template>> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.Templates",
-            "id" : this.__next_id(),
-            "params" : [token]
-        })) as Array<Template>;
-    }
-
-    /**
     Files in func dir
     **/
-    async files(token: Token, name: string, dir: string): Promise<Array<File>> {
+    async files(token: Token, uid: string, dir: string): Promise<Array<File>> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Files",
+            "method" : "LambdaAPI.Files",
             "id" : this.__next_id(),
-            "params" : [token, name, dir]
+            "params" : [token, uid, dir]
         })) as Array<File>;
     }
 
@@ -436,7 +314,7 @@ export class API {
     async info(token: Token, uid: string): Promise<App> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Info",
+            "method" : "LambdaAPI.Info",
             "id" : this.__next_id(),
             "params" : [token, uid]
         })) as App;
@@ -448,7 +326,7 @@ export class API {
     async update(token: Token, uid: string, manifest: Manifest): Promise<App> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Update",
+            "method" : "LambdaAPI.Update",
             "id" : this.__next_id(),
             "params" : [token, uid, manifest]
         })) as App;
@@ -460,7 +338,7 @@ export class API {
     async createFile(token: Token, uid: string, path: string, dir: boolean): Promise<boolean> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.CreateFile",
+            "method" : "LambdaAPI.CreateFile",
             "id" : this.__next_id(),
             "params" : [token, uid, path, dir]
         })) as boolean;
@@ -472,7 +350,7 @@ export class API {
     async removeFile(token: Token, uid: string, path: string): Promise<boolean> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.RemoveFile",
+            "method" : "LambdaAPI.RemoveFile",
             "id" : this.__next_id(),
             "params" : [token, uid, path]
         })) as boolean;
@@ -484,22 +362,10 @@ export class API {
     async renameFile(token: Token, uid: string, oldPath: string, newPath: string): Promise<boolean> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.RenameFile",
+            "method" : "LambdaAPI.RenameFile",
             "id" : this.__next_id(),
             "params" : [token, uid, oldPath, newPath]
         })) as boolean;
-    }
-
-    /**
-    Global last records
-    **/
-    async globalStats(token: Token, limit: number): Promise<Array<Record>> {
-        return (await this.__call({
-            "jsonrpc" : "2.0",
-            "method" : "API.GlobalStats",
-            "id" : this.__next_id(),
-            "params" : [token, limit]
-        })) as Array<Record>;
     }
 
     /**
@@ -508,7 +374,7 @@ export class API {
     async stats(token: Token, uid: string, limit: number): Promise<Array<Record>> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Stats",
+            "method" : "LambdaAPI.Stats",
             "id" : this.__next_id(),
             "params" : [token, uid, limit]
         })) as Array<Record>;
@@ -520,7 +386,7 @@ export class API {
     async actions(token: Token, uid: string): Promise<Array<string>> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Actions",
+            "method" : "LambdaAPI.Actions",
             "id" : this.__next_id(),
             "params" : [token, uid]
         })) as Array<string>;
@@ -532,7 +398,7 @@ export class API {
     async invoke(token: Token, uid: string, action: string): Promise<string> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Invoke",
+            "method" : "LambdaAPI.Invoke",
             "id" : this.__next_id(),
             "params" : [token, uid, action]
         })) as string;
@@ -544,7 +410,7 @@ export class API {
     async link(token: Token, uid: string, alias: string): Promise<App> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Link",
+            "method" : "LambdaAPI.Link",
             "id" : this.__next_id(),
             "params" : [token, uid, alias]
         })) as App;
@@ -556,7 +422,7 @@ export class API {
     async unlink(token: Token, alias: string): Promise<App> {
         return (await this.__call({
             "jsonrpc" : "2.0",
-            "method" : "API.Unlink",
+            "method" : "LambdaAPI.Unlink",
             "id" : this.__next_id(),
             "params" : [token, alias]
         })) as App;
@@ -579,7 +445,7 @@ export class API {
         }
 
         if (data.error) {
-            throw new APIError(data.error.message, data.error.code, data.error.data);
+            throw new LambdaAPIError(data.error.message, data.error.code, data.error.data);
         }
 
         return data.result;

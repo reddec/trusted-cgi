@@ -1,4 +1,4 @@
-export class APIError extends Error {
+export class LambdaAPIError extends Error {
     constructor(message, code, details) {
         super(code + ': ' + message);
         this.code = code;
@@ -6,12 +6,12 @@ export class APIError extends Error {
     }
 }
 
-export class API {
+export class LambdaAPI {
     /**
-    
+    optional public RSA key for SSH
     **/
 
-    // Create new API handler to API.
+    // Create new API handler to LambdaAPI.
     // preflightHandler (if defined) can return promise
     constructor(base_url = 'https://127.0.0.1:3434/u/', preflightHandler = null) {
         this.__url = base_url;
@@ -21,96 +21,12 @@ export class API {
 
 
     /**
-    Login user by username and password. Returns signed JWT
-    **/
-    async login(login, password){
-        return (await this.__call('Login', {
-            "jsonrpc" : "2.0",
-            "method" : "API.Login",
-            "id" : this.__next_id(),
-            "params" : [login, password]
-        }));
-    }
-
-    /**
-    Change password for the user
-    **/
-    async changePassword(token, password){
-        return (await this.__call('ChangePassword', {
-            "jsonrpc" : "2.0",
-            "method" : "API.ChangePassword",
-            "id" : this.__next_id(),
-            "params" : [token, password]
-        }));
-    }
-
-    /**
-    Create new app (lambda)
-    **/
-    async create(token){
-        return (await this.__call('Create', {
-            "jsonrpc" : "2.0",
-            "method" : "API.Create",
-            "id" : this.__next_id(),
-            "params" : [token]
-        }));
-    }
-
-    /**
-    Project configuration
-    **/
-    async config(token){
-        return (await this.__call('Config', {
-            "jsonrpc" : "2.0",
-            "method" : "API.Config",
-            "id" : this.__next_id(),
-            "params" : [token]
-        }));
-    }
-
-    /**
-    Apply new configuration and save it
-    **/
-    async apply(token, config){
-        return (await this.__call('Apply', {
-            "jsonrpc" : "2.0",
-            "method" : "API.Apply",
-            "id" : this.__next_id(),
-            "params" : [token, config]
-        }));
-    }
-
-    /**
-    Get all templates without filtering
-    **/
-    async allTemplates(token){
-        return (await this.__call('AllTemplates', {
-            "jsonrpc" : "2.0",
-            "method" : "API.AllTemplates",
-            "id" : this.__next_id(),
-            "params" : [token]
-        }));
-    }
-
-    /**
-    Create new app/lambda/function using pre-defined template
-    **/
-    async createFromTemplate(token, templateName){
-        return (await this.__call('CreateFromTemplate', {
-            "jsonrpc" : "2.0",
-            "method" : "API.CreateFromTemplate",
-            "id" : this.__next_id(),
-            "params" : [token, templateName]
-        }));
-    }
-
-    /**
     Upload content from .tar.gz archive to app and call Install handler (if defined)
     **/
     async upload(token, uid, tarGz){
         return (await this.__call('Upload', {
             "jsonrpc" : "2.0",
-            "method" : "API.Upload",
+            "method" : "LambdaAPI.Upload",
             "id" : this.__next_id(),
             "params" : [token, uid, tarGz]
         }));
@@ -122,7 +38,7 @@ export class API {
     async download(token, uid){
         return (await this.__call('Download', {
             "jsonrpc" : "2.0",
-            "method" : "API.Download",
+            "method" : "LambdaAPI.Download",
             "id" : this.__next_id(),
             "params" : [token, uid]
         }));
@@ -134,7 +50,7 @@ export class API {
     async push(token, uid, file, content){
         return (await this.__call('Push', {
             "jsonrpc" : "2.0",
-            "method" : "API.Push",
+            "method" : "LambdaAPI.Push",
             "id" : this.__next_id(),
             "params" : [token, uid, file, content]
         }));
@@ -146,21 +62,9 @@ export class API {
     async pull(token, uid, file){
         return (await this.__call('Pull', {
             "jsonrpc" : "2.0",
-            "method" : "API.Pull",
+            "method" : "LambdaAPI.Pull",
             "id" : this.__next_id(),
             "params" : [token, uid, file]
-        }));
-    }
-
-    /**
-    List available apps (lambdas) in a project
-    **/
-    async list(token){
-        return (await this.__call('List', {
-            "jsonrpc" : "2.0",
-            "method" : "API.List",
-            "id" : this.__next_id(),
-            "params" : [token]
         }));
     }
 
@@ -170,33 +74,21 @@ export class API {
     async remove(token, uid){
         return (await this.__call('Remove', {
             "jsonrpc" : "2.0",
-            "method" : "API.Remove",
+            "method" : "LambdaAPI.Remove",
             "id" : this.__next_id(),
             "params" : [token, uid]
         }));
     }
 
     /**
-    Templates with filter by availability including embedded
-    **/
-    async templates(token){
-        return (await this.__call('Templates', {
-            "jsonrpc" : "2.0",
-            "method" : "API.Templates",
-            "id" : this.__next_id(),
-            "params" : [token]
-        }));
-    }
-
-    /**
     Files in func dir
     **/
-    async files(token, name, dir){
+    async files(token, uid, dir){
         return (await this.__call('Files', {
             "jsonrpc" : "2.0",
-            "method" : "API.Files",
+            "method" : "LambdaAPI.Files",
             "id" : this.__next_id(),
-            "params" : [token, name, dir]
+            "params" : [token, uid, dir]
         }));
     }
 
@@ -206,7 +98,7 @@ export class API {
     async info(token, uid){
         return (await this.__call('Info', {
             "jsonrpc" : "2.0",
-            "method" : "API.Info",
+            "method" : "LambdaAPI.Info",
             "id" : this.__next_id(),
             "params" : [token, uid]
         }));
@@ -218,7 +110,7 @@ export class API {
     async update(token, uid, manifest){
         return (await this.__call('Update', {
             "jsonrpc" : "2.0",
-            "method" : "API.Update",
+            "method" : "LambdaAPI.Update",
             "id" : this.__next_id(),
             "params" : [token, uid, manifest]
         }));
@@ -230,7 +122,7 @@ export class API {
     async createFile(token, uid, path, dir){
         return (await this.__call('CreateFile', {
             "jsonrpc" : "2.0",
-            "method" : "API.CreateFile",
+            "method" : "LambdaAPI.CreateFile",
             "id" : this.__next_id(),
             "params" : [token, uid, path, dir]
         }));
@@ -242,7 +134,7 @@ export class API {
     async removeFile(token, uid, path){
         return (await this.__call('RemoveFile', {
             "jsonrpc" : "2.0",
-            "method" : "API.RemoveFile",
+            "method" : "LambdaAPI.RemoveFile",
             "id" : this.__next_id(),
             "params" : [token, uid, path]
         }));
@@ -254,21 +146,9 @@ export class API {
     async renameFile(token, uid, oldPath, newPath){
         return (await this.__call('RenameFile', {
             "jsonrpc" : "2.0",
-            "method" : "API.RenameFile",
+            "method" : "LambdaAPI.RenameFile",
             "id" : this.__next_id(),
             "params" : [token, uid, oldPath, newPath]
-        }));
-    }
-
-    /**
-    Global last records
-    **/
-    async globalStats(token, limit){
-        return (await this.__call('GlobalStats', {
-            "jsonrpc" : "2.0",
-            "method" : "API.GlobalStats",
-            "id" : this.__next_id(),
-            "params" : [token, limit]
         }));
     }
 
@@ -278,7 +158,7 @@ export class API {
     async stats(token, uid, limit){
         return (await this.__call('Stats', {
             "jsonrpc" : "2.0",
-            "method" : "API.Stats",
+            "method" : "LambdaAPI.Stats",
             "id" : this.__next_id(),
             "params" : [token, uid, limit]
         }));
@@ -290,7 +170,7 @@ export class API {
     async actions(token, uid){
         return (await this.__call('Actions', {
             "jsonrpc" : "2.0",
-            "method" : "API.Actions",
+            "method" : "LambdaAPI.Actions",
             "id" : this.__next_id(),
             "params" : [token, uid]
         }));
@@ -302,7 +182,7 @@ export class API {
     async invoke(token, uid, action){
         return (await this.__call('Invoke', {
             "jsonrpc" : "2.0",
-            "method" : "API.Invoke",
+            "method" : "LambdaAPI.Invoke",
             "id" : this.__next_id(),
             "params" : [token, uid, action]
         }));
@@ -314,7 +194,7 @@ export class API {
     async link(token, uid, alias){
         return (await this.__call('Link', {
             "jsonrpc" : "2.0",
-            "method" : "API.Link",
+            "method" : "LambdaAPI.Link",
             "id" : this.__next_id(),
             "params" : [token, uid, alias]
         }));
@@ -326,7 +206,7 @@ export class API {
     async unlink(token, alias){
         return (await this.__call('Unlink', {
             "jsonrpc" : "2.0",
-            "method" : "API.Unlink",
+            "method" : "LambdaAPI.Unlink",
             "id" : this.__next_id(),
             "params" : [token, alias]
         }));
@@ -358,7 +238,7 @@ export class API {
         const data = await res.json();
 
         if ('error' in data) {
-            throw new APIError(data.error.message, data.error.code, data.error.data);
+            throw new LambdaAPIError(data.error.message, data.error.code, data.error.data);
         }
 
         return data.result;

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/jessevdk/go-flags"
+	"github.com/reddec/trusted-cgi/api/services"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/server"
 	"github.com/reddec/trusted-cgi/stats/impl/memlog"
@@ -86,17 +87,10 @@ func main() {
 }
 
 func run(ctx context.Context, config Config) error {
-	srv, err := server.Open(config.Config, config.InitialAdminPassword)
-	if err != nil {
-		return err
-	}
-
 	tracker, err := memlog.NewDumped(config.StatsFile, config.StatsCache)
 	if err != nil {
 		return err
 	}
-	defer tracker.Dump()
-	go dumpTracker(ctx, config.StatsInterval, tracker)
 
 	var defCfg application.ProjectConfig
 	defCfg.User = config.InitialChrootUser
@@ -116,9 +110,20 @@ func run(ctx context.Context, config Config) error {
 	if err != nil {
 		return err
 	}
+
+	projectApi := services.NewProjectSrv(project, tracker, config.Templates)
+	lambdaApi := services.NewLambdaSrv(project, tracker)
+	userApi, err := services.CreateUserSrv(config.Config, config.InitialAdminPassword)
+	if err != nil {
+		return err
+	}
+
 	go runScheduler(ctx, config.SchedulerInterval, project)
 
-	handler, err := srv.Handler(ctx, project, config.Templates, config.Dev, tracker)
+	defer tracker.Dump()
+	go dumpTracker(ctx, config.StatsInterval, tracker)
+
+	handler, err := server.Handler(ctx, config.Dev, project, tracker, userApi, projectApi, lambdaApi, userApi)
 	if err != nil {
 		return err
 	}

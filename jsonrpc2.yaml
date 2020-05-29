@@ -1,15 +1,16 @@
 url: "https://127.0.0.1:3434/u/"
 package: jsonrpc
 custom_type_handler:
-  - '*github.com/reddec/trusted-cgi/server@Token'
-file: ./interface.go
-wrapper: "registerAPI"
-python: 'clients/python/client.py'
-js:  'clients/js/client.js'
-ts:  'clients/ts/client.ts'
+  - '*github.com/reddec/trusted-cgi/api@Token'
+file: ./../interface.go
+wrapper: "Register{{.TypeName}}"
+python: 'clients/python/{{.Generator.Name | replace "." "/"  | snakecase }}.py'
+js:  'clients/js/{{.Generator.Name | snakecase | replace "." "" }}.js'
+ts:  'clients/ts/{{.Generator.Name | snakecase | replace "." "" }}.ts'
 ts_shim_file: "tsshim.yaml"
-doc: 'docs/api.md'
-output: "./api_generated.go"
-go: 'clients/go/client.go'
-go_package: "{{.Generator.TypeName | lower}}"
+doc: 'docs/api/{{.Generator.Name | snakecase | replace "." "" }}.md'
+output: "./{{.Generator.TypeName | snakecase}}.go"
+go: './../client/{{.Generator.Name | replace "." "" | snakecase}}_client.go'
+go_package: "client"
+go_default: "Default{{.Generator.TypeName}}"
 go_linked: true

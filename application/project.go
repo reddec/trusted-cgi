@@ -48,23 +48,23 @@ type ProjectConfig struct {
 	Tar   []string `json:"tar,omitempty"`   // custom tar zcf command
 }
 
-func (project *ProjectConfig) UnTarCommand() []string {
-	if len(project.UnTar) > 0 {
-		return project.UnTar
+func (cfg *ProjectConfig) UnTarCommand() []string {
+	if len(cfg.UnTar) > 0 {
+		return cfg.UnTar
 	}
 	return []string{"tar", "zxf", "-"}
 }
 
-func (project *ProjectConfig) TarCommand() []string {
-	if len(project.Tar) > 0 {
-		return project.Tar
+func (cfg *ProjectConfig) TarCommand() []string {
+	if len(cfg.Tar) > 0 {
+		return cfg.Tar
 	}
 	return []string{"tar", "zcf", "-", "."}
 }
 
-func (project *ProjectConfig) Credentials() (*syscall.Credential, error) {
-	mappedUser := project.User
-	if project.User == "" {
+func (cfg *ProjectConfig) Credentials() (*syscall.Credential, error) {
+	mappedUser := cfg.User
+	if cfg.User == "" {
 		return nil, nil
 	}
 	cred, err := user.Lookup(mappedUser)
@@ -85,27 +85,58 @@ func (project *ProjectConfig) Credentials() (*syscall.Credential, error) {
 	}, nil
 }
 
-func (project *ProjectConfig) LoadOrCreate(file string) (*Project, error) {
-	var srv = &Project{
-		ProjectConfig: *project,
-		file:          file,
-		apps:          map[string]*App{},
-	}
-	err := srv.read()
-	if err != nil && !os.IsNotExist(err) {
+// Open project: load or create project based on config, defined parameters will be used as default
+func (cfg *ProjectConfig) LoadOrCreate(file string) (*Project, error) {
+	var saved ProjectConfig
+	err := saved.ReadFile(file)
+	if err == nil {
+		*cfg = saved
+	} else if !os.IsNotExist(err) {
 		return nil, err
 	}
-	err = srv.ApplyConfig(srv.ProjectConfig)
+
+	var srv = &Project{
+		config:     *cfg,
+		configFile: file,
+		apps:       map[string]*App{},
+		links:      map[string]*App{},
+	}
+	creds, err := cfg.Credentials()
+	if err != nil {
+		return nil, err
+	}
+	srv.creds = creds
+	err = srv.unsafeScanAppsToCache()
 	if err != nil {
 		return nil, err
 	}
 	return srv, srv.Save()
 }
 
+func (cfg *ProjectConfig) WriteFile(file string) error {
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	return enc.Encode(cfg)
+}
+
+func (cfg *ProjectConfig) ReadFile(file string) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewDecoder(f).Decode(cfg)
+}
+
 type Project struct {
-	ProjectConfig
+	configFile    string
+	config        ProjectConfig
 	creds         *syscall.Credential
-	file          string
 	keyFile       string
 	publicKey     crypto.PublicKey
 	appsLock      sync.RWMutex
@@ -115,40 +146,52 @@ type Project struct {
 	configLock    sync.Mutex
 }
 
-// Replace project config and do necessary updates.
-//
-// If user changed - update all credentials in project and in apps, apply ownership for all files
-func (project *Project) ApplyConfig(cfg ProjectConfig) error {
+func (project *Project) RunnerUser() string { return project.config.User }
+
+func (project *Project) ChangeUser(user string) error {
 	project.appsLock.Lock()
 	defer project.appsLock.Unlock()
-	if cfg.User != project.User {
-		creds, err := cfg.Credentials()
+
+	project.config.User = user
+	creds, err := project.config.Credentials()
+	if err != nil {
+		return err
+	}
+	project.creds = creds
+	for _, app := range project.apps {
+		app.creds = creds
+		err = app.ApplyOwner()
 		if err != nil {
 			return err
 		}
-
-		for _, app := range project.apps {
-			app.creds = creds
-			err = app.ApplyOwner()
-			if err != nil {
-				return err
-			}
-		}
-
-		project.creds = creds
 	}
 
-	project.ProjectConfig = cfg
-	return project.unsafeScanAppsToCache()
+	return project.config.WriteFile(project.configFile)
+}
+
+// Gets encoded public key if exists. Otherwise returns nil
+func (project *Project) PublicKey() []byte {
+	pk := project.publicKey
+	if pk == nil {
+		return nil
+	}
+	pub, ok := pk.(*rsa.PublicKey)
+	if !ok {
+		return nil
+	}
+	return pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PUBLIC KEY",
+		Bytes: x509.MarshalPKCS1PublicKey(pub),
+	})
 }
 
 // root directory to search for applications
 func (project *Project) Root() string {
-	return filepath.Dir(project.file)
+	return filepath.Dir(project.configFile)
 }
 
 func (project *Project) Save() error {
-	f, err := os.Create(project.file)
+	f, err := os.Create(project.configFile)
 	if err != nil {
 		return err
 	}
@@ -288,7 +331,7 @@ func (project *Project) Upload(ctx context.Context, uid string, tarGzBall io.Rea
 		return fmt.Errorf("no such app")
 	}
 
-	args := project.UnTarCommand()
+	args := project.config.UnTarCommand()
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -308,7 +351,7 @@ func (project *Project) Download(ctx context.Context, uid string, tarGzBall io.W
 	if app == nil {
 		return fmt.Errorf("no such app")
 	}
-	args := project.TarCommand()
+	args := project.config.TarCommand()
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = tarGzBall
@@ -342,15 +385,6 @@ func (project *Project) Remove(ctx context.Context, uid string) error {
 	}
 	project.links = links
 	return os.RemoveAll(app.location)
-}
-
-func (project *Project) read() error {
-	f, err := os.Open(project.file)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return json.NewDecoder(f).Decode(project)
 }
 
 func (project *Project) unsafeAttachApp(app *App) {

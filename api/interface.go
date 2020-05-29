@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"context"
@@ -27,31 +27,23 @@ type Template struct {
 	Description string `json:"description"`
 }
 
+type TemplateStatus struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Available   bool   `json:"available"`
+}
+
 type File struct {
 	Dir  bool   `json:"is_dir"`
 	Name string `json:"name"`
 }
 
-type TemplateStatus struct {
-	Template
-	Available bool `json:"available"`
+type Settings struct {
+	User      string `json:"user"`                 // effective user (user for run apps)
+	PublicKey string `json:"public_key,omitempty"` // optional public RSA key for SSH
 }
 
-type API interface {
-	// Login user by username and password. Returns signed JWT
-	Login(ctx context.Context, login, password string) (*Token, error)
-	// Change password for the user
-	ChangePassword(ctx context.Context, token *Token, password string) (bool, error)
-	// Create new app (lambda)
-	Create(ctx context.Context, token *Token) (*application.App, error)
-	// Project configuration
-	Config(ctx context.Context, token *Token) (*application.ProjectConfig, error)
-	// Apply new configuration and save it
-	Apply(ctx context.Context, token *Token, config application.ProjectConfig) (bool, error)
-	// Get all templates without filtering
-	AllTemplates(ctx context.Context, token *Token) ([]*TemplateStatus, error)
-	// Create new app/lambda/function using pre-defined template
-	CreateFromTemplate(ctx context.Context, token *Token, templateName string) (*application.App, error)
+type LambdaAPI interface {
 	// Upload content from .tar.gz archive to app and call Install handler (if defined)
 	Upload(ctx context.Context, token *Token, uid string, tarGz []byte) (bool, error)
 	// Download content as .tar.gz archive from app
@@ -60,14 +52,10 @@ type API interface {
 	Push(ctx context.Context, token *Token, uid string, file string, content []byte) (bool, error)
 	// Pull single file from app
 	Pull(ctx context.Context, token *Token, uid string, file string) ([]byte, error)
-	// List available apps (lambdas) in a project
-	List(ctx context.Context, token *Token) ([]*application.App, error)
 	// Remove app and call Uninstall handler (if defined)
 	Remove(ctx context.Context, token *Token, uid string) (bool, error)
-	// Templates with filter by availability including embedded
-	Templates(ctx context.Context, token *Token) ([]*Template, error)
 	// Files in func dir
-	Files(ctx context.Context, token *Token, name string, dir string) ([]*File, error)
+	Files(ctx context.Context, token *Token, uid string, dir string) ([]*File, error)
 	// Info about application
 	Info(ctx context.Context, token *Token, uid string) (*application.App, error)
 	// Update application manifest
@@ -78,8 +66,6 @@ type API interface {
 	RemoveFile(ctx context.Context, token *Token, uid string, path string) (bool, error)
 	// Rename file or directory
 	RenameFile(ctx context.Context, token *Token, uid string, oldPath, newPath string) (bool, error)
-	// Global last records
-	GlobalStats(ctx context.Context, token *Token, limit int) ([]stats.Record, error)
 	// Stats for the app
 	Stats(ctx context.Context, token *Token, uid string, limit int) ([]stats.Record, error)
 	// Actions available for the app
@@ -90,4 +76,31 @@ type API interface {
 	Link(ctx context.Context, token *Token, uid string, alias string) (*application.App, error)
 	// Remove link
 	Unlink(ctx context.Context, token *Token, alias string) (*application.App, error)
+}
+
+type ProjectAPI interface {
+	// Get global configuration
+	Config(ctx context.Context, token *Token) (*Settings, error)
+	// Change effective user
+	SetUser(ctx context.Context, token *Token, user string) (*Settings, error)
+	// Get all templates without filtering
+	AllTemplates(ctx context.Context, token *Token) ([]*TemplateStatus, error)
+	// List available apps (lambdas) in a project
+	List(ctx context.Context, token *Token) ([]*application.App, error)
+	// Templates with filter by availability including embedded
+	Templates(ctx context.Context, token *Token) ([]*Template, error)
+	// Global last records
+	Stats(ctx context.Context, token *Token, limit int) ([]stats.Record, error)
+	// Create new app (lambda)
+	Create(ctx context.Context, token *Token) (*application.App, error)
+	// Create new app/lambda/function using pre-defined template
+	CreateFromTemplate(ctx context.Context, token *Token, templateName string) (*application.App, error)
+}
+
+// User/admin profile API
+type UserAPI interface {
+	// Login user by username and password. Returns signed JWT
+	Login(ctx context.Context, login, password string) (*Token, error)
+	// Change password for the user
+	ChangePassword(ctx context.Context, token *Token, password string) (bool, error)
 }

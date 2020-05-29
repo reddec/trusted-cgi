@@ -20,10 +20,6 @@ import (
 
 // Handler for incoming requests
 func (project *Project) Handler(ctx context.Context, tracker stats.Recorder) (http.HandlerFunc, error) {
-	creds := project.Credentials()
-	if project.User == "" {
-		creds = nil //dev mode
-	}
 	return func(writer http.ResponseWriter, request *http.Request) {
 		sections := strings.SplitN(request.URL.Path, "/", 2)
 		appName := sections[0]
@@ -40,7 +36,7 @@ func (project *Project) Handler(ctx context.Context, tracker stats.Recorder) (ht
 		}
 
 		start := time.Now()
-		app.Run(ctx, tracker, creds, writer, request)
+		app.Run(ctx, tracker, writer, request)
 		end := time.Now()
 		log.Println("[INFO]", "("+appName+")", end.Sub(start))
 	}, nil
@@ -48,10 +44,6 @@ func (project *Project) Handler(ctx context.Context, tracker stats.Recorder) (ht
 
 // Handler for incoming requests
 func (project *Project) HandlerAlias(ctx context.Context, tracker stats.Recorder) (http.HandlerFunc, error) {
-	creds := project.Credentials()
-	if project.User == "" {
-		creds = nil //dev mode
-	}
 	return func(writer http.ResponseWriter, request *http.Request) {
 		sections := strings.SplitN(request.URL.Path, "/", 2)
 		appName := sections[0]
@@ -68,7 +60,7 @@ func (project *Project) HandlerAlias(ctx context.Context, tracker stats.Recorder
 		}
 
 		start := time.Now()
-		app.Run(ctx, tracker, creds, writer, request)
+		app.Run(ctx, tracker, writer, request)
 		end := time.Now()
 		log.Println("[INFO]", "("+appName+")", end.Sub(start))
 	}, nil
@@ -76,7 +68,7 @@ func (project *Project) HandlerAlias(ctx context.Context, tracker stats.Recorder
 
 // Run application with parameters defined in manifest in directory
 //
-func (app *App) Run(ctx context.Context, tracker stats.Recorder, creds *syscall.Credential, w http.ResponseWriter, r *http.Request) {
+func (app *App) Run(ctx context.Context, tracker stats.Recorder, w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var record = stats.Record{
@@ -145,7 +137,7 @@ func (app *App) Run(ctx context.Context, tracker stats.Recorder, creds *syscall.
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Pdeathsig:  syscall.SIGINT,
 		Setpgid:    true,
-		Credential: creds,
+		Credential: app.creds,
 	}
 
 	var environments = os.Environ()

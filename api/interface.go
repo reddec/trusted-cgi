@@ -39,10 +39,16 @@ type File struct {
 }
 
 type Settings struct {
-	User      string `json:"user"`                 // effective user (user for run apps)
-	PublicKey string `json:"public_key,omitempty"` // optional public RSA key for SSH
+	User        string            `json:"user"`                  // effective user (user for run apps)
+	PublicKey   string            `json:"public_key,omitempty"`  // optional public RSA key for SSH
+	Environment map[string]string `json:"environment,omitempty"` // global environment
 }
 
+type Environment struct {
+	Environment map[string]string `json:"environment,omitempty"` // global environment
+}
+
+// API for lambdas
 type LambdaAPI interface {
 	// Upload content from .tar.gz archive to app and call Install handler (if defined)
 	Upload(ctx context.Context, token *Token, uid string, tarGz []byte) (bool, error)
@@ -78,11 +84,14 @@ type LambdaAPI interface {
 	Unlink(ctx context.Context, token *Token, alias string) (*application.App, error)
 }
 
+// API for global project
 type ProjectAPI interface {
 	// Get global configuration
 	Config(ctx context.Context, token *Token) (*Settings, error)
 	// Change effective user
 	SetUser(ctx context.Context, token *Token, user string) (*Settings, error)
+	// Change global environment
+	SetEnvironment(ctx context.Context, token *Token, env Environment) (*Settings, error)
 	// Get all templates without filtering
 	AllTemplates(ctx context.Context, token *Token) ([]*TemplateStatus, error)
 	// List available apps (lambdas) in a project

@@ -48,9 +48,18 @@ func (srv *projectSrv) CreateFromTemplate(ctx context.Context, token *api.Token,
 
 func (srv *projectSrv) Config(ctx context.Context, token *api.Token) (*api.Settings, error) {
 	return &api.Settings{
-		User:      srv.project.RunnerUser(),
-		PublicKey: string(srv.project.PublicKey()),
+		User:        srv.project.RunnerUser(),
+		PublicKey:   string(srv.project.PublicKey()),
+		Environment: srv.project.GlobalEnvironment(),
 	}, nil
+}
+
+func (srv *projectSrv) SetEnvironment(ctx context.Context, token *api.Token, env api.Environment) (*api.Settings, error) {
+	err := srv.project.SetGlobalEnvironment(env.Environment)
+	if err != nil {
+		return nil, err
+	}
+	return srv.Config(ctx, token)
 }
 
 func (srv *projectSrv) SetUser(ctx context.Context, token *api.Token, user string) (*api.Settings, error) {

@@ -2,8 +2,8 @@ from aiohttp import client
 
 from dataclasses import dataclass
 
-from base64 import decodebytes, encodebytes
 from typing import Any, List, Optional
+from base64 import decodebytes, encodebytes
 
 
 
@@ -208,7 +208,7 @@ class LambdaAPIError(RuntimeError):
 
 class LambdaAPIClient:
     """
-    optional public RSA key for SSH
+    API for lambdas
     """
 
     def __init__(self, base_url: str = 'https://127.0.0.1:3434/u/', session: Optional[client.ClientSession] = None):
@@ -482,7 +482,7 @@ class LambdaAPIClient:
 
 class LambdaAPIBatch:
     """
-    optional public RSA key for SSH
+    API for lambdas
     """
 
     def __init__(self, client: LambdaAPIClient, size: int = 10):

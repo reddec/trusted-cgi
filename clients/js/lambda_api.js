@@ -8,7 +8,7 @@ export class LambdaAPIError extends Error {
 
 export class LambdaAPI {
     /**
-    optional public RSA key for SSH
+    API for lambdas
     **/
 
     // Create new API handler to LambdaAPI.

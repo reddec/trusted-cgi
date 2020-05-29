@@ -30,6 +30,12 @@ func (impl *ProjectAPIClient) SetUser(ctx context.Context, token *api.Token, use
 	return
 }
 
+// Change global environment
+func (impl *ProjectAPIClient) SetEnvironment(ctx context.Context, token *api.Token, env api.Environment) (reply *api.Settings, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.SetEnvironment", atomic.AddUint64(&impl.sequence, 1), &reply, token, env)
+	return
+}
+
 // Get all templates without filtering
 func (impl *ProjectAPIClient) AllTemplates(ctx context.Context, token *api.Token) (reply []*api.TemplateStatus, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.AllTemplates", atomic.AddUint64(&impl.sequence, 1), &reply, token)

@@ -13,9 +13,14 @@ export class ProjectAPIError extends Error {
 export interface Settings {
     user: string
     public_key: string | null
+    environment: any | null
 }
 
 export type Token = string;
+
+export interface Environment {
+    environment: any | null
+}
 
 export interface TemplateStatus {
     name: string
@@ -219,7 +224,7 @@ class postExecutor {
 }
 
 /**
-Remove link
+API for global project
 **/
 export class ProjectAPI {
 
@@ -268,6 +273,18 @@ export class ProjectAPI {
             "method" : "ProjectAPI.SetUser",
             "id" : this.__next_id(),
             "params" : [token, user]
+        })) as Settings;
+    }
+
+    /**
+    Change global environment
+    **/
+    async setEnvironment(token: Token, env: Environment): Promise<Settings> {
+        return (await this.__call({
+            "jsonrpc" : "2.0",
+            "method" : "ProjectAPI.SetEnvironment",
+            "id" : this.__next_id(),
+            "params" : [token, env]
         })) as Settings;
     }
 

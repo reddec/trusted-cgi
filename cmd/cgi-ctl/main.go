@@ -59,7 +59,12 @@ func (b Bare) Execute(args []string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile("Makefile", []byte("# Define actions here"), 0755)
+	makefile := "# define actions here\n"
+	if b.Git {
+		makefile += "update:\n\tgit pull origin master\n"
+	}
+
+	err = ioutil.WriteFile("Makefile", []byte(makefile), 0755)
 	if err != nil {
 		return err
 	}

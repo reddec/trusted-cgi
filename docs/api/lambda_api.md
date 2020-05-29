@@ -1,6 +1,6 @@
 # LambdaAPI
 
-optional public RSA key for SSH
+API for lambdas
 
 
 * [LambdaAPI.Upload](#lambdaapiupload) - Upload content from .tar.gz archive to app and call Install handler (if defined)

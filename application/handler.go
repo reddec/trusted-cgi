@@ -36,7 +36,7 @@ func (project *Project) Handler(ctx context.Context, tracker stats.Recorder) (ht
 		}
 
 		start := time.Now()
-		app.Run(ctx, tracker, writer, request)
+		app.Run(ctx, tracker, project.config.Environment, writer, request)
 		end := time.Now()
 		log.Println("[INFO]", "("+appName+")", end.Sub(start))
 	}, nil
@@ -60,7 +60,7 @@ func (project *Project) HandlerAlias(ctx context.Context, tracker stats.Recorder
 		}
 
 		start := time.Now()
-		app.Run(ctx, tracker, writer, request)
+		app.Run(ctx, tracker, project.config.Environment, writer, request)
 		end := time.Now()
 		log.Println("[INFO]", "("+appName+")", end.Sub(start))
 	}, nil
@@ -68,7 +68,11 @@ func (project *Project) HandlerAlias(ctx context.Context, tracker stats.Recorder
 
 // Run application with parameters defined in manifest in directory
 //
-func (app *App) Run(ctx context.Context, tracker stats.Recorder, w http.ResponseWriter, r *http.Request) {
+func (app *App) Run(ctx context.Context,
+	tracker stats.Recorder,
+	env map[string]string,
+	w http.ResponseWriter,
+	r *http.Request) {
 	defer r.Body.Close()
 
 	var record = stats.Record{
@@ -141,6 +145,9 @@ func (app *App) Run(ctx context.Context, tracker stats.Recorder, w http.Response
 	}
 
 	var environments = os.Environ()
+	for header, mapped := range env {
+		environments = append(environments, header+"="+mapped)
+	}
 	for header, mapped := range app.Manifest.InputHeaders {
 		environments = append(environments, mapped+"="+r.Header.Get(header))
 	}

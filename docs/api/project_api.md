@@ -1,10 +1,11 @@
 # ProjectAPI
 
-Remove link
+API for global project
 
 
 * [ProjectAPI.Config](#projectapiconfig) - Get global configuration
 * [ProjectAPI.SetUser](#projectapisetuser) - Change effective user
+* [ProjectAPI.SetEnvironment](#projectapisetenvironment) - Change global environment
 * [ProjectAPI.AllTemplates](#projectapialltemplates) - Get all templates without filtering
 * [ProjectAPI.List](#projectapilist) - List available apps (lambdas) in a project
 * [ProjectAPI.Templates](#projectapitemplates) - Templates with filter by availability including embedded
@@ -44,6 +45,7 @@ EOF
 |------|------|---------|
 | user | `string` |  |
 | public_key | `string` |  |
+| environment | `map[string]string` |  |
 ### Token
 
 ```go
@@ -81,6 +83,50 @@ EOF
 |------|------|---------|
 | user | `string` |  |
 | public_key | `string` |  |
+| environment | `map[string]string` |  |
+### Token
+
+```go
+type Token struct {
+}
+```
+
+## ProjectAPI.SetEnvironment
+
+Change global environment
+
+* Method: `ProjectAPI.SetEnvironment`
+* Returns: `*Settings`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | token | `*Token` |
+| 1 | env | `Environment` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:3434/u/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "ProjectAPI.SetEnvironment",
+    "params" : []
+}
+EOF
+```
+### Environment
+
+| Json | Type | Comment |
+|------|------|---------|
+| environment | `map[string]string` |  |
+### Settings
+
+| Json | Type | Comment |
+|------|------|---------|
+| user | `string` |  |
+| public_key | `string` |  |
+| environment | `map[string]string` |  |
 ### Token
 
 ```go

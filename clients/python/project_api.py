@@ -11,11 +11,13 @@ from base64 import decodebytes, encodebytes
 class Settings:
     user: 'str'
     public_key: 'Optional[str]'
+    environment: 'Optional[Any]'
 
     def to_json(self) -> dict:
         return {
             "user": self.user,
             "public_key": self.public_key,
+            "environment": self.environment,
         }
 
     @staticmethod
@@ -23,6 +25,23 @@ class Settings:
         return Settings(
                 user=payload['user'],
                 public_key=payload['public_key'],
+                environment=payload['environment'],
+        )
+
+
+@dataclass
+class Environment:
+    environment: 'Optional[Any]'
+
+    def to_json(self) -> dict:
+        return {
+            "environment": self.environment,
+        }
+
+    @staticmethod
+    def from_json(payload: dict) -> 'Environment':
+        return Environment(
+                environment=payload['environment'],
         )
 
 
@@ -249,7 +268,7 @@ class ProjectAPIError(RuntimeError):
 
 class ProjectAPIClient:
     """
-    Remove link
+    API for global project
     """
 
     def __init__(self, base_url: str = 'https://127.0.0.1:3434/u/', session: Optional[client.ClientSession] = None):
@@ -291,6 +310,22 @@ class ProjectAPIClient:
         payload = await response.json()
         if 'error' in payload:
             raise ProjectAPIError.from_json('set_user', payload['error'])
+        return Settings.from_json(payload['result'])
+
+    async def set_environment(self, token: Any, env: Environment) -> Settings:
+        """
+        Change global environment
+        """
+        response = await self._invoke({
+            "jsonrpc": "2.0",
+            "method": "ProjectAPI.SetEnvironment",
+            "id": self.__next_id(),
+            "params": [token, env.to_json(), ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise ProjectAPIError.from_json('set_environment', payload['error'])
         return Settings.from_json(payload['result'])
 
     async def all_templates(self, token: Any) -> List[TemplateStatus]:
@@ -411,7 +446,7 @@ class ProjectAPIClient:
 
 class ProjectAPIBatch:
     """
-    Remove link
+    API for global project
     """
 
     def __init__(self, client: ProjectAPIClient, size: int = 10):
@@ -439,6 +474,14 @@ class ProjectAPIBatch:
         """
         params = [token, user, ]
         method = "ProjectAPI.SetUser"
+        self.__add_request(method, params, lambda payload: Settings.from_json(payload))
+
+    def set_environment(self, token: Any, env: Environment):
+        """
+        Change global environment
+        """
+        params = [token, env.to_json(), ]
+        method = "ProjectAPI.SetEnvironment"
         self.__add_request(method, params, lambda payload: Settings.from_json(payload))
 
     def all_templates(self, token: Any):

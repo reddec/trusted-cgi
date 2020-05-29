@@ -208,7 +208,7 @@ class postExecutor {
 }
 
 /**
-optional public RSA key for SSH
+API for lambdas
 **/
 export class LambdaAPI {
 

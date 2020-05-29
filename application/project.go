@@ -43,9 +43,10 @@ func OpenProject(location string, defaultConfig ProjectConfig) (*Project, error)
 }
 
 type ProjectConfig struct {
-	User  string   `json:"user"`            // user that will be used for jobs
-	UnTar []string `json:"untar,omitempty"` // custom tar zxf command
-	Tar   []string `json:"tar,omitempty"`   // custom tar zcf command
+	User        string            `json:"user"`                  // user that will be used for jobs
+	UnTar       []string          `json:"untar,omitempty"`       // custom tar zxf command
+	Tar         []string          `json:"tar,omitempty"`         // custom tar zcf command
+	Environment map[string]string `json:"environment,omitempty"` // global environment
 }
 
 func (cfg *ProjectConfig) UnTarCommand() []string {
@@ -166,6 +167,19 @@ func (project *Project) ChangeUser(user string) error {
 		}
 	}
 
+	return project.config.WriteFile(project.configFile)
+}
+
+func (project *Project) GlobalEnvironment() map[string]string {
+	project.configLock.Lock()
+	defer project.configLock.Unlock()
+	return project.config.Environment
+}
+
+func (project *Project) SetGlobalEnvironment(env map[string]string) error {
+	project.configLock.Lock()
+	defer project.configLock.Unlock()
+	project.config.Environment = env
 	return project.config.WriteFile(project.configFile)
 }
 

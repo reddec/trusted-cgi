@@ -8,7 +8,7 @@ export class ProjectAPIError extends Error {
 
 export class ProjectAPI {
     /**
-    Remove link
+    API for global project
     **/
 
     // Create new API handler to ProjectAPI.
@@ -41,6 +41,18 @@ export class ProjectAPI {
             "method" : "ProjectAPI.SetUser",
             "id" : this.__next_id(),
             "params" : [token, user]
+        }));
+    }
+
+    /**
+    Change global environment
+    **/
+    async setEnvironment(token, env){
+        return (await this.__call('SetEnvironment', {
+            "jsonrpc" : "2.0",
+            "method" : "ProjectAPI.SetEnvironment",
+            "id" : this.__next_id(),
+            "params" : [token, env]
         }));
     }
 

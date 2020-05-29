@@ -83,6 +83,15 @@ initial admin password is `admin` (change it!).
 The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
 functions.
 
+# Docs and features
+
+* [Manifest](docs/manifest.md) - main and mandatory entrypoint for the lambda
+* [Actions](docs/actions.md) - arbitrary actions that could be invoked by UI or by scheduler
+* [Scheduler](docs/scheduler.md) - cron-like scheduling system to automatically call actions by time
+* [Aliases](docs/aliases.md) - permanent links and aliases/links
+* [Security](docs/security.md) - security and restrictions
+* [GIT repo](docs/git_repo.md) - using GIT repo as a function
+
 # Actions
 
 If function contains Makefile and installed make, it is possible to invoke targets over UI/API (called Actions). Useful

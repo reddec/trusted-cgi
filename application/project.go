@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -12,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/reddec/trusted-cgi/templates"
 	"github.com/reddec/trusted-cgi/types"
+	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"log"
@@ -138,7 +138,7 @@ type Project struct {
 	config        ProjectConfig
 	creds         *syscall.Credential
 	keyFile       string
-	publicKey     crypto.PublicKey
+	publicKey     ssh.PublicKey
 	appsLock      sync.RWMutex
 	lastScheduler time.Time
 	apps          map[string]*App
@@ -171,18 +171,10 @@ func (project *Project) ChangeUser(user string) error {
 
 // Gets encoded public key if exists. Otherwise returns nil
 func (project *Project) PublicKey() []byte {
-	pk := project.publicKey
-	if pk == nil {
+	if project.publicKey == nil {
 		return nil
 	}
-	pub, ok := pk.(*rsa.PublicKey)
-	if !ok {
-		return nil
-	}
-	return pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: x509.MarshalPKCS1PublicKey(pub),
-	})
+	return ssh.MarshalAuthorizedKey(project.publicKey)
 }
 
 // root directory to search for applications
@@ -262,7 +254,7 @@ func (project *Project) CreateFromGit(ctx context.Context, repo string) (*App, e
 
 	app, err := CreateAppGit(ctx, root, repo, project.keyFile, creds)
 	if err != nil {
-		_ = os.RemoveAll(app.location)
+		_ = os.RemoveAll(root)
 		return nil, err
 	}
 
@@ -429,15 +421,22 @@ func (project *Project) SetupSSHKey(file string) error {
 		if err != nil {
 			return err
 		}
-
-		project.publicKey = priv.Public()
+		project.keyFile = file
+		project.publicKey, err = ssh.NewPublicKey(priv.Public())
+		if err != nil {
+			return err
+		}
 	} else if os.IsNotExist(err) {
 		// generate SSH keys
 		privateKey, err := project.generateSSHKeys(file)
 		if err != nil {
 			return err
 		}
-		project.publicKey = privateKey.Public()
+		project.keyFile = file
+		project.publicKey, err = ssh.NewPublicKey(privateKey.Public())
+		if err != nil {
+			return err
+		}
 	} else if err != nil {
 		return err
 	}

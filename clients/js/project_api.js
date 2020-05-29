@@ -116,6 +116,18 @@ export class ProjectAPI {
         }));
     }
 
+    /**
+    Create new app/lambda/function using remote Git repo
+    **/
+    async createFromGit(token, repo){
+        return (await this.__call('CreateFromGit', {
+            "jsonrpc" : "2.0",
+            "method" : "ProjectAPI.CreateFromGit",
+            "id" : this.__next_id(),
+            "params" : [token, repo]
+        }));
+    }
+
 
 
     __next_id() {

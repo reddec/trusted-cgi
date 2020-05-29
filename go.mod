@@ -13,4 +13,5 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/tinylib/msgp v1.1.2
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31 // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 )

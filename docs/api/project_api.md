@@ -11,6 +11,7 @@ Remove link
 * [ProjectAPI.Stats](#projectapistats) - Global last records
 * [ProjectAPI.Create](#projectapicreate) - Create new app (lambda)
 * [ProjectAPI.CreateFromTemplate](#projectapicreatefromtemplate) - Create new app/lambda/function using pre-defined template
+* [ProjectAPI.CreateFromGit](#projectapicreatefromgit) - Create new app/lambda/function using remote Git repo
 
 
 
@@ -301,6 +302,44 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
     "jsonrpc" : "2.0",
     "id" : 1,
     "method" : "ProjectAPI.CreateFromTemplate",
+    "params" : []
+}
+EOF
+```
+### App
+
+| Json | Type | Comment |
+|------|------|---------|
+| uid | `string` |  |
+| manifest | `types.Manifest` |  |
+| git | `bool` |  |
+### Token
+
+```go
+type Token struct {
+}
+```
+
+## ProjectAPI.CreateFromGit
+
+Create new app/lambda/function using remote Git repo
+
+* Method: `ProjectAPI.CreateFromGit`
+* Returns: `*application.App`
+
+* Arguments:
+
+| Position | Name | Type |
+|----------|------|------|
+| 0 | token | `*Token` |
+| 1 | repo | `string` |
+
+```bash
+curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:3434/u/" <<EOF
+{
+    "jsonrpc" : "2.0",
+    "id" : 1,
+    "method" : "ProjectAPI.CreateFromGit",
     "params" : []
 }
 EOF

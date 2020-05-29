@@ -95,6 +95,8 @@ type ProjectAPI interface {
 	Create(ctx context.Context, token *Token) (*application.App, error)
 	// Create new app/lambda/function using pre-defined template
 	CreateFromTemplate(ctx context.Context, token *Token, templateName string) (*application.App, error)
+	// Create new app/lambda/function using remote Git repo
+	CreateFromGit(ctx context.Context, token *Token, repo string) (*application.App, error)
 }
 
 // User/admin profile API

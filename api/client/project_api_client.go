@@ -65,3 +65,9 @@ func (impl *ProjectAPIClient) CreateFromTemplate(ctx context.Context, token *api
 	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.CreateFromTemplate", atomic.AddUint64(&impl.sequence, 1), &reply, token, templateName)
 	return
 }
+
+// Create new app/lambda/function using remote Git repo
+func (impl *ProjectAPIClient) CreateFromGit(ctx context.Context, token *api.Token, repo string) (reply *application.App, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.CreateFromGit", atomic.AddUint64(&impl.sequence, 1), &reply, token, repo)
+	return
+}

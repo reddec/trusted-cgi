@@ -27,6 +27,10 @@ func (srv *projectSrv) Create(ctx context.Context, token *api.Token) (*applicati
 	return srv.project.Create(ctx)
 }
 
+func (srv *projectSrv) CreateFromGit(ctx context.Context, token *api.Token, repo string) (*application.App, error) {
+	return srv.project.CreateFromGit(ctx, repo)
+}
+
 func (srv *projectSrv) CreateFromTemplate(ctx context.Context, token *api.Token, templateName string) (*application.App, error) {
 	possible, err := templates.List(srv.templatesDir)
 	if err != nil {

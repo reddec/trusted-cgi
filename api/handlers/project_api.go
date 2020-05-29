@@ -174,5 +174,26 @@ func RegisterProjectAPI(router *jsonrpc2.Router, wrap api.ProjectAPI, typeHandle
 		return wrap.CreateFromTemplate(ctx, args.Arg0, args.Arg1)
 	})
 
-	return []string{"ProjectAPI.Config", "ProjectAPI.SetUser", "ProjectAPI.AllTemplates", "ProjectAPI.List", "ProjectAPI.Templates", "ProjectAPI.Stats", "ProjectAPI.Create", "ProjectAPI.CreateFromTemplate"}
+	router.RegisterFunc("ProjectAPI.CreateFromGit", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
+		var args struct {
+			Arg0 *api.Token `json:"token"`
+			Arg1 string     `json:"repo"`
+		}
+		var err error
+		if positional {
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1)
+		} else {
+			err = json.Unmarshal(params, &args)
+		}
+		if err != nil {
+			return nil, err
+		}
+		err = typeHandler.ValidateToken(ctx, args.Arg0)
+		if err != nil {
+			return nil, err
+		}
+		return wrap.CreateFromGit(ctx, args.Arg0, args.Arg1)
+	})
+
+	return []string{"ProjectAPI.Config", "ProjectAPI.SetUser", "ProjectAPI.AllTemplates", "ProjectAPI.List", "ProjectAPI.Templates", "ProjectAPI.Stats", "ProjectAPI.Create", "ProjectAPI.CreateFromTemplate", "ProjectAPI.CreateFromGit"}
 }

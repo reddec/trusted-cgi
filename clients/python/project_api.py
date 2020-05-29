@@ -389,6 +389,22 @@ class ProjectAPIClient:
             raise ProjectAPIError.from_json('create_from_template', payload['error'])
         return App.from_json(payload['result'])
 
+    async def create_from_git(self, token: Any, repo: str) -> App:
+        """
+        Create new app/lambda/function using remote Git repo
+        """
+        response = await self._invoke({
+            "jsonrpc": "2.0",
+            "method": "ProjectAPI.CreateFromGit",
+            "id": self.__next_id(),
+            "params": [token, repo, ]
+        })
+        assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
+        payload = await response.json()
+        if 'error' in payload:
+            raise ProjectAPIError.from_json('create_from_git', payload['error'])
+        return App.from_json(payload['result'])
+
     async def _invoke(self, request):
         return await self.__request('POST', self.__url, json=request)
 
@@ -471,6 +487,14 @@ class ProjectAPIBatch:
         """
         params = [token, template_name, ]
         method = "ProjectAPI.CreateFromTemplate"
+        self.__add_request(method, params, lambda payload: App.from_json(payload))
+
+    def create_from_git(self, token: Any, repo: str):
+        """
+        Create new app/lambda/function using remote Git repo
+        """
+        params = [token, repo, ]
+        method = "ProjectAPI.CreateFromGit"
         self.__add_request(method, params, lambda payload: App.from_json(payload))
 
     def __add_request(self, method: str, params, factory):

@@ -2,8 +2,8 @@ from aiohttp import client
 
 from dataclasses import dataclass
 
-from typing import Any, List, Optional
 from base64 import decodebytes, encodebytes
+from typing import Any, List, Optional
 
 
 

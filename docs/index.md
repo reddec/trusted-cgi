@@ -47,47 +47,6 @@ So, 'cause I am a developer I decided to make my own wheels ;-)
 
 # Installation
 
-## Play locally
-
-Just download and run `trusted-cgi --dev`
-
-## Direct to server (recommended)
-
-Recommended: ubuntu LTS x64 server
-
-0. Add bintray key `sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61`
-1. Download from [releases](https://github.com/reddec/trusted-cgi/releases) page, or (better) use bintray repo
-[![Download](https://api.bintray.com/packages/reddec/debian/trusted-cgi/images/download.svg)](https://bintray.com/reddec/debian/trusted-cgi/_latestVersion)
-2. `apt update` - update repos (optional since 18.04 and you used bintray repo)
-3. `apt install trusted-cgi` or for minimal `apt install --no-install-recommends trusted-cgi`  
-
-For Ubuntu (should be for all LTS)
-
-```bash
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
-echo "deb https://dl.bintray.com/reddec/debian all main" | sudo tee /etc/apt/sources.list.d/trusted-cgi.list
-sudo apt update
-sudo apt install trusted-cgi
-```
-
-Configuration files will be placed under `/etc/trusted-cgi`, functions files under `/var/trusted-cgi`,
-systemd service will be launched as `trusted-cgi` and all new services will be run under `trusted-cgi` system
-user.
-
-## Docker
-
-Notice: due to docker nature it is impossible to make restrictions by IP.
-
-* Pull image: `docker pull reddec/trusted-cgi`
-* Run for test `docker run --rm -p 3434:3434 reddec/trusted-cgi`
-
-There are several exposed parameters (see Dockerfile), however, data stored in `/data` and
-initial admin password is `admin` (change it!).
-
-The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
-functions.
-
-
 # Actions
 
 If function contains Makefile and installed make, it is possible to invoke targets over UI/API (called Actions). Useful

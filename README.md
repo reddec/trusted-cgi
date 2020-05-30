@@ -11,36 +11,17 @@ Lightweight self-hosted lambda/applications/cgi/serverless-functions engine.
 
 [see docs](https://trusted-cgi.reddec.net)
 
-**Why?**
- 
-Because I want to write small handlers that will be 99% of time just do nothing. I am already paying for the cheapest
-Digital Ocean (thanks guys for your existence) and do not want to pay additionally to Lambda providers like Google/Amazon/Azure.
+Features:
 
-I also tried self hosted solutions based on k3s but it too heavy for 1GB server (yep, it is, don't believe in marketing).
-
-So, 'cause I am a Developer I decided to make my own wheels ;-)
-
-**Idea behind**
-
-Idea came from past: CGI. In a beginning of Internet, people have being making a simple scripts that receives incoming bytes over STDIN 
-(standard input) and writes to STDOUT (standard output). The application server (aka CGI server), accepts clients,
-invokes scripts and redirects socket input/output to the script. There are a lot of details here but this is brief explanation.
-
-After more than 20 years the world spin around and arrived to the beginning: serverless functions/lambda and so on.
-It is almost CGI, except scripts became a docker containers, and we need much more servers to do the same things as before.
-
-So let's cut the corners a bit: we have a trusted developer (our self, company workers - means it's not arbitrary clients), 
-so we don't need a heavy restriction for the application, so let's throw away docker and another heavy staff.
-
-Add some piece of **security**: inbound IP, inbound origins, tokens....
-
-Add monitoring of hits and history details....
-
-Add neat Web UI file browsing with edit functions...
-
-Add playground where you can test your scripts....
-
-Add nice logo, license everything under MIT and you will get Trusted-CGI.  
+* No specific requirements: just one binary. Working "as-is"
+* One-click new lambda with public link and handler. Available immediately.
+* Rich API
+* Security: user switch, IP restrictions, Origin restrictions, tokens ....
+* Time limits
+* Permanent links (aliases)
+* Actions - independent instruction that could be run via UI/API on server
+* Scheduler: run actions in cron-tab like style
+* ... etc - [see docs](https://trusted-cgi.reddec.net) 
  
 
 # Installation

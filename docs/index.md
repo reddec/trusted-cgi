@@ -7,6 +7,9 @@
 
 Lightweight self-hosted lambda/applications/cgi/serverless-functions engine. 
 
+![Download](./assets/interaction.svg)
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/GjqhQXlOdWQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 **Idea behind**
 
@@ -29,6 +32,9 @@ so we don't need a heavy restriction for the application, so let's throw away do
 * [Security](security.md) - security and restrictions
 * [GIT repo](git_repo.md) - using GIT repo as a function
 
+**High-level components diagram**
+
+![Download](./assets/trusted-cgi-overview.svg)
 
 ## Why I did it?
  

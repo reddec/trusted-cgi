@@ -109,6 +109,7 @@ class Manifest:
     tokens: 'Optional[Any]'
     aliases: 'Optional[Any]'
     cron: 'Optional[List[Schedule]]'
+    static: 'Optional[str]'
 
     def to_json(self) -> dict:
         return {
@@ -130,6 +131,7 @@ class Manifest:
             "tokens": self.tokens,
             "aliases": self.aliases,
             "cron": [x.to_json() for x in self.cron],
+            "static": self.static,
         }
 
     @staticmethod
@@ -153,6 +155,7 @@ class Manifest:
                 tokens=payload['tokens'],
                 aliases=payload['aliases'],
                 cron=[Schedule.from_json(x) for x in (payload['cron'] or [])],
+                static=payload['static'],
         )
 
 

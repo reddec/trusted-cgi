@@ -312,6 +312,7 @@ EOF
 | tokens | `map[string]string` |  |
 | aliases | `JsonStringSet` |  |
 | cron | `[]Schedule` |  |
+| static | `string` |  |
 
 ### Token
 

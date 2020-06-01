@@ -27,6 +27,7 @@ type Manifest struct {
 	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
 	Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
 	Cron           []Schedule        `json:"cron,omitempty"`            // crontab expression and action name to invoke
+	Static         string            `json:"static,omitempty"`          // relative path to static folder
 }
 
 type Schedule struct {

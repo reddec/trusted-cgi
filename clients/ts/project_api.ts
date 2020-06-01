@@ -53,6 +53,7 @@ export interface Manifest {
     tokens: any | null
     aliases: JsonStringSet | null
     cron: Array<Schedule> | null
+    static: string | null
 }
 
 export type JsonDuration = string; // suffixes: ns, us, ms, s, m, h

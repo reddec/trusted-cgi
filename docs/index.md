@@ -52,7 +52,7 @@ Also, it is possible to scale the platform performance by just launching the sam
 with a shared file system (or docker images) with a balancer in front of it.
 
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/GjqhQXlOdWQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="https://www.youtube.com/embed/GjqhQXlOdWQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 **Idea behind**
 

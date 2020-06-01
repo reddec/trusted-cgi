@@ -22,118 +22,67 @@ Features:
 * Actions - independent instruction that could be run via UI/API on server
 * Scheduler: run actions in cron-tab like style
 * ... etc - [see docs](https://trusted-cgi.reddec.net) 
- 
 
 # Installation
 
-## Play locally
+TL;DR;
 
-Just download and run `trusted-cgi --dev`
+* for production for debian servers - use bintray repository (recommend)
+* locally or non-debian server - [download binary](https://github.com/reddec/trusted-cgi/releases) and run
+* for quick tests or for limited production - use docker image (`docker run --rm -p 3434:3434 reddec/trusted-cgi`)
 
-## Direct to server (recommended)
+See [installation manual](https://trusted-cgi.reddec.net/installation)
 
-Recommended: ubuntu LTS x64 server
+# Overview 
 
-0. Add bintray key `sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61`
-1. Download from [releases](https://github.com/reddec/trusted-cgi/releases) page, or (better) use bintray repo
-[![Download](https://api.bintray.com/packages/reddec/debian/trusted-cgi/images/download.svg)](https://bintray.com/reddec/debian/trusted-cgi/_latestVersion)
-2. `apt update` - update repos (optional since 18.04 and you used bintray repo)
-3. `apt install trusted-cgi` or for minimal `apt install --no-install-recommends trusted-cgi`  
+The process flow is quite straightforward: one light daemon in background listens for requests and launches scripts/apps
+on demand. An executable shall read standard input (stdin) for request data and write a response to standard output (stdout).
 
-For Ubuntu (should be for all LTS)
+Technically any script/application that can parse STDIN and write something to STDOUT should be capable of the execution.
 
-```bash
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
-echo "deb https://dl.bintray.com/reddec/debian all main" | sudo tee /etc/apt/sources.list.d/trusted-cgi.list
-sudo apt update
-sudo apt install trusted-cgi
-```
+Trusted-cgi designed keeping in mind that input and output data is quite small and contains structured data (json/xml),
+however, there are no restrictions on the platform itself.
 
-Configuration files will be placed under `/etc/trusted-cgi`, functions files under `/var/trusted-cgi`,
-systemd service will be launched as `trusted-cgi` and all new services will be run under `trusted-cgi` system
-user.
+Key differences with classic CGI:
 
-## Docker
+* Only request body is being piped to scripts input (CGI pipes everything, and application has to parse it by itself - it could be very not trivial and slow (it depends))
+* Request headers, form fields, and query params are pre-parsed by the platform and can be passed as an environment variable (see mapping)
+* Response headers are pre-defined in manifest
 
-Notice: due to docker nature it is impossible to make restrictions by IP.
+Due to changes, it's possible to make the simplest script with JSON input and output like this:
 
-* Pull image: `docker pull reddec/trusted-cgi`
-* Run for test `docker run --rm -p 3434:3434 reddec/trusted-cgi`
+```python
+import sys
+import json
 
-There are several exposed parameters (see Dockerfile), however, data stored in `/data` and
-initial admin password is `admin` (change it!).
+request = json.load(sys.stdin) # read and parse request
+response = ['hello', 'world']  # do some logic and make response
+json.dump(response, sys.stdout)  # send it to client
+```  
 
-The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
-functions.
+Keep in mind, the platform also adds a growing number of new features - see features.
 
-# Docs and features
+**target audience**
 
-* [Manifest](docs/manifest.md) - main and mandatory entrypoint for the lambda
-* [Actions](docs/actions.md) - arbitrary actions that could be invoked by UI or by scheduler
-* [Scheduler](docs/scheduler.md) - cron-like scheduling system to automatically call actions by time
-* [Aliases](docs/aliases.md) - permanent links and aliases/links
-* [Security](docs/security.md) - security and restrictions
-* [GIT repo](docs/git_repo.md) - using GIT repo as a function
+It's best (but not limited) for
 
-# Actions
+* for hobby projects
+* for experiments
+* for projects with a low number of requests: webhooks, scheduled processing, etc..
+* for a project working on low-end machines: raspberry pi, cheapest VPS, etc..
 
-If function contains Makefile and installed make, it is possible to invoke targets over UI/API (called Actions). Useful
-for installing dependencies or building.
+However, if your projects have overgrown the platform limitations, it should be quite easy to migrate to any other solutions, because
+most low-level details are hidden and could be replaced in a few days (basically - just wrap script to HTTP service)  
 
-# URL
+Also, it is possible to scale the platform performance by just launching the same instances of the platform
+with a shared file system (or docker images) with a balancer in front of it.
 
-Each function contains at least one URL: `<base URL>/a/<UID>` and any number of unique aliases/links `<base URL>/l/<LINK NAME>`.
 
-Links are useful to make a public links and dynamically migrate between real implementations (functions). For ex:
-you made a GitHub hook processor in Python language, than changed your mind and switched to PHP function. Instead of 
-updating link in GitHub repo (that could be a hassle if you spread it everywhere) you can change just a link.
+# Contributing
 
-Important! Security settings and restrictions will be used from new functions.
+The platform is quite simple Golang project with Vue + Quasar frontend 
+and should be easy for newcomers. Caveats and tips for backend check [here](https://trusted-cgi.reddec.net/development)
 
-# Templates
+For UI check [sub-repo](https://github.com/reddec/trusted-cgi-ui)
 
-## Embedded
-
-### Python 3
-
-Host requirements:
-
-* make
-* python3
-* python3-venv
-
-### Node
-
-Host requirements:
-
-* make
-* node
-* npm
-
-### PHP
-
-Host requirements:
-
-* php
-
-### Nim lang
-
-Host requirements:
-
-* make
-* nim
-* nimble
-
-# Development
-
-## Embedding UI
-
-```shell script
-make clean
-make embed_ui
-`
-
-## TODO
-
-* Upload/download tarball
-* CLI control
+Any PR (docs, code, styles, features, ...) will be very helpful!

@@ -16,7 +16,7 @@ ui/dist: ui/src
 update_ui:
 	cd ui && git reset --hard && git pull origin master && git lfs pull && npx quasar build
 
-regen: #json-rpc2
+regen: json-rpc2
 	go generate api/handlers/*.go
 
 embed_ui: bindata update_ui

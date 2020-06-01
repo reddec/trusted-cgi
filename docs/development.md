@@ -22,3 +22,11 @@ Requirements should be same as for UI [sub-repo](https://github.com/reddec/trust
 make clean
 make embed_ui
 ```
+
+## Regenerating API
+
+In case of API changes, generated files should also be update by following command
+
+```shell
+make regen
+```

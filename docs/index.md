@@ -9,6 +9,49 @@ Lightweight self-hosted lambda/applications/cgi/serverless-functions engine.
 
 ![Download](./assets/interaction.svg)
 
+The process flow is quite straightforward: one light daemon in background listens for requests and launches scripts/apps
+on demand. An executable shall read standard input (stdin) for request data and write a response to standard output (stdout).
+
+Technically any script/application that can parse STDIN and write something to STDOUT should be capable of the execution.
+
+Trusted-cgi designed keeping in mind that input and output data is quite small and contains structured data (json/xml),
+however, there are no restrictions on the platform itself.
+
+Key differences with classic CGI:
+
+* Only request body is being piped to scripts input (CGI pipes everything, and application has to parse it by itself - it could be very not trivial and slow (it depends))
+* Request headers, form fields, and query params are pre-parsed by the platform and can be passed as an environment variable (see mapping)
+* Response headers are pre-defined in manifest
+
+Due to changes, it's possible to make the simplest script with JSON input and output like this:
+
+```python
+import sys
+import json
+
+request = json.load(sys.stdin) # read and parse request
+response = ['hello', 'world']  # do some logic and make response
+json.dump(response, sys.stdout)  # send it to client
+```  
+
+Keep in mind, the platform also adds a growing number of new features - see features.
+
+**target audience**
+
+It's best (but not limited) for
+
+* for hobby projects
+* for experiments
+* for projects with a low number of requests: webhooks, scheduled processing, etc..
+* for a project working on low-end machines: raspberry pi, cheapest VPS, etc..
+
+However, if your projects have overgrown the platform limitations, it should be quite easy to migrate to any other solutions, because
+most low-level details are hidden and could be replaced in a few days (basically - just wrap script to HTTP service)  
+
+Also, it is possible to scale the platform performance by just launching the same instances of the platform
+with a shared file system (or docker images) with a balancer in front of it.
+
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/GjqhQXlOdWQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 **Idea behind**

@@ -36,10 +36,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## UserAPI.ChangePassword
 
@@ -69,7 +66,4 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT

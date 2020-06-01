@@ -52,10 +52,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.SetUser
 
@@ -94,10 +91,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.SetEnvironment
 
@@ -143,10 +137,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.AllTemplates
 
@@ -184,10 +175,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.List
 
@@ -225,10 +213,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.Templates
 
@@ -265,10 +250,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.Stats
 
@@ -316,10 +298,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.Create
 
@@ -357,10 +336,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.CreateFromTemplate
 
@@ -399,10 +375,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## ProjectAPI.CreateFromGit
 
@@ -441,7 +414,4 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT

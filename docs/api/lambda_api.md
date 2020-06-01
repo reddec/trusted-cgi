@@ -51,10 +51,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Download
 
@@ -84,10 +81,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Push
 
@@ -119,10 +113,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Pull
 
@@ -153,10 +144,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Remove
 
@@ -186,10 +174,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Files
 
@@ -228,10 +213,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Info
 
@@ -270,10 +252,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Update
 
@@ -337,10 +316,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.CreateFile
 
@@ -372,10 +348,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.RemoveFile
 
@@ -406,10 +379,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.RenameFile
 
@@ -441,10 +411,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Stats
 
@@ -493,10 +460,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Actions
 
@@ -526,10 +490,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Invoke
 
@@ -560,10 +521,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Link
 
@@ -603,10 +561,7 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT
 
 ## LambdaAPI.Unlink
 
@@ -645,7 +600,4 @@ EOF
 ### Token
 
 
-```go
-type Token struct {
-}
-```
+Signed JWT

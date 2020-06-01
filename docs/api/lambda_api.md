@@ -47,7 +47,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -78,7 +80,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -111,7 +115,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -143,7 +149,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -174,7 +182,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -206,13 +216,17 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### File
+
 
 | Json | Type | Comment |
 |------|------|---------|
 | is_dir | `bool` |  |
 | name | `string` |  |
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -243,14 +257,18 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### App
+
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
 | manifest | `types.Manifest` |  |
 | git | `bool` |  |
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -282,14 +300,18 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### App
+
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
 | manifest | `types.Manifest` |  |
 | git | `bool` |  |
+
 ### Manifest
+
 
 | Json | Type | Comment |
 |------|------|---------|
@@ -309,10 +331,11 @@ EOF
 | allowed_origin | `JsonStringSet` |  |
 | public | `bool` |  |
 | tokens | `map[string]string` |  |
-| post_clone | `string` |  |
 | aliases | `JsonStringSet` |  |
 | cron | `[]Schedule` |  |
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -345,7 +368,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -377,7 +402,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -410,7 +437,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -442,7 +471,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Record
+
 
 | Json | Type | Comment |
 |------|------|---------|
@@ -458,7 +489,9 @@ EOF
 | token | `string` |  |
 | begin | `time.Time` |  |
 | end | `time.Time` |  |
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -489,7 +522,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -521,7 +556,9 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -553,14 +590,18 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### App
+
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
 | manifest | `types.Manifest` |  |
 | git | `bool` |  |
+
 ### Token
+
 
 ```go
 type Token struct {
@@ -591,14 +632,18 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 }
 EOF
 ```
+
 ### App
+
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
 | manifest | `types.Manifest` |  |
 | git | `bool` |  |
+
 ### Token
+
 
 ```go
 type Token struct {

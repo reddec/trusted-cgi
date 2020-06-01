@@ -44,6 +44,7 @@ Example: for python with virtualenv with main script `app.py` it will look like:
 * **public** (optional, boolean): if false, check all requests against `tokens`
 * **aliases** (optional, array of string): aliases/links for the lambda, useful to make permanent URL, [see aliases doc](aliases.md)
 * **cron** (option, array of `Cron`): scheduled actions
+* **static** (optional, string): path to directory inside lambda to serve static files; if defined the GET and HEAD methods will not be available for handler
 
 ### Cron
 

@@ -79,6 +79,11 @@ so we don't need a heavy restriction for the application, so let's throw away do
 
 ![Download](./assets/trusted-cgi-overview.svg)
 
+**URL**
+
+Each function contains at least one URL: `<base URL>/a/<UID>` and any number of unique [aliases/links](aliases.md) `<base URL>/l/<LINK NAME>`.
+
+
 ## Why I did it?
  
 Because I want to write small handlers that will be 99% of the time just do nothing. I am already paying for the cheapest
@@ -90,65 +95,19 @@ So, 'cause I am a developer I decided to make my own wheels ;-)
 
 # Installation
 
-# Actions
+TL;DR;
 
-If function contains Makefile and installed make, it is possible to invoke targets over UI/API (called Actions). Useful
-for installing dependencies or building.
+* for production for debian servers - use bintray repository (recommend)
+* locally or non-debian server - [download binary](https://github.com/reddec/trusted-cgi/releases) and run
+* for quick tests or for limited production - use docker image (`docker run --rm -p 3434:3434 reddec/trusted-cgi`)
 
-# URL
+See [installation manual](installation.md)
 
-Each function contains at least one URL: `<base URL>/a/<UID>` and any number of unique aliases/links `<base URL>/l/<LINK NAME>`.
+# Contributing
 
-Links are useful to make a public links and dynamically migrate between real implementations (functions). For ex:
-you made a GitHub hook processor in Python language, than changed your mind and switched to PHP function. Instead of 
-updating link in GitHub repo (that could be a hassle if you spread it everywhere) you can change just a link.
+The platform is quite simple Golang project with Vue + Quasar frontend 
+and should be easy for newcomers. Caveats and tips for backend check [here](development.md)
 
-Important! Security settings and restrictions will be used from new functions.
+For UI check [sub-repo](https://github.com/reddec/trusted-cgi-ui)
 
-# Templates
-
-## Embedded
-
-### Python 3
-
-Host requirements:
-
-* make
-* python3
-* python3-venv
-
-### Node
-
-Host requirements:
-
-* make
-* node
-* npm
-
-### PHP
-
-Host requirements:
-
-* php
-
-### Nim lang
-
-Host requirements:
-
-* make
-* nim
-* nimble
-
-# Development
-
-## Embedding UI
-
-```shell script
-make clean
-make embed_ui
-`
-
-## TODO
-
-* Upload/download tarball
-* CLI control
+Any PR (docs, code, styles, features, ...) will be very helpful!

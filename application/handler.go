@@ -23,11 +23,6 @@ func (project *Project) Handler(ctx context.Context, tracker stats.Recorder) (ht
 	return func(writer http.ResponseWriter, request *http.Request) {
 		sections := strings.SplitN(request.URL.Path, "/", 2)
 		appName := sections[0]
-		if len(sections) > 1 {
-			request.URL.Path = sections[1]
-		} else {
-			request.URL.Path = "/"
-		}
 		app := project.FindApp(appName)
 
 		if app == nil {
@@ -47,11 +42,6 @@ func (project *Project) HandlerAlias(ctx context.Context, tracker stats.Recorder
 	return func(writer http.ResponseWriter, request *http.Request) {
 		sections := strings.SplitN(request.URL.Path, "/", 2)
 		appName := sections[0]
-		if len(sections) > 1 {
-			request.URL.Path = sections[1]
-		} else {
-			request.URL.Path = "/"
-		}
 		app := project.FindAppByAlias(appName)
 
 		if app == nil {
@@ -73,7 +63,8 @@ func (app *App) Run(ctx context.Context,
 	env map[string]string,
 	w http.ResponseWriter,
 	r *http.Request) {
-	defer r.Body.Close()
+	requestBody := r.Body
+	defer requestBody.Close()
 
 	var record = stats.Record{
 		UID:    app.UID,
@@ -93,6 +84,19 @@ func (app *App) Run(ctx context.Context,
 		record.Code = http.StatusForbidden
 		record.Err = "security checks failed"
 		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	if app.Manifest.Static != "" && (r.Method == http.MethodGet || r.Method == http.MethodHead) {
+		dir, err := app.File(app.Manifest.Static)
+		if err != nil {
+			record.Code = http.StatusForbidden
+			record.Err = err.Error()
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		prefix := strings.SplitN(r.URL.Path, "/", 2)[0]
+		http.StripPrefix(prefix, http.FileServer(http.Dir(dir))).ServeHTTP(w, r)
 		return
 	}
 
@@ -130,6 +134,7 @@ func (app *App) Run(ctx context.Context,
 		return
 	}
 	record.Input = inputData
+	r.Body = ioutil.NopCloser(bytes.NewReader(inputData))
 
 	var result bytes.Buffer
 

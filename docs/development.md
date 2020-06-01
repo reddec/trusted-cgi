@@ -20,10 +20,10 @@ Quick project setup:
 2. Clone project somewhere (not required only under `GOAPTH`, because the project uses modules): `git clone https://github.com/reddec/trusted-cgi.git`
 2.1 Pull LFS files: `git lfs pull`
 3. Change directory to the cloned folder (`cd trusted-cgi`) and build it: `go get -v ./cmd/...`
-4. Test that it's built and available: `trusted-cgi --help` (version should be `dev`)
+4. Test project build: `trusted-cgi --help` (version should be `dev`)
 5. Run locally: `trusted-cgi --dev`
 
-When you decide to change something and check - repeat 3, 4, 5, however it matured IDE (like Goland) it's
+When you decide to change something and check - repeat 3, 4, 5, however in a matured IDE (like Goland) it's
 possible to run `main.go` directly from UI that allows you to attach debugger if needed.
 
 This is example of my runner in Goland (nothing complicated, but change working directory to your folder out of GIT tracking)

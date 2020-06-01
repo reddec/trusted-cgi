@@ -18,7 +18,7 @@ IDE:
 
 Requirements should be same as for UI [sub-repo](https://github.com/reddec/trusted-cgi-ui)
 
-```shell script
+```shell
 make clean
 make embed_ui
 ```

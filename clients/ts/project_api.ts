@@ -51,7 +51,6 @@ export interface Manifest {
     allowed_origin: JsonStringSet | null
     public: boolean
     tokens: any | null
-    post_clone: string | null
     aliases: JsonStringSet | null
     cron: Array<Schedule> | null
 }

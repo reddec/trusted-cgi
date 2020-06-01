@@ -107,7 +107,6 @@ class Manifest:
     allowed_origin: 'Optional[Any]'
     public: 'bool'
     tokens: 'Optional[Any]'
-    post_clone: 'Optional[str]'
     aliases: 'Optional[Any]'
     cron: 'Optional[List[Schedule]]'
 
@@ -129,7 +128,6 @@ class Manifest:
             "allowed_origin": self.allowed_origin,
             "public": self.public,
             "tokens": self.tokens,
-            "post_clone": self.post_clone,
             "aliases": self.aliases,
             "cron": [x.to_json() for x in self.cron],
         }
@@ -153,7 +151,6 @@ class Manifest:
                 allowed_origin=payload['allowed_origin'],
                 public=payload['public'],
                 tokens=payload['tokens'],
-                post_clone=payload['post_clone'],
                 aliases=payload['aliases'],
                 cron=[Schedule.from_json(x) for x in (payload['cron'] or [])],
         )

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jessevdk/go-flags"
+	"github.com/reddec/trusted-cgi/cmd/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
 	"os"
@@ -16,6 +17,7 @@ type Config struct {
 	Init struct {
 		Bare Bare `command:"bare" description:"create bare template"`
 	} `command:"init" description:"initialize function in a current directory"`
+	Download download `command:"download" description:"download lambda content to the local tarball or stdout"`
 }
 
 func main() {
@@ -70,7 +72,9 @@ func (b Bare) Execute(args []string) error {
 	}
 
 	if b.Git {
-		return exec.Command("git", "init").Run()
+		gctx, closer := internal.SignalContext()
+		defer closer()
+		return exec.CommandContext(gctx, "git", "init").Run()
 	}
 	return nil
 }

@@ -5,12 +5,12 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/reddec/trusted-cgi/api/services"
 	"github.com/reddec/trusted-cgi/application"
+	"github.com/reddec/trusted-cgi/cmd/internal"
 	"github.com/reddec/trusted-cgi/server"
 	"github.com/reddec/trusted-cgi/stats/impl/memlog"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
 	"time"
 )
 
@@ -70,15 +70,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	gctx, closer := context.WithCancel(context.Background())
-	go func() {
-		c := make(chan os.Signal, 2)
-		signal.Notify(c, os.Kill, os.Interrupt)
-		for range c {
-			closer()
-			break
-		}
-	}()
+	gctx, closer := internal.SignalContext()
 	defer closer()
 	err = run(gctx, config)
 	if err != nil {

@@ -37,6 +37,7 @@ func (rl *remoteLink) Token(ctx context.Context) (*api.Token, error) {
 			return nil, err
 		}
 		rl.Password = strings.TrimSpace(string(bytePassword))
+		_, _ = fmt.Fprintln(os.Stderr)
 	}
 	return rl.Users().Login(ctx, rl.Login, rl.Password)
 }

@@ -27,6 +27,7 @@ import (
 
 const (
 	ProjectManifest = "project.json"
+	CGIIgnore       = ".cgiignore"
 	SSHKeySize      = 3072
 )
 
@@ -358,6 +359,10 @@ func (project *Project) Download(ctx context.Context, uid string, tarGzBall io.W
 		return fmt.Errorf("no such app")
 	}
 	args := project.config.TarCommand()
+	ignoreFile := filepath.Join(project.Root(), CGIIgnore)
+	if _, err := os.Stat(ignoreFile); err == nil {
+		args = append(args, "--exclude-from", ignoreFile)
+	}
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = tarGzBall

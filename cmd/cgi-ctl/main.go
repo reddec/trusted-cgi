@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jessevdk/go-flags"
+	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
@@ -18,6 +19,7 @@ type Config struct {
 		Bare Bare `command:"bare" description:"create bare template"`
 	} `command:"init" description:"initialize function in a current directory"`
 	Download download `command:"download" description:"download lambda content to the local tarball or stdout"`
+	Upload   upload   `command:"upload" description:"upload content to lambda to the remote platform"`
 }
 
 func main() {
@@ -67,6 +69,11 @@ func (b Bare) Execute(args []string) error {
 	}
 
 	err = ioutil.WriteFile("Makefile", []byte(makefile), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(application.CGIIgnore, []byte(""), 0755)
 	if err != nil {
 		return err
 	}

@@ -1,3 +1,8 @@
 /.idea
 /build-test
 /dist
+/docs/vendor
+/docs/Gemfile*
+/docs/.bundle
+/docs/_site
+/docs/.jekyll-cache

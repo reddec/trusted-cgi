@@ -1,3 +1,9 @@
+---
+layout: default
+title: Manifest
+parent: Usage
+nav_order: 0
+---
 # Manifest
 
 Manifest is the entrypoint for the server. File `manifest.json` is required for each

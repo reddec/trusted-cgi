@@ -1,5 +1,12 @@
-theme: jekyll-theme-minimal
+remote_theme: pmarsceill/just-the-docs
 title: Trusted CGI
+url: "https://trusted-cgi.reddec.net"
 description: Lightweight self-hosted lambda/applications/cgi/serverless-functions engine
-logo: assets/logo.svg
+logo: /assets/logo.svg
+permalink: pretty
 show_downloads: true
+aux_links:
+  "reddec":
+    - "https://reddec.net"
+  "GitHub":
+    - "//github.com/reddec/trusted-cgi"

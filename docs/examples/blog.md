@@ -1,3 +1,9 @@
+---
+layout: default
+title: Blog
+parent: Examples
+nav_order: 1
+---
 ## Example
 
 This is basic public comment board example: 

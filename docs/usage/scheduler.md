@@ -1,3 +1,9 @@
+---
+layout: default
+title: Scheduler
+parent: Usage
+nav_order: 4
+---
 # Scheduler
 
 Each action could be automatically called in cron-tab like style.

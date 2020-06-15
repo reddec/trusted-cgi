@@ -1,3 +1,9 @@
+---
+layout: default
+title: Security
+parent: Usage
+nav_order: 5
+---
 # Security
 
 Security checks aimed to restrict access to function to the limited group of clients.

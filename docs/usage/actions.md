@@ -1,3 +1,9 @@
+---
+layout: default
+title: Actions
+parent: Usage
+nav_order: 1
+---
 # Actions
 
 Actions is optional arbitrary commands defined in [Makefile](https://www.gnu.org/software/make/manual/make.html#Rule-Example) as targets and can be invoked

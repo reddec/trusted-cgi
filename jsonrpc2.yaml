@@ -10,6 +10,12 @@ ts:  'clients/ts/{{.Generator.Name | snakecase | replace "." "" }}.ts'
 ts_shim_file: "tsshim.yaml"
 doc: 'docs/api/{{.Generator.Name | snakecase | replace "." "" }}.md'
 doc_shim_file: "docshim.yaml"
+doc_header: |
+  ---
+  layout: default
+  title: {{.Service.Name}}
+  parent: API
+  ---
 output: "./{{.Generator.TypeName | snakecase}}.go"
 go: './../client/{{.Generator.Name | replace "." "" | snakecase}}_client.go'
 go_package: "client"

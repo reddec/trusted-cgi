@@ -1,3 +1,10 @@
+---
+layout: default
+title: Templates
+nav_order: 5
+has_children: true
+---
+
 # Templates
 
 Templates are a special kind of JSON-based files that defines a structure and base files
@@ -8,7 +15,7 @@ working directory as `.templates` and could be changed by `--templates` flag of 
 
 Name file will be a name of template (except .json).
 
-Templates could define files, [manifest](manifest), [actions](actions) to invoke after clone and required checks.
+Templates could define files, [manifest](../usage/manifest), [actions](../usage/actions) to invoke after clone and required checks.
 
 Minimal working template file:
 
@@ -23,8 +30,8 @@ Minimal working template file:
 Structure:
 
 * **description** (optional, string): short description of template
-* **manifest** (required, [Manifest](manifest.md)): manifest definition for a new lambda
-* **post_clone** (optional, string): [action](actions.md) to invoke after clone
+* **manifest** (required, [Manifest](../usage/manifest)): manifest definition for a new lambda
+* **post_clone** (optional, string): [action](../usage/actions) to invoke after clone
 * **checks** (optional, array of array of string): list of commands to invoke to check template availability (see example below)
 * **files** (optional, map of string to string): files and content in a new lambda
 
@@ -44,32 +51,7 @@ Example check to ensure that template will be available only if python3 and pip3
 
 ## Embedded
 
-### Python 3
+Most embeddable templates will be available in Docker image or via installing debian package (with
+recommended packages - installed automatically by default)
 
-Host requirements:
-
-* make
-* python3
-* python3-venv
-
-### Node
-
-Host requirements:
-
-* make
-* node
-* npm
-
-### PHP
-
-Host requirements:
-
-* php
-
-### Nim lang
-
-Host requirements:
-
-* make
-* nim
-* nimble
+List of embedded templates below:

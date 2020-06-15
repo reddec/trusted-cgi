@@ -1,3 +1,9 @@
+---
+layout: default
+title: LambdaAPI
+parent: API
+---
+
 # LambdaAPI
 
 API for lambdas

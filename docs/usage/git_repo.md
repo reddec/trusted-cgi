@@ -1,3 +1,9 @@
+---
+layout: default
+title: Git repo
+parent: Usage
+nav_order: 3
+---
 # New function from git
 
 It's possible to use Git repo as source for 

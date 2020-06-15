@@ -1,9 +1,15 @@
+---
+layout: default
+title: Static files
+parent: Usage
+nav_order: 6
+---
 # Static files
 
 Static files can be served by `GET` request from the specified folder.
 Using static serving together with lambda allows you to create dynamic service with UI (like blog or comments).
 
-To enable the feature, set in [manifest](manifest.md) field `static` to relative path to the directory with static files
+To enable the feature, set in [manifest](../../usage/manifest) field `static` to relative path to the directory with static files
  (must be subfolder of lambda directory). 
 
 If the feature enabled the GET and HEAD methods will not be available for handler (lambda).
@@ -17,4 +23,4 @@ UI:
 
 Related examples:
 
-* [blog](examples/blog.md)
+* [blog](../../examples/blog)

@@ -68,12 +68,12 @@ so we don't need a heavy restriction for the application, so let's throw away do
 
 ## Docs and features
 
-* [Manifest](manifest.md) - main and mandatory entrypoint for the lambda
-* [Actions](actions.md) - arbitrary actions that could be invoked by UI or by scheduler
-* [Scheduler](scheduler.md) - cron-like scheduling system to automatically call actions by time
-* [Aliases](aliases.md) - permanent links and aliases/links
-* [Security](security.md) - security and restrictions
-* [GIT repo](git_repo.md) - using GIT repo as a function
+* [Manifest](usage/manifest) - main and mandatory entrypoint for the lambda
+* [Actions](usage/actions) - arbitrary actions that could be invoked by UI or by scheduler
+* [Scheduler](usage/scheduler) - cron-like scheduling system to automatically call actions by time
+* [Aliases](usage/aliases) - permanent links and aliases/links
+* [Security](usage/security) - security and restrictions
+* [GIT repo](usage/git_repo) - using GIT repo as a function
 
 **High-level components diagram**
 
@@ -81,7 +81,7 @@ so we don't need a heavy restriction for the application, so let's throw away do
 
 **URL**
 
-Each function contains at least one URL: `<base URL>/a/<UID>` and any number of unique [aliases/links](aliases.md) `<base URL>/l/<LINK NAME>`.
+Each function contains at least one URL: `<base URL>/a/<UID>` and any number of unique [aliases/links](usage/aliases) `<base URL>/l/<LINK NAME>`.
 
 
 ## Why I did it?
@@ -101,12 +101,12 @@ TL;DR;
 * locally or non-debian server - [download binary](https://github.com/reddec/trusted-cgi/releases) and run
 * for quick tests or for limited production - use docker image (`docker run --rm -p 3434:3434 reddec/trusted-cgi`)
 
-See [installation manual](installation.md)
+See [installation manual](administrating/installation)
 
 # Contributing
 
 The platform is quite simple Golang project with Vue + Quasar frontend 
-and should be easy for newcomers. Caveats and tips for backend check [here](development.md)
+and should be easy for newcomers. Caveats and tips for backend check [here](development)
 
 For UI check [sub-repo](https://github.com/reddec/trusted-cgi-ui)
 

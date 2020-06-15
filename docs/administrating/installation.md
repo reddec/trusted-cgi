@@ -1,3 +1,10 @@
+---
+layout: default
+title: Installation
+parent: Administrating
+nav_order: 1
+---
+{:toc:}
 # Install
 
 TL;DR;

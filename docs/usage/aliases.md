@@ -1,3 +1,9 @@
+---
+layout: default
+title: Aliases
+parent: Usage
+nav_order: 2
+---
 # Aliases
 
 Links (or aliases) are useful to make a public links and dynamically migrate between real implementations (functions). For ex:

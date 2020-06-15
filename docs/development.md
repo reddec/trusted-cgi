@@ -1,3 +1,8 @@
+---
+layout: default
+title: Development
+nav_order: 999
+---
 # Development
 
 The project has Linux-specific features and aimed to be run in Linux ecosystem.

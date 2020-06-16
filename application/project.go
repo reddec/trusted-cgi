@@ -61,7 +61,7 @@ func (cfg *ProjectConfig) TarCommand() []string {
 	if len(cfg.Tar) > 0 {
 		return cfg.Tar
 	}
-	return []string{"tar", "zcf", "-", "."}
+	return []string{"tar", "zcf", "-"}
 }
 
 func (cfg *ProjectConfig) Credentials() (*syscall.Credential, error) {
@@ -359,10 +359,10 @@ func (project *Project) Download(ctx context.Context, uid string, tarGzBall io.W
 		return fmt.Errorf("no such app")
 	}
 	args := project.config.TarCommand()
-	ignoreFile := filepath.Join(project.Root(), CGIIgnore)
-	if _, err := os.Stat(ignoreFile); err == nil {
-		args = append(args, "--exclude-from", ignoreFile)
+	if _, err := os.Stat(filepath.Join(app.location, CGIIgnore)); err == nil {
+		args = append(args, "--exclude-from", CGIIgnore)
 	}
+	args = append(args, ".")
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = tarGzBall

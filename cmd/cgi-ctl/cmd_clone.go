@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/alecthomas/units"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	"log"
@@ -45,6 +46,7 @@ func (cmd *clone) Execute(args []string) error {
 	if err != nil {
 		return fmt.Errorf("download: %w", err)
 	}
+	log.Println("downloaded", units.Base2Bytes(len(tarball)))
 	log.Println("extract to", cmd.Output, "...")
 	untar := exec.CommandContext(ctx, "tar", "zxf", "-")
 	untar.Stderr = os.Stderr

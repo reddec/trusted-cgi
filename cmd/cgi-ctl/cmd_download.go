@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/alecthomas/units"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	"io"
 	"log"
@@ -27,7 +28,7 @@ func (cmd *download) Execute(args []string) error {
 	if err != nil {
 		return fmt.Errorf("download: %w", err)
 	}
-
+	log.Println("downloaded", units.Base2Bytes(len(tarball)))
 	var out io.Writer
 	if cmd.Output == "" {
 		cmd.Output = cmd.UID + ".tar.gz"

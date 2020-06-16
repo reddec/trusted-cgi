@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/alecthomas/units"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	"log"
@@ -54,7 +55,7 @@ func (cmd *upload) Execute([]string) error {
 	if err != nil {
 		return fmt.Errorf("login: %w", err)
 	}
-	log.Println("upload", cmd.UID, buffer.Len()/1024, "KB ...")
+	log.Println("upload", cmd.UID, units.Base2Bytes(buffer.Len()), "...")
 	_, err = cmd.Lambdas().Upload(ctx, token, cmd.UID, buffer.Bytes())
 	if err != nil {
 		return fmt.Errorf("upload: %w", err)

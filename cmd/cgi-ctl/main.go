@@ -22,6 +22,7 @@ type Config struct {
 	Download download `command:"download" description:"download lambda content to the local tarball or stdout"`
 	Upload   upload   `command:"upload" description:"upload content to lambda to the remote platform"`
 	Clone    clone    `command:"clone" description:"clone lambda to local FS and keep URL for future tracking"`
+	Do       do       `command:"do" description:"invoke actions (without actions it will print all availbe actions)"`
 }
 
 func main() {

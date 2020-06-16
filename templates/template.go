@@ -96,6 +96,7 @@ func ListEmbedded() map[string]*Template {
 				"app.py":           pythonScript,
 				"Makefile":         pythonMake,
 				"requirements.txt": "requests",
+				".cgiignore":       "venv",
 			},
 			Manifest: types.Manifest{
 				Name: "Example Python Function",
@@ -126,6 +127,7 @@ Replace url to the real
 				"app.js":       nodeJsScript,
 				"package.json": nodeJsManifest,
 				"Makefile":     nodeJsMake,
+				".cgiignore":   "node_modules",
 			},
 			Manifest: types.Manifest{
 				Name: "Example NodeJS Function",

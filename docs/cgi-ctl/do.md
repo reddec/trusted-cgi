@@ -41,7 +41,7 @@ cgi-ctl do --uid e0ed902f-4a9c-4c29-870d-f343f330b6ab --url https://example.com/
 will ask password for `admin` user and then invoke `install` action for `e0ed902f-4a9c-4c29-870d-f343f330b6ab` lambda
 
 
-For a [cloned](clone) lambda it is enough to just call `do`:
+For a [cloned](../clone) lambda it is enough to just call `do`:
 
 ```
 cgi-ctl do install

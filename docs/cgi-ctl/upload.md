@@ -17,15 +17,17 @@ Usage:
   cgi-ctl [OPTIONS] upload [upload-OPTIONS]
 
 Help Options:
-  -h, --help          Show this help message
+  -h, --help             Show this help message
 
 [upload command options]
-      -l, --login=    Login name (default: admin) [$LOGIN]
-      -p, --password= Password (default: admin) [$PASSWORD]
-      -P, --ask-pass  Get password from stdin [$ASK_PASS]
-      -u, --url=      Trusted-CGI endpoint (default: http://127.0.0.1:3434/) [$URL]
-      -o, --uid=      Lambda UID [$UID]
-          --input=    Directory (default: .) [$INPUT]
+      -l, --login=       Login name (default: admin) [$LOGIN]
+      -p, --password=    Password (default: admin) [$PASSWORD]
+      -P, --ask-pass     Get password from stdin [$ASK_PASS]
+      -u, --url=         Trusted-CGI endpoint (default: http://127.0.0.1:3434/) [$URL]
+          --ghost        Disable save credentials to user config dir [$GHOST]
+          --independent  Disable read credentials from user config dir [$INDEPENDENT]
+      -o, --uid=         Lambda UID (if empty - dirname of input will be used) [$UID]
+          --input=       Directory (default: .) [$INPUT]
 ```
 
 

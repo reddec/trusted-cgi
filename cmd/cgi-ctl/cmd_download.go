@@ -1,46 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"github.com/reddec/trusted-cgi/api"
-	"github.com/reddec/trusted-cgi/api/client"
 	"github.com/reddec/trusted-cgi/cmd/internal"
-	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"log"
 	"os"
-	"strings"
-	"syscall"
 )
-
-type remoteLink struct {
-	Login    string `short:"l" long:"login" env:"LOGIN" description:"Login name" default:"admin"`
-	Password string `short:"p" long:"password" env:"PASSWORD" description:"Password" default:"admin"`
-	AskPass  bool   `short:"P" long:"ask-pass" env:"ASK_PASS" description:"Get password from stdin"`
-	URL      string `short:"u" long:"url" env:"URL" description:"Trusted-CGI endpoint" default:"http://127.0.0.1:3434/"`
-}
-
-func (rl *remoteLink) Users() *client.UserAPIClient {
-	return &client.UserAPIClient{BaseURL: rl.URL + "u/"}
-}
-
-func (rl *remoteLink) Lambdas() *client.LambdaAPIClient {
-	return &client.LambdaAPIClient{BaseURL: rl.URL + "u/"}
-}
-
-func (rl *remoteLink) Token(ctx context.Context) (*api.Token, error) {
-	if rl.AskPass {
-		_, _ = fmt.Fprintf(os.Stderr, "Enter Password: ")
-		bytePassword, err := terminal.ReadPassword(syscall.Stdin)
-		if err != nil {
-			return nil, err
-		}
-		rl.Password = strings.TrimSpace(string(bytePassword))
-		_, _ = fmt.Fprintln(os.Stderr)
-	}
-	return rl.Users().Login(ctx, rl.Login, rl.Password)
-}
 
 type download struct {
 	remoteLink
@@ -51,7 +17,6 @@ type download struct {
 func (cmd *download) Execute(args []string) error {
 	ctx, closer := internal.SignalContext()
 	defer closer()
-	log.SetOutput(os.Stderr)
 	log.Println("login...")
 	token, err := cmd.Token(ctx)
 	if err != nil {

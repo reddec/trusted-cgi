@@ -15,15 +15,17 @@ Usage:
   cgi-ctl [OPTIONS] download [download-OPTIONS]
 
 Help Options:
-  -h, --help          Show this help message
+  -h, --help             Show this help message
 
 [download command options]
-      -l, --login=    Login name (default: admin) [$LOGIN]
-      -p, --password= Password (default: admin) [$PASSWORD]
-      -P, --ask-pass  Get password from stdin [$ASK_PASS]
-      -u, --url=      Trusted-CGI endpoint (default: http://127.0.0.1:3434/) [$URL]
-      -i, --uid=      Lambda UID [$UID]
-      -o, --output=   Output data (- means stdout, empty means as UID) [$OUTPUT]
+      -l, --login=       Login name (default: admin) [$LOGIN]
+      -p, --password=    Password (default: admin) [$PASSWORD]
+      -P, --ask-pass     Get password from stdin [$ASK_PASS]
+      -u, --url=         Trusted-CGI endpoint (default: http://127.0.0.1:3434/) [$URL]
+          --ghost        Disable save credentials to user config dir [$GHOST]
+          --independent  Disable read credentials from user config dir [$INDEPENDENT]
+      -i, --uid=         Lambda UID [$UID]
+      -o, --output=      Output data (- means stdout, empty means as UID) [$OUTPUT]
 ```
 
 **Example 1** (from local dev instance, lambda `e0ed902f-4a9c-4c29-870d-f343f330b6ab`):

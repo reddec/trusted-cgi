@@ -6,6 +6,7 @@ import (
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,10 +21,12 @@ type Config struct {
 	} `command:"init" description:"initialize function in a current directory"`
 	Download download `command:"download" description:"download lambda content to the local tarball or stdout"`
 	Upload   upload   `command:"upload" description:"upload content to lambda to the remote platform"`
+	Clone    clone    `command:"clone" description:"clone lambda to local FS and keep URL for future tracking"`
 }
 
 func main() {
 	var config Config
+	log.SetOutput(os.Stderr)
 	parser := flags.NewParser(&config, flags.Default)
 	parser.LongDescription = "Easy CGI-like server for development (helper tool)\nAuthor: Baryshnikov Aleksandr <dev@baryshnikov.net>\nVersion: " + version
 	_, err := parser.Parse()

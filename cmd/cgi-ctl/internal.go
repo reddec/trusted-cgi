@@ -140,6 +140,7 @@ func (dc *domainConfig) Read(filename string) error {
 }
 
 type controlFile struct {
+	UID string `json:"uid,omitempty"`
 	URL string `json:"url"`
 }
 
@@ -191,4 +192,27 @@ func urlJoin(base string, path ...string) string {
 		base += "/"
 	}
 	return base + strings.Join(path, "/")
+}
+
+type uidLocator struct {
+	UID string `short:"U" long:"uid" env:"UID" description:"Lambda UID" `
+}
+
+func (ul *uidLocator) parseUID() error {
+	if ul.UID != "" {
+		return nil
+	}
+	var cf controlFile
+	if err := cf.Read(controlFilename); err == nil && cf.UID != "" {
+		ul.UID = cf.UID
+		return nil
+	} else if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("parse control file: %w", err)
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("detect work dir: %w", err)
+	}
+	ul.UID = filepath.Base(wd)
+	return nil
 }

@@ -9,14 +9,13 @@ import (
 	"github.com/reddec/trusted-cgi/types"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 type alias struct {
 	remoteLink
-	UID    string `short:"o" long:"uid" env:"UID" description:"Lambda UID (if empty - dirname of input will be used)"`
-	Delete bool   `short:"d" long:"delete" env:"DELETE" description:"delete links, otherwise add"`
-	Keep   bool   `long:"keep" env:"KEEP" description:"do not update (if it exists) local manifest file"`
+	uidLocator
+	Delete bool `short:"d" long:"delete" env:"DELETE" description:"delete links, otherwise add"`
+	Keep   bool `long:"keep" env:"KEEP" description:"do not update (if it exists) local manifest file"`
 	Args   struct {
 		Aliases []string `name:"aliases" positional-arg:"alias" description:"links/aliases names"`
 	} `positional-args:"yes"`
@@ -25,12 +24,8 @@ type alias struct {
 func (cmd *alias) Execute(args []string) error {
 	ctx, closer := internal.SignalContext()
 	defer closer()
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("detect work dir: %w", err)
-	}
-	if cmd.UID == "" {
-		cmd.UID = filepath.Base(wd)
+	if err := cmd.parseUID(); err != nil {
+		return err
 	}
 	log.Println("lambda", cmd.UID)
 	log.Println("login...")

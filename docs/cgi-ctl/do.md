@@ -25,7 +25,7 @@ Help Options:
       -u, --url=         Trusted-CGI endpoint (default: http://127.0.0.1:3434/) [$URL]
           --ghost        Disable save credentials to user config dir [$GHOST]
           --independent  Disable read credentials from user config dir [$INDEPENDENT]
-      -o, --uid=         Lambda UID (if empty - dirname of input will be used) [$UID]
+      -U, --uid=         Lambda UID [$UID]
 
 [do command arguments]
   Actions:               action names

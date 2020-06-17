@@ -58,3 +58,9 @@ Example, after a `clone` operation from local dev instance:
 2. If `--ask-pass` set - ask for a password from STDIN without echo.
 3. Login and token
 4. If flag `--ghost` not set, save credentials to `~/.config/trusted-cgi-ctl/<host>`
+
+## General UID search
+
+1. Use `-U, --uid` flag if presented;
+2. Otherwise, read `.cgictl.json` file is exists and use `uid` field (if not empty);
+3. Otherwise, Use current directory name as UI

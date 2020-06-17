@@ -58,6 +58,7 @@ func (cmd *clone) Execute(args []string) error {
 
 	var cf controlFile
 	cf.URL = cmd.URL
+	cf.UID = cmd.UID
 	err = cf.Save(controlFilename)
 	if err != nil {
 		return fmt.Errorf("save control file: %w", err)

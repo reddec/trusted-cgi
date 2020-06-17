@@ -9,32 +9,24 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 type upload struct {
 	remoteLink
-	UID   string `short:"o" long:"uid" env:"UID" description:"Lambda UID (if empty - dirname of input will be used)"`
+	uidLocator
 	Input string `long:"input" env:"INPUT" description:"Directory" default:"."`
 }
 
 func (cmd *upload) Execute([]string) error {
 	ctx, closer := internal.SignalContext()
 	defer closer()
-
-	wd, err := filepath.Abs(cmd.Input)
-	if err != nil {
-		return fmt.Errorf("detect abs path: %w", err)
-	}
-	if cmd.UID == "" {
-		cmd.UID = filepath.Base(wd)
-	}
-
-	err = os.Chdir(wd)
+	err := os.Chdir(cmd.Input)
 	if err != nil {
 		return fmt.Errorf("change dir: %w", err)
 	}
-
+	if err := cmd.parseUID(); err != nil {
+		return err
+	}
 	var buffer = &bytes.Buffer{}
 	log.SetOutput(os.Stderr)
 	log.Println("archiving...")

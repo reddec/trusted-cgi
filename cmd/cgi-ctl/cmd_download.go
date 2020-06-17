@@ -11,13 +11,16 @@ import (
 
 type download struct {
 	remoteLink
-	UID    string `short:"i" long:"uid" env:"UID" description:"Lambda UID" required:"yes"`
+	uidLocator
 	Output string `short:"o" long:"output" env:"OUTPUT" description:"Output data (- means stdout, empty means as UID)" default:""`
 }
 
 func (cmd *download) Execute(args []string) error {
 	ctx, closer := internal.SignalContext()
 	defer closer()
+	if err := cmd.parseUID(); err != nil {
+		return err
+	}
 	log.Println("login...")
 	token, err := cmd.Token(ctx)
 	if err != nil {

@@ -4,35 +4,37 @@ import (
 	"fmt"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	internal2 "github.com/reddec/trusted-cgi/internal"
+	"github.com/reddec/trusted-cgi/types"
 	"log"
 )
 
-type updateManifest struct {
+type apply struct {
 	remoteLink
 	uidLocator
 }
 
-func (cmd *updateManifest) Execute(args []string) error {
+func (cmd *apply) Execute(args []string) error {
 	ctx, closer := internal.SignalContext()
 	defer closer()
 	if err := cmd.parseUID(); err != nil {
 		return err
 	}
 	log.Println("lambda", cmd.UID)
+
+	var manifest types.Manifest
+	if err := manifest.LoadFrom(internal2.ManifestFile); err != nil {
+		return fmt.Errorf("load local manifest: %w", err)
+	}
+
 	log.Println("login...")
 	token, err := cmd.Token(ctx)
 	if err != nil {
 		return fmt.Errorf("login: %w", err)
 	}
-	log.Println("getting info...")
-	info, err := cmd.Lambdas().Info(ctx, token, cmd.UID)
+	log.Println("pushing manifest...")
+	_, err = cmd.Lambdas().Update(ctx, token, cmd.UID, manifest)
 	if err != nil {
-		return fmt.Errorf("get info: %w", err)
-	}
-	log.Println("saving...")
-	err = info.Manifest.SaveAs(internal2.ManifestFile)
-	if err != nil {
-		return fmt.Errorf("update manifest file: %w", err)
+		return fmt.Errorf("update remote manifest: %w", err)
 	}
 	log.Println("done")
 	return nil

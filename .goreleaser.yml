@@ -32,6 +32,8 @@ builds:
     - 7
   goos:
     - linux
+    - windows
+    - darwin
   flags:
     - -trimpath
 nfpms:
@@ -78,17 +80,34 @@ archives:
 - replacements:
     Linux: linux
     386: i386
+    windows: ctl_windows
+    darwin: ctl_darwin
   name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
   files:
     - LICENSE
     - README.md
   format: tar.gz
+  format_overrides:
+    - goos: windows
+      format: zip
 dockers:
-  - image_templates:
+  - binaries:
+      - trusted-cgi
+    dockerfile: Dockerfile
+    image_templates:
       - "reddec/trusted-cgi:{{ .Tag }}"
       - "reddec/trusted-cgi:v{{ .Major }}"
       - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}"
       - "reddec/trusted-cgi:latest"
+
+  - binaries:
+      - trusted-cgi
+    dockerfile: Dockerfile.minimal
+    image_templates:
+      - "reddec/trusted-cgi:{{ .Tag }}-light"
+      - "reddec/trusted-cgi:v{{ .Major }}-light"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light"
+      - "reddec/trusted-cgi:latest-light"
 checksum:
   name_template: 'checksums.txt'
 snapshot:

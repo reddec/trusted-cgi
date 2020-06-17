@@ -5,6 +5,9 @@ nav_order: 600
 has_children: true
 ---
 
+It's not required to use only `cgi-ctl`. The comprehensive web UI provides rich and complete experience for developers and 
+helps to explore, code and test lambda functions directly from a browser.
+
 `cgi-ctl` command aims to be a tool for helping developers interact with the platform without web UI.
 
 `cgi-ctl` includes into distribution starting from version 0.3.1 and could be obtained independently
@@ -62,5 +65,5 @@ Example, after a `clone` operation from local dev instance:
 ## General UID search
 
 1. Use `-U, --uid` flag if presented;
-2. Otherwise, read `.cgictl.json` file is exists and use `uid` field (if not empty);
+2. Otherwise, read `.cgictl.json` file if exists and use `uid` field (if not empty);
 3. Otherwise, Use current directory name as UI

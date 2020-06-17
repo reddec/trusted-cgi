@@ -75,6 +75,11 @@ so we don't need a heavy restriction for the application, so let's throw away do
 * [Security](usage/security) - security and restrictions
 * [GIT repo](usage/git_repo) - using GIT repo as a function
 
+Before version `1.<minor>.<patch>` only the same version of `trusted-cgi` and `cgi-ctl` will guaranteed work. Different versions of
+server and client binaries may work or may not work.
+
+As soon as project will reach major version, within one minor version but different patch number client and server tools must work properly. 
+
 **High-level components diagram**
 
 ![Download](./assets/trusted-cgi-overview.svg)

@@ -13,7 +13,7 @@ import (
 
 type clone struct {
 	remoteLink
-	UID    string `short:"i" long:"uid" env:"UID" description:"Lambda UID" required:"yes"`
+	UID    string `short:"U" long:"uid" env:"UID" description:"Lambda UID" required:"yes"`
 	Output string `short:"o" long:"output" env:"OUTPUT" description:"Output directory (empty - same as UID)" default:""`
 }
 

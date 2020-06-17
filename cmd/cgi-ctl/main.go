@@ -18,6 +18,9 @@ type Config struct {
 	Do       do       `command:"do" description:"invoke actions (without actions it will print all available actions)"`
 	Create   create   `command:"create" description:"create new lambda on the remote platform and initialize local environment"`
 	Alias    alias    `command:"alias" description:"list, created or remove alias for the lambda"`
+	Update   struct {
+		Manifest updateManifest `command:"manifest" description:"pull and save remote manifest file"`
+	} `command:"update" description:"update parts of the lambda"`
 }
 
 func main() {

@@ -50,6 +50,9 @@ initial admin password is `admin` (change it!).
 The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
 functions.
 
+There is light (around 8MB) docker image: `reddec/trusted-cgi:latest-light`. It contains only minimal set of pre-installed
+packages and could be useful to run pre-compiled binary functions or shell lambdas. Or to use as a base image. 
+
 ## From source
 
 Requirements:

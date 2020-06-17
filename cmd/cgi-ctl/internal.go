@@ -7,14 +7,12 @@ import (
 	"fmt"
 	"github.com/reddec/trusted-cgi/api"
 	"github.com/reddec/trusted-cgi/api/client"
-	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 const (
@@ -59,7 +57,7 @@ func (rl *remoteLink) Token(ctx context.Context) (*api.Token, error) {
 	}
 	if rl.AskPass {
 		_, _ = fmt.Fprintf(os.Stderr, "Enter Password: ")
-		bytePassword, err := terminal.ReadPassword(syscall.Stdin)
+		bytePassword, err := AskPass()
 		if err != nil {
 			return nil, err
 		}

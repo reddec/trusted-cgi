@@ -85,15 +85,15 @@ func (srv *lambdaSrv) Files(ctx context.Context, token *api.Token, uid string, d
 	return ans, nil
 }
 
-func (srv *lambdaSrv) Info(ctx context.Context, token *api.Token, uid string) (*application.App, error) {
+func (srv *lambdaSrv) Info(ctx context.Context, token *api.Token, uid string) (*types.App, error) {
 	app := srv.project.FindApp(uid)
 	if app == nil {
 		return nil, fmt.Errorf("unknown app")
 	}
-	return app, nil
+	return &app.App, nil
 }
 
-func (srv *lambdaSrv) Update(ctx context.Context, token *api.Token, uid string, manifest types.Manifest) (*application.App, error) {
+func (srv *lambdaSrv) Update(ctx context.Context, token *api.Token, uid string, manifest types.Manifest) (*types.App, error) {
 	app := srv.project.FindApp(uid)
 	if app == nil {
 		return nil, fmt.Errorf("unknown app")
@@ -102,7 +102,7 @@ func (srv *lambdaSrv) Update(ctx context.Context, token *api.Token, uid string, 
 		return nil, err
 	}
 	app.Manifest = manifest
-	return app, app.Manifest.SaveAs(app.ManifestFile())
+	return &app.App, app.Manifest.SaveAs(app.ManifestFile())
 }
 
 func (srv *lambdaSrv) CreateFile(ctx context.Context, token *api.Token, uid string, path string, dir bool) (bool, error) {
@@ -164,10 +164,18 @@ func (srv *lambdaSrv) Invoke(ctx context.Context, token *api.Token, uid string, 
 	return app.InvokeAction(ctx, action, 0, srv.project.GlobalEnvironment())
 }
 
-func (srv *lambdaSrv) Link(ctx context.Context, token *api.Token, uid string, alias string) (*application.App, error) {
-	return srv.project.Link(uid, alias)
+func (srv *lambdaSrv) Link(ctx context.Context, token *api.Token, uid string, alias string) (*types.App, error) {
+	app, err := srv.project.Link(uid, alias)
+	if err != nil {
+		return nil, err
+	}
+	return &app.App, nil
 }
 
-func (srv *lambdaSrv) Unlink(ctx context.Context, token *api.Token, alias string) (*application.App, error) {
-	return srv.project.Unlink(alias)
+func (srv *lambdaSrv) Unlink(ctx context.Context, token *api.Token, alias string) (*types.App, error) {
+	app, err := srv.project.Unlink(alias)
+	if err != nil {
+		return nil, err
+	}
+	return &app.App, nil
 }

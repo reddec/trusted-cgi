@@ -226,7 +226,7 @@ Signed JWT
 Info about application
 
 * Method: `LambdaAPI.Info`
-* Returns: `*application.App`
+* Returns: `*types.App`
 
 * Arguments:
 
@@ -252,7 +252,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Token
@@ -265,7 +265,7 @@ Signed JWT
 Update application manifest
 
 * Method: `LambdaAPI.Update`
-* Returns: `*application.App`
+* Returns: `*types.App`
 
 * Arguments:
 
@@ -292,7 +292,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Manifest
@@ -535,7 +535,7 @@ Signed JWT
 Make link/alias for app
 
 * Method: `LambdaAPI.Link`
-* Returns: `*application.App`
+* Returns: `*types.App`
 
 * Arguments:
 
@@ -562,7 +562,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Token
@@ -575,7 +575,7 @@ Signed JWT
 Remove link
 
 * Method: `LambdaAPI.Unlink`
-* Returns: `*application.App`
+* Returns: `*types.App`
 
 * Arguments:
 
@@ -601,7 +601,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Token

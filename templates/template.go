@@ -3,13 +3,13 @@ package templates
 import (
 	"context"
 	"encoding/json"
+	"github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -35,10 +35,7 @@ type Template struct {
 func (t *Template) IsAvailable(ctx context.Context) bool {
 	for _, check := range t.Check {
 		cmd := exec.CommandContext(ctx, check[0], check[1:]...)
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Setpgid:   true,
-			Pdeathsig: syscall.SIGINT,
-		}
+		internal.SetFlags(cmd)
 		if cmd.Run() != nil {
 			return false
 		}

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/alecthomas/units"
-	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/cmd/internal"
+	internal_app "github.com/reddec/trusted-cgi/internal"
 	"log"
 	"os"
 	"os/exec"
@@ -64,7 +64,7 @@ func (cmd *clone) Execute(args []string) error {
 		return fmt.Errorf("save control file: %w", err)
 	}
 
-	err = appendIfNoLineFile(application.CGIIgnore, controlFilename)
+	err = appendIfNoLineFile(internal_app.CGIIgnore, controlFilename)
 	if err != nil {
 		return fmt.Errorf("update cgiignore file: %w", err)
 	}

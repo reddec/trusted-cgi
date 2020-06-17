@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/jessevdk/go-flags"
-	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/cmd/internal"
+	internal_app "github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
 	"log"
@@ -62,7 +62,7 @@ func (b Bare) Execute(args []string) error {
 		Public:         !b.Private,
 	}
 
-	err = def.SaveAs("manifest.json")
+	err = def.SaveAs(internal_app.ManifestFile)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (b Bare) Execute(args []string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(application.CGIIgnore, []byte(""), 0755)
+	err = ioutil.WriteFile(internal_app.CGIIgnore, []byte(""), 0755)
 	if err != nil {
 		return err
 	}

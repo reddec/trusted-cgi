@@ -188,7 +188,7 @@ Signed JWT
 List available apps (lambdas) in a project
 
 * Method: `ProjectAPI.List`
-* Returns: `[]*application.App`
+* Returns: `[]*types.App`
 
 * Arguments:
 
@@ -213,7 +213,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Token
@@ -311,7 +311,7 @@ Signed JWT
 Create new app (lambda)
 
 * Method: `ProjectAPI.Create`
-* Returns: `*application.App`
+* Returns: `*types.App`
 
 * Arguments:
 
@@ -336,7 +336,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Token
@@ -349,7 +349,7 @@ Signed JWT
 Create new app/lambda/function using pre-defined template
 
 * Method: `ProjectAPI.CreateFromTemplate`
-* Returns: `*application.App`
+* Returns: `*types.App`
 
 * Arguments:
 
@@ -375,7 +375,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Token
@@ -388,7 +388,7 @@ Signed JWT
 Create new app/lambda/function using remote Git repo
 
 * Method: `ProjectAPI.CreateFromGit`
-* Returns: `*application.App`
+* Returns: `*types.App`
 
 * Arguments:
 
@@ -414,7 +414,7 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `types.Manifest` |  |
+| manifest | `Manifest` |  |
 | git | `bool` |  |
 
 ### Token

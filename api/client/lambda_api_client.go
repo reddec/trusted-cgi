@@ -4,7 +4,6 @@ import (
 	"context"
 	client "github.com/reddec/jsonrpc2/client"
 	api "github.com/reddec/trusted-cgi/api"
-	application "github.com/reddec/trusted-cgi/application"
 	stats "github.com/reddec/trusted-cgi/stats"
 	types "github.com/reddec/trusted-cgi/types"
 	"sync/atomic"
@@ -56,13 +55,13 @@ func (impl *LambdaAPIClient) Files(ctx context.Context, token *api.Token, uid st
 }
 
 // Info about application
-func (impl *LambdaAPIClient) Info(ctx context.Context, token *api.Token, uid string) (reply *application.App, err error) {
+func (impl *LambdaAPIClient) Info(ctx context.Context, token *api.Token, uid string) (reply *types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "LambdaAPI.Info", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid)
 	return
 }
 
 // Update application manifest
-func (impl *LambdaAPIClient) Update(ctx context.Context, token *api.Token, uid string, manifest types.Manifest) (reply *application.App, err error) {
+func (impl *LambdaAPIClient) Update(ctx context.Context, token *api.Token, uid string, manifest types.Manifest) (reply *types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "LambdaAPI.Update", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid, manifest)
 	return
 }
@@ -104,13 +103,13 @@ func (impl *LambdaAPIClient) Invoke(ctx context.Context, token *api.Token, uid s
 }
 
 // Make link/alias for app
-func (impl *LambdaAPIClient) Link(ctx context.Context, token *api.Token, uid string, alias string) (reply *application.App, err error) {
+func (impl *LambdaAPIClient) Link(ctx context.Context, token *api.Token, uid string, alias string) (reply *types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "LambdaAPI.Link", atomic.AddUint64(&impl.sequence, 1), &reply, token, uid, alias)
 	return
 }
 
 // Remove link
-func (impl *LambdaAPIClient) Unlink(ctx context.Context, token *api.Token, alias string) (reply *application.App, err error) {
+func (impl *LambdaAPIClient) Unlink(ctx context.Context, token *api.Token, alias string) (reply *types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "LambdaAPI.Unlink", atomic.AddUint64(&impl.sequence, 1), &reply, token, alias)
 	return
 }

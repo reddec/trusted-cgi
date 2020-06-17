@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/alecthomas/units"
-	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/cmd/internal"
+	internal_app "github.com/reddec/trusted-cgi/internal"
 	"log"
 	"os"
 	"os/exec"
@@ -39,8 +39,8 @@ func (cmd *upload) Execute([]string) error {
 	log.SetOutput(os.Stderr)
 	log.Println("archiving...")
 	var args = []string{"zcf", "-"}
-	if _, err := os.Stat(application.CGIIgnore); err == nil {
-		args = append(args, "--exclude-from", application.CGIIgnore)
+	if _, err := os.Stat(internal_app.CGIIgnore); err == nil {
+		args = append(args, "--exclude-from", internal_app.CGIIgnore)
 	}
 	args = append(args, ".")
 	run := exec.CommandContext(ctx, "tar", args...)

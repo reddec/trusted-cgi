@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/stats"
 	"github.com/reddec/trusted-cgi/types"
 )
@@ -63,9 +62,9 @@ type LambdaAPI interface {
 	// Files in func dir
 	Files(ctx context.Context, token *Token, uid string, dir string) ([]*File, error)
 	// Info about application
-	Info(ctx context.Context, token *Token, uid string) (*application.App, error)
+	Info(ctx context.Context, token *Token, uid string) (*types.App, error)
 	// Update application manifest
-	Update(ctx context.Context, token *Token, uid string, manifest types.Manifest) (*application.App, error)
+	Update(ctx context.Context, token *Token, uid string, manifest types.Manifest) (*types.App, error)
 	// Create file or directory inside app
 	CreateFile(ctx context.Context, token *Token, uid string, path string, dir bool) (bool, error)
 	// Remove file or directory
@@ -79,9 +78,9 @@ type LambdaAPI interface {
 	// Invoke action in the app (if make installed)
 	Invoke(ctx context.Context, token *Token, uid string, action string) (string, error)
 	// Make link/alias for app
-	Link(ctx context.Context, token *Token, uid string, alias string) (*application.App, error)
+	Link(ctx context.Context, token *Token, uid string, alias string) (*types.App, error)
 	// Remove link
-	Unlink(ctx context.Context, token *Token, alias string) (*application.App, error)
+	Unlink(ctx context.Context, token *Token, alias string) (*types.App, error)
 }
 
 // API for global project
@@ -95,17 +94,17 @@ type ProjectAPI interface {
 	// Get all templates without filtering
 	AllTemplates(ctx context.Context, token *Token) ([]*TemplateStatus, error)
 	// List available apps (lambdas) in a project
-	List(ctx context.Context, token *Token) ([]*application.App, error)
+	List(ctx context.Context, token *Token) ([]*types.App, error)
 	// Templates with filter by availability including embedded
 	Templates(ctx context.Context, token *Token) ([]*Template, error)
 	// Global last records
 	Stats(ctx context.Context, token *Token, limit int) ([]stats.Record, error)
 	// Create new app (lambda)
-	Create(ctx context.Context, token *Token) (*application.App, error)
+	Create(ctx context.Context, token *Token) (*types.App, error)
 	// Create new app/lambda/function using pre-defined template
-	CreateFromTemplate(ctx context.Context, token *Token, templateName string) (*application.App, error)
+	CreateFromTemplate(ctx context.Context, token *Token, templateName string) (*types.App, error)
 	// Create new app/lambda/function using remote Git repo
-	CreateFromGit(ctx context.Context, token *Token, repo string) (*application.App, error)
+	CreateFromGit(ctx context.Context, token *Token, repo string) (*types.App, error)
 }
 
 // User/admin profile API

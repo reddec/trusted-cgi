@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/templates"
 	"github.com/reddec/trusted-cgi/types"
 	"golang.org/x/crypto/ssh"
@@ -25,12 +26,6 @@ import (
 	"time"
 )
 
-const (
-	ProjectManifest = "project.json"
-	CGIIgnore       = ".cgiignore"
-	SSHKeySize      = 3072
-)
-
 func OpenProject(location string, defaultConfig ProjectConfig) (*Project, error) {
 	rootDir, err := filepath.Abs(location)
 	if err != nil {
@@ -40,7 +35,7 @@ func OpenProject(location string, defaultConfig ProjectConfig) (*Project, error)
 	if err != nil {
 		return nil, err
 	}
-	return defaultConfig.LoadOrCreate(filepath.Join(rootDir, ProjectManifest))
+	return defaultConfig.LoadOrCreate(filepath.Join(rootDir, internal.ProjectManifest))
 }
 
 type ProjectConfig struct {
@@ -359,8 +354,8 @@ func (project *Project) Download(ctx context.Context, uid string, tarGzBall io.W
 		return fmt.Errorf("no such app")
 	}
 	args := project.config.TarCommand()
-	if _, err := os.Stat(filepath.Join(app.location, CGIIgnore)); err == nil {
-		args = append(args, "--exclude-from", CGIIgnore)
+	if _, err := os.Stat(filepath.Join(app.location, internal.CGIIgnore)); err == nil {
+		args = append(args, "--exclude-from", internal.CGIIgnore)
 	}
 	args = append(args, ".")
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
@@ -464,7 +459,7 @@ func (project *Project) SetupSSHKey(file string) error {
 
 func (project *Project) generateSSHKeys(file string) (*rsa.PrivateKey, error) {
 	log.Println("generating ssh key to", file)
-	privateKey, err := rsa.GenerateKey(rand.Reader, SSHKeySize)
+	privateKey, err := rsa.GenerateKey(rand.Reader, internal.SSHKeySize)
 	if err != nil {
 		return nil, err
 	}

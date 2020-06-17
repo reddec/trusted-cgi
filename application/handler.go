@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/stats"
 	"io"
 	"io/ioutil"
@@ -144,11 +145,9 @@ func (app *App) Run(ctx context.Context,
 	cmd.Stdout = &result
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Pdeathsig:  syscall.SIGINT,
-		Setpgid:    true,
 		Credential: app.creds,
 	}
-
+	internal.SetFlags(cmd)
 	var environments = os.Environ()
 	for header, mapped := range env {
 		environments = append(environments, header+"="+mapped)

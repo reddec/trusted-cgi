@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"github.com/reddec/trusted-cgi/internal"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -59,10 +60,9 @@ func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Du
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Pdeathsig:  syscall.SIGINT,
-		Setpgid:    true,
 		Credential: app.creds,
 	}
+	internal.SetFlags(cmd)
 	cmd.Env = environments
 
 	err := cmd.Run()

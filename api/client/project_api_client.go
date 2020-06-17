@@ -4,8 +4,8 @@ import (
 	"context"
 	client "github.com/reddec/jsonrpc2/client"
 	api "github.com/reddec/trusted-cgi/api"
-	application "github.com/reddec/trusted-cgi/application"
 	stats "github.com/reddec/trusted-cgi/stats"
+	types "github.com/reddec/trusted-cgi/types"
 	"sync/atomic"
 )
 
@@ -43,7 +43,7 @@ func (impl *ProjectAPIClient) AllTemplates(ctx context.Context, token *api.Token
 }
 
 // List available apps (lambdas) in a project
-func (impl *ProjectAPIClient) List(ctx context.Context, token *api.Token) (reply []*application.App, err error) {
+func (impl *ProjectAPIClient) List(ctx context.Context, token *api.Token) (reply []*types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.List", atomic.AddUint64(&impl.sequence, 1), &reply, token)
 	return
 }
@@ -61,19 +61,19 @@ func (impl *ProjectAPIClient) Stats(ctx context.Context, token *api.Token, limit
 }
 
 // Create new app (lambda)
-func (impl *ProjectAPIClient) Create(ctx context.Context, token *api.Token) (reply *application.App, err error) {
+func (impl *ProjectAPIClient) Create(ctx context.Context, token *api.Token) (reply *types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.Create", atomic.AddUint64(&impl.sequence, 1), &reply, token)
 	return
 }
 
 // Create new app/lambda/function using pre-defined template
-func (impl *ProjectAPIClient) CreateFromTemplate(ctx context.Context, token *api.Token, templateName string) (reply *application.App, err error) {
+func (impl *ProjectAPIClient) CreateFromTemplate(ctx context.Context, token *api.Token, templateName string) (reply *types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.CreateFromTemplate", atomic.AddUint64(&impl.sequence, 1), &reply, token, templateName)
 	return
 }
 
 // Create new app/lambda/function using remote Git repo
-func (impl *ProjectAPIClient) CreateFromGit(ctx context.Context, token *api.Token, repo string) (reply *application.App, err error) {
+func (impl *ProjectAPIClient) CreateFromGit(ctx context.Context, token *api.Token, repo string) (reply *types.App, err error) {
 	err = client.CallHTTP(ctx, impl.BaseURL, "ProjectAPI.CreateFromGit", atomic.AddUint64(&impl.sequence, 1), &reply, token, repo)
 	return
 }

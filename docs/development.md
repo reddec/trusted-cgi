@@ -5,7 +5,8 @@ nav_order: 999
 ---
 # Development
 
-The project has Linux-specific features and aimed to be run in Linux ecosystem.
+The project has Linux-specific features and aimed to be run in Linux ecosystem, however
+client control utility (cgi-ctl) shall work on most platform.
 
 Requirements for backend
 

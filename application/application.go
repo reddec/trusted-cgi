@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
 	"os"
@@ -13,13 +14,11 @@ import (
 	"syscall"
 )
 
-const (
-	ManifestFile = "manifest.json"
-)
-
 func OpenApp(location string, creds *syscall.Credential) (*App, error) {
 	var app = &App{
-		UID:      filepath.Base(location),
+		App: types.App{
+			UID: filepath.Base(location),
+		},
 		creds:    creds,
 		location: location,
 	}
@@ -31,8 +30,10 @@ func OpenApp(location string, creds *syscall.Credential) (*App, error) {
 
 func CreateApp(location string, creds *syscall.Credential, manifest types.Manifest) (*App, error) {
 	var app = &App{
-		UID:      filepath.Base(location),
-		Manifest: manifest,
+		App: types.App{
+			UID:      filepath.Base(location),
+			Manifest: manifest,
+		},
 		creds:    creds,
 		location: location,
 	}
@@ -50,10 +51,9 @@ func CreateApp(location string, creds *syscall.Credential, manifest types.Manife
 func CreateAppGit(ctx context.Context, location, repo, privateKey string, creds *syscall.Credential) (*App, error) {
 	cmd := exec.CommandContext(ctx, "git", "clone", "--depth", "1", repo, location)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Pdeathsig:  syscall.SIGINT,
-		Setpgid:    true,
 		Credential: creds,
 	}
+	internal.SetFlags(cmd)
 	var buffer bytes.Buffer
 	cmd.Stderr = &buffer
 	cmd.Stdout = os.Stdout
@@ -67,15 +67,13 @@ func CreateAppGit(ctx context.Context, location, repo, privateKey string, creds 
 }
 
 type App struct {
-	UID      string              `json:"uid"`
-	Manifest types.Manifest      `json:"manifest"`
-	IsGit    bool                `json:"git"`
+	types.App
 	creds    *syscall.Credential `json:"-"`
 	location string              `json:"-"`
 }
 
 func (app *App) ManifestFile() string {
-	return filepath.Join(app.location, ManifestFile)
+	return filepath.Join(app.location, internal.ManifestFile)
 }
 
 func (app *App) ApplyOwner() error {

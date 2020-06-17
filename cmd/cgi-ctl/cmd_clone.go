@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 type clone struct {
@@ -59,7 +58,7 @@ func (cmd *clone) Execute(args []string) error {
 
 	var cf controlFile
 	cf.URL = cmd.URL
-	err = cf.Save(filepath.Join(controlFilename))
+	err = cf.Save(controlFilename)
 	if err != nil {
 		return fmt.Errorf("save control file: %w", err)
 	}

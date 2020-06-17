@@ -9,10 +9,10 @@ import (
 )
 
 type Manifest struct {
-	Name           string            `json:"name"`                      // information field
-	Description    string            `json:"description"`               // information field
+	Name           string            `json:"name,omitempty"`            // information field
+	Description    string            `json:"description,omitempty"`     // information field
 	Run            []string          `json:"run"`                       // command to run
-	OutputHeaders  map[string]string `json:"output_headers"`            // output headers
+	OutputHeaders  map[string]string `json:"output_headers,omitempty"`  // output headers
 	InputHeaders   map[string]string `json:"input_headers,omitempty"`   // headers to map from request to environment
 	Query          map[string]string `json:"query,omitempty"`           // map query or form parameters to environment
 	Environment    map[string]string `json:"environment,omitempty"`     // custom environment

@@ -30,11 +30,15 @@ type remoteLink struct {
 }
 
 func (rl *remoteLink) Users() *client.UserAPIClient {
-	return &client.UserAPIClient{BaseURL: rl.URL + "u/"}
+	return &client.UserAPIClient{BaseURL: urlJoin(rl.URL, "u", "")}
 }
 
 func (rl *remoteLink) Lambdas() *client.LambdaAPIClient {
-	return &client.LambdaAPIClient{BaseURL: rl.URL + "u/"}
+	return &client.LambdaAPIClient{BaseURL: urlJoin(rl.URL, "u", "")}
+}
+
+func (rl *remoteLink) Project() *client.ProjectAPIClient {
+	return &client.ProjectAPIClient{BaseURL: urlJoin(rl.URL, "u", "")}
 }
 
 func (rl *remoteLink) Token(ctx context.Context) (*api.Token, error) {
@@ -177,4 +181,14 @@ func appendIfNoLineFile(filename string, line string) error {
 	}
 	defer f.Close()
 	return appendIfNoLine(f, line)
+}
+
+func urlJoin(base string, path ...string) string {
+	if len(path) == 0 {
+		return base
+	}
+	if !strings.HasSuffix(base, "/") {
+		base += "/"
+	}
+	return base + strings.Join(path, "/")
 }

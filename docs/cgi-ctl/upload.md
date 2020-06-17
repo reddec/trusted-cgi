@@ -12,6 +12,9 @@ Upload the lambda content from the current directory to a remote instance of `tr
 
 Files defined in `.cgiignore` file will be ignored (uses `tar --exclude-form` syntax).
 
+**Important!** aliases should be changed over [alias](../alias) command. If you uploaded new aliases manually
+via record in manifest a platform restart required (for re-index). It will be fixed in a future releases.
+
 ```
 Usage:
   cgi-ctl [OPTIONS] upload [upload-OPTIONS]

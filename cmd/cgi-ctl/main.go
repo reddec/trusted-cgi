@@ -15,8 +15,9 @@ type Config struct {
 	Download download `command:"download" description:"download lambda content to the local tarball or stdout"`
 	Upload   upload   `command:"upload" description:"upload content to lambda to the remote platform"`
 	Clone    clone    `command:"clone" description:"clone lambda to local FS and keep URL for future tracking"`
-	Do       do       `command:"do" description:"invoke actions (without actions it will print all availbe actions)"`
+	Do       do       `command:"do" description:"invoke actions (without actions it will print all available actions)"`
 	Create   create   `command:"create" description:"create new lambda on the remote platform and initialize local environment"`
+	Alias    alias    `command:"alias" description:"list, created or remove alias for the lambda"`
 }
 
 func main() {

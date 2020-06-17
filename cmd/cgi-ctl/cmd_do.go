@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type do struct {
@@ -41,7 +40,9 @@ func (cmd *do) Execute(args []string) error {
 			return fmt.Errorf("list actions: %w", err)
 		}
 		if len(list) > 0 {
-			log.Println("available actions:", strings.Join(list, ", "))
+			for _, name := range list {
+				fmt.Println(name)
+			}
 		} else {
 			log.Println("no available actions")
 		}

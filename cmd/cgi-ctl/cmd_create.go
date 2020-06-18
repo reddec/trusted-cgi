@@ -6,11 +6,14 @@ import (
 	internal_app "github.com/reddec/trusted-cgi/internal"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 type create struct {
 	remoteLink
-	Args struct {
+	Public      bool   `long:"public" env:"PUBLIC" description:"make public lambda"`
+	Description string `short:"d" long:"description" env:"DESCRIPTION" description:"lambda description"`
+	Args        struct {
 		Dir string `name:"dir" description:"project directory" required:"yes"`
 	} `positional-args:"yes"`
 }
@@ -27,6 +30,11 @@ func (cmd *create) Execute(args []string) error {
 	err = os.Chdir(cmd.Args.Dir)
 	if err != nil {
 		return fmt.Errorf("change dir: %w", err)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get work dir: %w", err)
 	}
 
 	log.Println("login...")
@@ -53,6 +61,16 @@ func (cmd *create) Execute(args []string) error {
 	err = appendIfNoLineFile(internal_app.CGIIgnore, controlFilename)
 	if err != nil {
 		return fmt.Errorf("update cgiignore file: %w", err)
+	}
+
+	info.Manifest.Name = filepath.Base(wd)
+	info.Manifest.Description = cmd.Description
+	info.Manifest.Public = cmd.Public
+
+	log.Println("updating manifest...")
+	info, err = cmd.Lambdas().Update(ctx, token, info.UID, info.Manifest)
+	if err != nil {
+		return fmt.Errorf("update manifest: %w", err)
 	}
 
 	err = info.Manifest.SaveAs(internal_app.ManifestFile)

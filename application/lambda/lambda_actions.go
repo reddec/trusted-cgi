@@ -1,23 +1,24 @@
-package application
+package lambda
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"github.com/reddec/trusted-cgi/internal"
+	"github.com/robfig/cron"
+	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"syscall"
 	"time"
 )
 
 var targetsPattern = regexp.MustCompile(`^([\d\w-/]+)\s*:\s*[\d\w-/\s]*$`)
 
 // List Make actions (if Makefile defined)
-func (app *App) ListActions() ([]string, error) {
-	makefile := filepath.Join(app.location, "Makefile")
+func (local *localLambda) Actions() ([]string, error) {
+	makefile := filepath.Join(local.rootDir, "Makefile")
 	f, err := os.Open(makefile)
 	if os.IsNotExist(err) {
 		return []string{}, nil
@@ -39,9 +40,10 @@ func (app *App) ListActions() ([]string, error) {
 }
 
 // Invoke action by name (make target)
-func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Duration, globalEnv map[string]string) (string, error) {
-	var out bytes.Buffer
-
+func (local *localLambda) Do(ctx context.Context, name string, timeLimit time.Duration, globalEnv map[string]string, out io.Writer) error {
+	if out == nil {
+		out = os.Stderr
+	}
 	if timeLimit > 0 {
 		cctx, cancel := context.WithTimeout(ctx, timeLimit)
 		defer cancel()
@@ -51,20 +53,34 @@ func (app *App) InvokeAction(ctx context.Context, name string, timeLimit time.Du
 	for k, v := range globalEnv {
 		environments = append(environments, k+"="+v)
 	}
-	for k, v := range app.Manifest.Environment {
+	for k, v := range local.manifest.Environment {
 		environments = append(environments, k+"="+v)
 	}
 
 	cmd := exec.CommandContext(ctx, "make", name)
-	cmd.Dir = app.location
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Credential: app.creds,
-	}
+	cmd.Dir = local.rootDir
+	cmd.Stdout = out
+	cmd.Stderr = out
+	internal.SetCreds(cmd, local.creds)
 	internal.SetFlags(cmd)
 	cmd.Env = environments
 
-	err := cmd.Run()
-	return out.String(), err
+	return cmd.Run()
+}
+
+func (local *localLambda) DoScheduled(ctx context.Context, lastRun time.Time, globalEnv map[string]string) {
+	now := time.Now()
+	for _, plan := range local.manifest.Cron {
+		sched, err := cron.Parse(plan.Cron)
+		if err != nil {
+			log.Println(plan.Cron, "-", err)
+			continue
+		}
+		if !sched.Next(lastRun).After(now) {
+			err = local.Do(ctx, plan.Action, time.Duration(plan.TimeLimit), globalEnv, nil)
+			if err != nil {
+				log.Println(plan.Cron, plan.Action, err)
+			}
+		}
+	}
 }

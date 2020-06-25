@@ -6,42 +6,38 @@ import (
 	"github.com/reddec/trusted-cgi/api"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/stats"
-	"github.com/reddec/trusted-cgi/templates"
-	"github.com/reddec/trusted-cgi/types"
 )
 
-func NewProjectSrv(project *application.Project, tracker stats.Reader, templatesDir string) *projectSrv {
+func NewProjectSrv(cases application.Cases, tracker stats.Reader) *projectSrv {
 	return &projectSrv{
-		project:      project,
-		tracker:      tracker,
-		templatesDir: templatesDir,
+		cases:   cases,
+		tracker: tracker,
 	}
 }
 
 type projectSrv struct {
-	project      *application.Project
-	tracker      stats.Reader // for stats
-	templatesDir string
+	cases   application.Cases
+	tracker stats.Reader // for stats
 }
 
-func (srv *projectSrv) Create(ctx context.Context, token *api.Token) (*types.App, error) {
-	app, err := srv.project.Create(ctx)
+func (srv *projectSrv) Create(ctx context.Context, token *api.Token) (*application.Definition, error) {
+	uid, err := srv.cases.Create(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &app.App, nil
+	return srv.cases.Platform().FindByUID(uid)
 }
 
-func (srv *projectSrv) CreateFromGit(ctx context.Context, token *api.Token, repo string) (*types.App, error) {
-	app, err := srv.project.CreateFromGit(ctx, repo)
+func (srv *projectSrv) CreateFromGit(ctx context.Context, token *api.Token, repo string) (*application.Definition, error) {
+	uid, err := srv.cases.CreateFromGit(ctx, repo)
 	if err != nil {
 		return nil, err
 	}
-	return &app.App, nil
+	return srv.cases.Platform().FindByUID(uid)
 }
 
-func (srv *projectSrv) CreateFromTemplate(ctx context.Context, token *api.Token, templateName string) (*types.App, error) {
-	possible, err := templates.List(srv.templatesDir)
+func (srv *projectSrv) CreateFromTemplate(ctx context.Context, token *api.Token, templateName string) (*application.Definition, error) {
+	possible, err := srv.cases.Templates()
 	if err != nil {
 		return nil, err
 	}
@@ -52,23 +48,24 @@ func (srv *projectSrv) CreateFromTemplate(ctx context.Context, token *api.Token,
 	if !tpl.IsAvailable(ctx) {
 		return nil, fmt.Errorf("template %s is not supported", templateName)
 	}
-	app, err := srv.project.CreateFromTemplate(ctx, tpl)
+	uid, err := srv.cases.CreateFromTemplate(ctx, *tpl)
 	if err != nil {
 		return nil, err
 	}
-	return &app.App, nil
+	return srv.cases.Platform().FindByUID(uid)
 }
 
 func (srv *projectSrv) Config(ctx context.Context, token *api.Token) (*api.Settings, error) {
+	pk, _ := srv.cases.PublicSSHKey()
 	return &api.Settings{
-		User:        srv.project.RunnerUser(),
-		PublicKey:   string(srv.project.PublicKey()),
-		Environment: srv.project.GlobalEnvironment(),
+		User:        srv.cases.Platform().Config().User,
+		PublicKey:   string(pk),
+		Environment: srv.cases.Platform().Config().Environment,
 	}, nil
 }
 
 func (srv *projectSrv) SetEnvironment(ctx context.Context, token *api.Token, env api.Environment) (*api.Settings, error) {
-	err := srv.project.SetGlobalEnvironment(env.Environment)
+	err := srv.cases.Platform().SetConfig(srv.cases.Platform().Config().WithEnv(env.Environment))
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +73,7 @@ func (srv *projectSrv) SetEnvironment(ctx context.Context, token *api.Token, env
 }
 
 func (srv *projectSrv) SetUser(ctx context.Context, token *api.Token, user string) (*api.Settings, error) {
-	err := srv.project.ChangeUser(user)
+	err := srv.cases.Platform().SetConfig(srv.cases.Platform().Config().WithUser(user))
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +81,7 @@ func (srv *projectSrv) SetUser(ctx context.Context, token *api.Token, user strin
 }
 
 func (srv *projectSrv) AllTemplates(ctx context.Context, token *api.Token) ([]*api.TemplateStatus, error) {
-	list, err := templates.List(srv.templatesDir)
+	list, err := srv.cases.Templates()
 	if err != nil {
 		return nil, err
 	}
@@ -100,17 +97,12 @@ func (srv *projectSrv) AllTemplates(ctx context.Context, token *api.Token) ([]*a
 	return ans, nil
 }
 
-func (srv *projectSrv) List(ctx context.Context, token *api.Token) ([]*types.App, error) {
-	list := srv.project.List()
-	var ans = make([]*types.App, len(list))
-	for i, v := range list {
-		ans[i] = &v.App
-	}
-	return ans, nil
+func (srv *projectSrv) List(ctx context.Context, token *api.Token) ([]application.Definition, error) {
+	return srv.cases.Platform().List(), nil
 }
 
 func (srv *projectSrv) Templates(ctx context.Context, token *api.Token) ([]*api.Template, error) {
-	possible, err := templates.List(srv.templatesDir)
+	possible, err := srv.cases.Templates()
 	if err != nil {
 		return nil, err
 	}

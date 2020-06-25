@@ -13,36 +13,41 @@ import (
 
 func Handler(ctx context.Context,
 	dev bool,
-	project *application.Project,
+	platform application.Platform,
 	tracker stats.Stats,
 	tokenHandler interface {
-	ValidateToken(ctx context.Context, value *api.Token) error
-},
+		ValidateToken(ctx context.Context, value *api.Token) error
+	},
 	projectAPI api.ProjectAPI,
 	lambdaAPI api.LambdaAPI,
 	userAPI api.UserAPI) (http.Handler, error) {
-	apps, err := project.Handler(ctx, tracker)
-	if err != nil {
-		return nil, err
-	}
+	var mux http.ServeMux
+	// main API
+	apps := application.HandlerByUID(ctx, tracker, platform)
+	links := application.HandlerByLinks(ctx, tracker, platform)
 
-	links, err := project.HandlerAlias(ctx, tracker)
-	if err != nil {
-		return nil, err
-	}
+	mux.Handle("/a/", openedHandler(http.StripPrefix("/a/", apps)))
+	mux.Handle("/l/", openedHandler(http.StripPrefix("/l/", links)))
 
+	// admin API
 	var router jsonrpc2.Router
 
 	handlers.RegisterUserAPI(&router, userAPI, tokenHandler)
 	handlers.RegisterLambdaAPI(&router, lambdaAPI, tokenHandler)
 	handlers.RegisterProjectAPI(&router, projectAPI, tokenHandler)
+	mux.Handle("/u/", chooseHandler(dev, jsonrpc2.HandlerRestContext(ctx, &router)))
 
-	var mux http.ServeMux
-	mux.Handle("/a/", openedHandler(http.StripPrefix("/a/", apps)))
-	mux.Handle("/u/", secureHttpHandler(dev, jsonrpc2.HandlerRestContext(ctx, &router)))
-	mux.Handle("/l/", openedHandler(http.StripPrefix("/l/", links)))
+	// UI
 	mux.Handle("/", http.FileServer(assets.AssetFile()))
 	return &mux, nil
+}
+
+func chooseHandler(dev bool, handler http.Handler) http.Handler {
+	if dev {
+		return openedHandler(handler)
+	} else {
+		return securedHttpHandler(handler)
+	}
 }
 
 func openedHandler(handler http.Handler) http.Handler {
@@ -61,15 +66,11 @@ func openedHandler(handler http.Handler) http.Handler {
 	})
 }
 
-func secureHttpHandler(dev bool, handler http.Handler) http.Handler {
-	if dev {
-		return openedHandler(handler)
-	} else {
-		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			writer.Header().Set("X-XSS-Protection", "1; mode=block")
-			writer.Header().Set("X-Frame-Options", "SAMEORIGIN")
-			writer.Header().Set("X-Content-Type-Options", "nosniff")
-			handler.ServeHTTP(writer, request)
-		})
-	}
+func securedHttpHandler(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("X-XSS-Protection", "1; mode=block")
+		writer.Header().Set("X-Frame-Options", "SAMEORIGIN")
+		writer.Header().Set("X-Content-Type-Options", "nosniff")
+		handler.ServeHTTP(writer, request)
+	})
 }

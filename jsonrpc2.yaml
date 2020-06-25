@@ -2,7 +2,7 @@ url: "https://127.0.0.1:3434/u/"
 package: jsonrpc
 custom_type_handler:
   - '*github.com/reddec/trusted-cgi/api@Token'
-file: ./../interface.go
+file: ./../interfaces.go
 wrapper: "Register{{.TypeName}}"
 python: 'clients/python/{{.Generator.Name | replace "." "/"  | snakecase }}.py'
 js:  'clients/js/{{.Generator.Name | snakecase | replace "." "" }}.js'

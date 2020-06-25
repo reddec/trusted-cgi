@@ -48,7 +48,6 @@ Example: for python with virtualenv with main script `app.py` it will look like:
 * **allowed_origin** (optional, array of string): allow requests only with `Origin` header value the list
 * **tokens** (optional, array of string): allow requests only with `Authorization` header value the list; applicable only if `public: false`
 * **public** (optional, boolean): if false, check all requests against `tokens`
-* **aliases** (optional, array of string): aliases/links for the lambda, useful to make permanent URL, [see aliases doc](aliases.md)
 * **cron** (option, array of `Cron`): scheduled actions
 * **static** (optional, string): path to directory inside lambda to serve static files; if defined the GET and HEAD methods will not be available for handler
 
@@ -72,3 +71,12 @@ Uses [Go time.Duration](https://golang.org/pkg/time/#ParseDuration): string with
 * `h` - hours
 
 Example: `1h30m25s`, `15s`
+
+## Migration notice
+
+### 0.3.3
+
+* **aliases** (optional, array of string): aliases/links for the lambda, useful to make permanent URL, [see aliases doc](aliases.md)
+
+Since `0.3.3` field `aliases` moved to platform level. Migration from `0.3.x` (x < 3) to `0.3.3` 
+version should be done automatically after a restart.

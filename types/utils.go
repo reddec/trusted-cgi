@@ -36,3 +36,14 @@ func (s *JsonStringSet) Set(key string) {
 func (s *JsonStringSet) Del(key string) {
 	delete(*s, key)
 }
+
+func (s *JsonStringSet) Dup() JsonStringSet {
+	if s == nil {
+		return nil
+	}
+	var cp = make(JsonStringSet, len(*s))
+	for k, v := range *s {
+		cp[k] = v
+	}
+	return cp
+}

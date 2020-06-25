@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"github.com/reddec/trusted-cgi/api"
 	"github.com/reddec/trusted-cgi/cmd/internal"
-	internal2 "github.com/reddec/trusted-cgi/internal"
-	"github.com/reddec/trusted-cgi/types"
 	"log"
-	"os"
 )
 
 type alias struct {
@@ -39,16 +36,14 @@ func (cmd *alias) Execute(args []string) error {
 	if cmd.Delete {
 		return cmd.removeAliases(ctx, token)
 	}
-	var app *types.App
 	for _, alias := range cmd.Args.Aliases {
 		log.Println("adding alias", alias)
-		a, err := cmd.Lambdas().Link(ctx, token, cmd.UID, alias)
+		_, err := cmd.Lambdas().Link(ctx, token, cmd.UID, alias)
 		if err != nil {
 			return fmt.Errorf("add alias %s: %w", alias, err)
 		}
-		app = a
 	}
-	return cmd.hintUpdate(app)
+	return nil
 }
 
 func (cmd *alias) printAliases(ctx context.Context, token *api.Token) error {
@@ -56,8 +51,8 @@ func (cmd *alias) printAliases(ctx context.Context, token *api.Token) error {
 	if err != nil {
 		return fmt.Errorf("list aliases: %w", err)
 	}
-	if len(info.Manifest.Aliases) > 0 {
-		for name := range info.Manifest.Aliases {
+	if len(info.Aliases) > 0 {
+		for name := range info.Aliases {
 			fmt.Println(name)
 		}
 	} else {
@@ -67,30 +62,12 @@ func (cmd *alias) printAliases(ctx context.Context, token *api.Token) error {
 }
 
 func (cmd *alias) removeAliases(ctx context.Context, token *api.Token) error {
-	var app *types.App
 	for _, alias := range cmd.Args.Aliases {
 		log.Println("removing alias", alias)
-		a, err := cmd.Lambdas().Unlink(ctx, token, alias)
+		_, err := cmd.Lambdas().Unlink(ctx, token, alias)
 		if err != nil {
 			return fmt.Errorf("remove alias %s: %w", alias, err)
 		}
-		app = a
 	}
-	return cmd.hintUpdate(app)
-}
-
-func (cmd *alias) hintUpdate(app *types.App) error {
-	if cmd.Keep || app == nil {
-		log.Println("done. do not forget update manifest: cgi-ctl update manifest")
-		return nil
-	}
-	if _, err := os.Stat(internal2.ManifestFile); err != nil {
-		return nil
-	}
-	err := app.Manifest.SaveAs(internal2.ManifestFile)
-	if err != nil {
-		return fmt.Errorf("update manifest: %w", err)
-	}
-	log.Println("done")
 	return nil
 }

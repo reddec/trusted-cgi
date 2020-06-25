@@ -3,29 +3,30 @@ package services
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/reddec/trusted-cgi/api"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/stats"
 	"github.com/reddec/trusted-cgi/types"
-	"io/ioutil"
-	"os"
 )
 
-func NewLambdaSrv(project *application.Project, tracker stats.Reader) *lambdaSrv {
+func NewLambdaSrv(cases application.Cases, tracker stats.Reader) *lambdaSrv {
 	return &lambdaSrv{
-		project: project,
+		cases:   cases,
 		tracker: tracker,
 	}
 }
 
 type lambdaSrv struct {
-	project *application.Project
+	cases   application.Cases
 	tracker stats.Reader
 }
 
 func (srv *lambdaSrv) Upload(ctx context.Context, token *api.Token, uid string, tarGz []byte) (bool, error) {
-	err := srv.project.Upload(ctx, uid, bytes.NewReader(tarGz))
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return false, err
+	}
+	err = fn.Lambda.SetContent(bytes.NewReader(tarGz))
 	if err != nil {
 		return false, err
 	}
@@ -34,113 +35,94 @@ func (srv *lambdaSrv) Upload(ctx context.Context, token *api.Token, uid string, 
 
 func (srv *lambdaSrv) Download(ctx context.Context, token *api.Token, uid string) ([]byte, error) {
 	var out bytes.Buffer
-	err := srv.project.Download(ctx, uid, &out)
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return nil, err
+	}
+	err = fn.Lambda.Content(&out)
 	return out.Bytes(), err
 }
 
 func (srv *lambdaSrv) Push(ctx context.Context, token *api.Token, uid string, file string, content []byte) (bool, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return false, fmt.Errorf("unknown app")
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return false, err
 	}
-
-	err := app.WriteFile(file, content)
+	err = fn.Lambda.WriteFile(file, bytes.NewReader(content))
 	return err == nil, err
 }
 
 func (srv *lambdaSrv) Pull(ctx context.Context, token *api.Token, uid string, file string) ([]byte, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return nil, fmt.Errorf("unknown app")
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return nil, err
 	}
-	return app.ReadFile(file)
+	var out bytes.Buffer
+	err = fn.Lambda.ReadFile(file, &out)
+	return out.Bytes(), err
 }
 
 func (srv *lambdaSrv) Remove(ctx context.Context, token *api.Token, uid string) (bool, error) {
-	err := srv.project.Remove(ctx, uid)
+	err := srv.cases.Remove(uid)
 	return err == nil, err
 }
 
-func (srv *lambdaSrv) Files(ctx context.Context, token *api.Token, uid string, dir string) ([]*api.File, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return nil, fmt.Errorf("unknown app")
-	}
-
-	fpath, err := app.File(dir)
+func (srv *lambdaSrv) Files(ctx context.Context, token *api.Token, uid string, dir string) ([]types.File, error) {
+	fn, err := srv.cases.Platform().FindByUID(uid)
 	if err != nil {
 		return nil, err
 	}
-	list, err := ioutil.ReadDir(fpath)
+	return fn.Lambda.ListFiles(dir)
+}
+
+func (srv *lambdaSrv) Info(ctx context.Context, token *api.Token, uid string) (*application.Definition, error) {
+	fn, err := srv.cases.Platform().FindByUID(uid)
 	if err != nil {
 		return nil, err
 	}
-	var ans = make([]*api.File, 0, len(list))
-	for _, item := range list {
-		ans = append(ans, &api.File{
-			Dir:  item.IsDir(),
-			Name: item.Name(),
-		})
-	}
-	return ans, nil
+	return fn, nil
 }
 
-func (srv *lambdaSrv) Info(ctx context.Context, token *api.Token, uid string) (*types.App, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return nil, fmt.Errorf("unknown app")
-	}
-	return &app.App, nil
-}
-
-func (srv *lambdaSrv) Update(ctx context.Context, token *api.Token, uid string, manifest types.Manifest) (*types.App, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return nil, fmt.Errorf("unknown app")
+func (srv *lambdaSrv) Update(ctx context.Context, token *api.Token, uid string, manifest types.Manifest) (*application.Definition, error) {
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return nil, err
 	}
 	if err := manifest.Validate(); err != nil {
 		return nil, err
 	}
-	app.Manifest = manifest
-	return &app.App, app.Manifest.SaveAs(app.ManifestFile())
+	err = fn.Lambda.SetManifest(manifest)
+	if err != nil {
+		return nil, err
+	}
+	fn.Manifest = manifest
+	return fn, nil
 }
 
 func (srv *lambdaSrv) CreateFile(ctx context.Context, token *api.Token, uid string, path string, dir bool) (bool, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return false, fmt.Errorf("unknown app")
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return false, err
 	}
-	err := app.Touch(path, dir)
+	err = fn.Lambda.WriteFile(path, bytes.NewBufferString(""))
 	return err == nil, err
 }
 
 func (srv *lambdaSrv) RemoveFile(ctx context.Context, token *api.Token, uid string, path string) (bool, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return false, fmt.Errorf("unknown app")
-	}
-	fpath, err := app.File(path)
+	fn, err := srv.cases.Platform().FindByUID(uid)
 	if err != nil {
 		return false, err
 	}
-	err = os.RemoveAll(fpath)
+	err = fn.Lambda.RemoveFile(path)
 	return err == nil, err
 }
 
 func (srv *lambdaSrv) RenameFile(ctx context.Context, token *api.Token, uid string, oldPath, newPath string) (bool, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return false, fmt.Errorf("unknown app")
-	}
-	opath, err := app.File(oldPath)
+	fn, err := srv.cases.Platform().FindByUID(uid)
 	if err != nil {
 		return false, err
 	}
-	npath, err := app.File(newPath)
-	if err != nil {
-		return false, err
-	}
-	err = os.Rename(opath, npath)
+	err = fn.Lambda.RenameFile(oldPath, newPath)
 	return err == nil, err
 }
 
@@ -149,33 +131,27 @@ func (srv *lambdaSrv) Stats(ctx context.Context, token *api.Token, uid string, l
 }
 
 func (srv *lambdaSrv) Actions(ctx context.Context, token *api.Token, uid string) ([]string, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return nil, fmt.Errorf("unknown app")
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return nil, err
 	}
-	return app.ListActions()
+	return fn.Lambda.Actions()
 }
 
 func (srv *lambdaSrv) Invoke(ctx context.Context, token *api.Token, uid string, action string) (string, error) {
-	app := srv.project.FindApp(uid)
-	if app == nil {
-		return "", fmt.Errorf("unknown app")
+	fn, err := srv.cases.Platform().FindByUID(uid)
+	if err != nil {
+		return "", err
 	}
-	return app.InvokeAction(ctx, action, 0, srv.project.GlobalEnvironment())
+	var out bytes.Buffer
+	err = srv.cases.Platform().Do(ctx, fn.Lambda, action, 0, &out)
+	return out.String(), err
 }
 
-func (srv *lambdaSrv) Link(ctx context.Context, token *api.Token, uid string, alias string) (*types.App, error) {
-	app, err := srv.project.Link(uid, alias)
-	if err != nil {
-		return nil, err
-	}
-	return &app.App, nil
+func (srv *lambdaSrv) Link(ctx context.Context, token *api.Token, uid string, alias string) (*application.Definition, error) {
+	return srv.cases.Platform().Link(uid, alias)
 }
 
-func (srv *lambdaSrv) Unlink(ctx context.Context, token *api.Token, alias string) (*types.App, error) {
-	app, err := srv.project.Unlink(alias)
-	if err != nil {
-		return nil, err
-	}
-	return &app.App, nil
+func (srv *lambdaSrv) Unlink(ctx context.Context, token *api.Token, alias string) (*application.Definition, error) {
+	return srv.cases.Platform().Unlink(alias)
 }

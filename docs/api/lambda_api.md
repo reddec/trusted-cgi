@@ -187,7 +187,7 @@ Signed JWT
 Files in func dir
 
 * Method: `LambdaAPI.Files`
-* Returns: `[]*File`
+* Returns: `[]types.File`
 
 * Arguments:
 
@@ -213,8 +213,8 @@ EOF
 
 | Json | Type | Comment |
 |------|------|---------|
-| is_dir | `bool` |  |
 | name | `string` |  |
+| is_dir | `bool` |  |
 
 ### Token
 
@@ -226,7 +226,7 @@ Signed JWT
 Info about application
 
 * Method: `LambdaAPI.Info`
-* Returns: `*types.App`
+* Returns: `*application.Definition`
 
 * Arguments:
 
@@ -246,14 +246,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Token
 
@@ -265,7 +265,7 @@ Signed JWT
 Update application manifest
 
 * Method: `LambdaAPI.Update`
-* Returns: `*types.App`
+* Returns: `*application.Definition`
 
 * Arguments:
 
@@ -286,14 +286,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Manifest
 
@@ -316,7 +316,6 @@ EOF
 | allowed_origin | `JsonStringSet` |  |
 | public | `bool` |  |
 | tokens | `map[string]string` |  |
-| aliases | `JsonStringSet` |  |
 | cron | `[]Schedule` |  |
 | static | `string` |  |
 
@@ -452,15 +451,8 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| input | `[]byte` |  |
-| output | `[]byte` |  |
 | error | `string` |  |
-| code | `int` |  |
-| method | `string` |  |
-| remote | `string` |  |
-| origin | `string` |  |
-| uri | `string` |  |
-| token | `string` |  |
+| request | `types.Request` |  |
 | begin | `time.Time` |  |
 | end | `time.Time` |  |
 
@@ -535,7 +527,7 @@ Signed JWT
 Make link/alias for app
 
 * Method: `LambdaAPI.Link`
-* Returns: `*types.App`
+* Returns: `*application.Definition`
 
 * Arguments:
 
@@ -556,14 +548,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Token
 
@@ -575,7 +567,7 @@ Signed JWT
 Remove link
 
 * Method: `LambdaAPI.Unlink`
-* Returns: `*types.App`
+* Returns: `*application.Definition`
 
 * Arguments:
 
@@ -595,14 +587,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Token
 

@@ -25,9 +25,9 @@ type Manifest struct {
 	AllowedOrigin  JsonStringSet     `json:"allowed_origin,omitempty"`  // limit incoming connections by origin header
 	Public         bool              `json:"public"`                    // if public, tokens are ignores
 	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
-	Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
-	Cron           []Schedule        `json:"cron,omitempty"`            // crontab expression and action name to invoke
-	Static         string            `json:"static,omitempty"`          // relative path to static folder
+	//Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
+	Cron   []Schedule `json:"cron,omitempty"`   // crontab expression and action name to invoke
+	Static string     `json:"static,omitempty"` // relative path to static folder
 }
 
 type Schedule struct {

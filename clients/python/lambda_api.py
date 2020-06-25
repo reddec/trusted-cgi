@@ -9,51 +9,51 @@ from base64 import decodebytes, encodebytes
 
 @dataclass
 class File:
-    dir: 'bool'
     name: 'str'
+    dir: 'bool'
 
     def to_json(self) -> dict:
         return {
-            "is_dir": self.dir,
             "name": self.name,
+            "is_dir": self.dir,
         }
 
     @staticmethod
     def from_json(payload: dict) -> 'File':
         return File(
-                dir=payload['is_dir'],
                 name=payload['name'],
+                dir=payload['is_dir'],
         )
 
 
 @dataclass
-class App:
+class Definition:
     uid: 'str'
+    aliases: 'Any'
     manifest: 'Manifest'
-    is_git: 'bool'
 
     def to_json(self) -> dict:
         return {
             "uid": self.uid,
+            "aliases": self.aliases,
             "manifest": self.manifest.to_json(),
-            "git": self.is_git,
         }
 
     @staticmethod
-    def from_json(payload: dict) -> 'App':
-        return App(
+    def from_json(payload: dict) -> 'Definition':
+        return Definition(
                 uid=payload['uid'],
+                aliases=payload['aliases'],
                 manifest=Manifest.from_json(payload['manifest']),
-                is_git=payload['git'],
         )
 
 
 @dataclass
 class Manifest:
-    name: 'str'
-    description: 'str'
+    name: 'Optional[str]'
+    description: 'Optional[str]'
     run: 'List[str]'
-    output_headers: 'Any'
+    output_headers: 'Optional[Any]'
     input_headers: 'Optional[Any]'
     query: 'Optional[Any]'
     environment: 'Optional[Any]'
@@ -66,7 +66,6 @@ class Manifest:
     allowed_origin: 'Optional[Any]'
     public: 'bool'
     tokens: 'Optional[Any]'
-    aliases: 'Optional[Any]'
     cron: 'Optional[List[Schedule]]'
     static: 'Optional[str]'
 
@@ -88,7 +87,6 @@ class Manifest:
             "allowed_origin": self.allowed_origin,
             "public": self.public,
             "tokens": self.tokens,
-            "aliases": self.aliases,
             "cron": [x.to_json() for x in self.cron],
             "static": self.static,
         }
@@ -112,7 +110,6 @@ class Manifest:
                 allowed_origin=payload['allowed_origin'],
                 public=payload['public'],
                 tokens=payload['tokens'],
-                aliases=payload['aliases'],
                 cron=[Schedule.from_json(x) for x in (payload['cron'] or [])],
                 static=payload['static'],
         )
@@ -143,30 +140,16 @@ class Schedule:
 @dataclass
 class Record:
     uid: 'str'
-    input: 'Optional[bytes]'
-    output: 'Optional[bytes]'
     err: 'Optional[str]'
-    code: 'int'
-    method: 'str'
-    remote: 'str'
-    origin: 'Optional[str]'
-    uri: 'str'
-    token: 'Optional[str]'
+    request: 'Request'
     begin: 'Any'
     end: 'Any'
 
     def to_json(self) -> dict:
         return {
             "uid": self.uid,
-            "input": encodebytes(self.input),
-            "output": encodebytes(self.output),
             "error": self.err,
-            "code": self.code,
-            "method": self.method,
-            "remote": self.remote,
-            "origin": self.origin,
-            "uri": self.uri,
-            "token": self.token,
+            "request": self.request.to_json(),
             "begin": self.begin,
             "end": self.end,
         }
@@ -175,17 +158,41 @@ class Record:
     def from_json(payload: dict) -> 'Record':
         return Record(
                 uid=payload['uid'],
-                input=decodebytes((payload['input'] or '').encode()),
-                output=decodebytes((payload['output'] or '').encode()),
                 err=payload['error'],
-                code=payload['code'],
-                method=payload['method'],
-                remote=payload['remote'],
-                origin=payload['origin'],
-                uri=payload['uri'],
-                token=payload['token'],
+                request=Request.from_json(payload['request']),
                 begin=payload['begin'],
                 end=payload['end'],
+        )
+
+
+@dataclass
+class Request:
+    method: 'str'
+    url: 'str'
+    path: 'str'
+    remote_address: 'str'
+    form: 'Any'
+    headers: 'Any'
+
+    def to_json(self) -> dict:
+        return {
+            "method": self.method,
+            "url": self.url,
+            "path": self.path,
+            "remote_address": self.remote_address,
+            "form": self.form,
+            "headers": self.headers,
+        }
+
+    @staticmethod
+    def from_json(payload: dict) -> 'Request':
+        return Request(
+                method=payload['method'],
+                url=payload['url'],
+                path=payload['path'],
+                remote_address=payload['remote_address'],
+                form=payload['form'],
+                headers=payload['headers'],
         )
 
 
@@ -316,7 +323,7 @@ class LambdaAPIClient:
             raise LambdaAPIError.from_json('files', payload['error'])
         return [File.from_json(x) for x in (payload['result'] or [])]
 
-    async def info(self, token: Any, uid: str) -> App:
+    async def info(self, token: Any, uid: str) -> Definition:
         """
         Info about application
         """
@@ -330,9 +337,9 @@ class LambdaAPIClient:
         payload = await response.json()
         if 'error' in payload:
             raise LambdaAPIError.from_json('info', payload['error'])
-        return App.from_json(payload['result'])
+        return Definition.from_json(payload['result'])
 
-    async def update(self, token: Any, uid: str, manifest: Manifest) -> App:
+    async def update(self, token: Any, uid: str, manifest: Manifest) -> Definition:
         """
         Update application manifest
         """
@@ -346,7 +353,7 @@ class LambdaAPIClient:
         payload = await response.json()
         if 'error' in payload:
             raise LambdaAPIError.from_json('update', payload['error'])
-        return App.from_json(payload['result'])
+        return Definition.from_json(payload['result'])
 
     async def create_file(self, token: Any, uid: str, path: str, dir: bool) -> bool:
         """
@@ -444,7 +451,7 @@ class LambdaAPIClient:
             raise LambdaAPIError.from_json('invoke', payload['error'])
         return payload['result']
 
-    async def link(self, token: Any, uid: str, alias: str) -> App:
+    async def link(self, token: Any, uid: str, alias: str) -> Definition:
         """
         Make link/alias for app
         """
@@ -458,9 +465,9 @@ class LambdaAPIClient:
         payload = await response.json()
         if 'error' in payload:
             raise LambdaAPIError.from_json('link', payload['error'])
-        return App.from_json(payload['result'])
+        return Definition.from_json(payload['result'])
 
-    async def unlink(self, token: Any, alias: str) -> App:
+    async def unlink(self, token: Any, alias: str) -> Definition:
         """
         Remove link
         """
@@ -474,7 +481,7 @@ class LambdaAPIClient:
         payload = await response.json()
         if 'error' in payload:
             raise LambdaAPIError.from_json('unlink', payload['error'])
-        return App.from_json(payload['result'])
+        return Definition.from_json(payload['result'])
 
     async def _invoke(self, request):
         return await self.__request('POST', self.__url, json=request)
@@ -550,7 +557,7 @@ class LambdaAPIBatch:
         """
         params = [token, uid, ]
         method = "LambdaAPI.Info"
-        self.__add_request(method, params, lambda payload: App.from_json(payload))
+        self.__add_request(method, params, lambda payload: Definition.from_json(payload))
 
     def update(self, token: Any, uid: str, manifest: Manifest):
         """
@@ -558,7 +565,7 @@ class LambdaAPIBatch:
         """
         params = [token, uid, manifest.to_json(), ]
         method = "LambdaAPI.Update"
-        self.__add_request(method, params, lambda payload: App.from_json(payload))
+        self.__add_request(method, params, lambda payload: Definition.from_json(payload))
 
     def create_file(self, token: Any, uid: str, path: str, dir: bool):
         """
@@ -614,7 +621,7 @@ class LambdaAPIBatch:
         """
         params = [token, uid, alias, ]
         method = "LambdaAPI.Link"
-        self.__add_request(method, params, lambda payload: App.from_json(payload))
+        self.__add_request(method, params, lambda payload: Definition.from_json(payload))
 
     def unlink(self, token: Any, alias: str):
         """
@@ -622,7 +629,7 @@ class LambdaAPIBatch:
         """
         params = [token, alias, ]
         method = "LambdaAPI.Unlink"
-        self.__add_request(method, params, lambda payload: App.from_json(payload))
+        self.__add_request(method, params, lambda payload: Definition.from_json(payload))
 
     def __add_request(self, method: str, params, factory):
         request_id = self.__next_id()

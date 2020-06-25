@@ -14,7 +14,7 @@ ui/dist: ui/src
 	cd ui && npm install . && npx quasar build
 
 update_ui:
-	cd ui && git reset --hard && git pull origin master && git lfs pull && npx quasar build
+	cd ui && git reset --hard && git pull origin master && git lfs pull && npm install . && npx quasar build
 
 regen: json-rpc2
 	go generate api/handlers/*.go

@@ -28,17 +28,20 @@ export interface TemplateStatus {
     available: boolean
 }
 
-export interface App {
+export interface Definition {
     uid: string
+    aliases: JsonStringSet
     manifest: Manifest
-    git: boolean
+}
+
+export interface JsonStringSet {
 }
 
 export interface Manifest {
-    name: string
-    description: string
+    name: string | null
+    description: string | null
     run: Array<string>
-    output_headers: any
+    output_headers: any | null
     input_headers: any | null
     query: any | null
     environment: any | null
@@ -51,15 +54,11 @@ export interface Manifest {
     allowed_origin: JsonStringSet | null
     public: boolean
     tokens: any | null
-    aliases: JsonStringSet | null
     cron: Array<Schedule> | null
     static: string | null
 }
 
 export type JsonDuration = string; // suffixes: ns, us, ms, s, m, h
-
-export interface JsonStringSet {
-}
 
 export interface Schedule {
     cron: string
@@ -74,17 +73,19 @@ export interface Template {
 
 export interface Record {
     uid: string
-    input: Array<number> | null
-    output: Array<number> | null
     error: string | null
-    code: number
-    method: string
-    remote: string
-    origin: string | null
-    uri: string
-    token: string | null
+    request: Request
     begin: Time
     end: Time
+}
+
+export interface Request {
+    method: string
+    url: string
+    path: string
+    remote_address: string
+    form: any
+    headers: any
 }
 
 export type Time = string; // RFC3339
@@ -303,13 +304,13 @@ export class ProjectAPI {
     /**
     List available apps (lambdas) in a project
     **/
-    async list(token: Token): Promise<Array<App>> {
+    async list(token: Token): Promise<Array<Definition>> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "ProjectAPI.List",
             "id" : this.__next_id(),
             "params" : [token]
-        })) as Array<App>;
+        })) as Array<Definition>;
     }
 
     /**
@@ -339,37 +340,37 @@ export class ProjectAPI {
     /**
     Create new app (lambda)
     **/
-    async create(token: Token): Promise<App> {
+    async create(token: Token): Promise<Definition> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "ProjectAPI.Create",
             "id" : this.__next_id(),
             "params" : [token]
-        })) as App;
+        })) as Definition;
     }
 
     /**
     Create new app/lambda/function using pre-defined template
     **/
-    async createFromTemplate(token: Token, templateName: string): Promise<App> {
+    async createFromTemplate(token: Token, templateName: string): Promise<Definition> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "ProjectAPI.CreateFromTemplate",
             "id" : this.__next_id(),
             "params" : [token, templateName]
-        })) as App;
+        })) as Definition;
     }
 
     /**
     Create new app/lambda/function using remote Git repo
     **/
-    async createFromGit(token: Token, repo: string): Promise<App> {
+    async createFromGit(token: Token, repo: string): Promise<Definition> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "ProjectAPI.CreateFromGit",
             "id" : this.__next_id(),
             "params" : [token, repo]
-        })) as App;
+        })) as Definition;
     }
 
 

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/stats"
 	"github.com/reddec/trusted-cgi/types"
 )
@@ -32,11 +33,6 @@ type TemplateStatus struct {
 	Available   bool   `json:"available"`
 }
 
-type File struct {
-	Dir  bool   `json:"is_dir"`
-	Name string `json:"name"`
-}
-
 type Settings struct {
 	User        string            `json:"user"`                  // effective user (user for run apps)
 	PublicKey   string            `json:"public_key,omitempty"`  // optional public RSA key for SSH
@@ -60,11 +56,11 @@ type LambdaAPI interface {
 	// Remove app and call Uninstall handler (if defined)
 	Remove(ctx context.Context, token *Token, uid string) (bool, error)
 	// Files in func dir
-	Files(ctx context.Context, token *Token, uid string, dir string) ([]*File, error)
+	Files(ctx context.Context, token *Token, uid string, dir string) ([]types.File, error)
 	// Info about application
-	Info(ctx context.Context, token *Token, uid string) (*types.App, error)
+	Info(ctx context.Context, token *Token, uid string) (*application.Definition, error)
 	// Update application manifest
-	Update(ctx context.Context, token *Token, uid string, manifest types.Manifest) (*types.App, error)
+	Update(ctx context.Context, token *Token, uid string, manifest types.Manifest) (*application.Definition, error)
 	// Create file or directory inside app
 	CreateFile(ctx context.Context, token *Token, uid string, path string, dir bool) (bool, error)
 	// Remove file or directory
@@ -78,9 +74,9 @@ type LambdaAPI interface {
 	// Invoke action in the app (if make installed)
 	Invoke(ctx context.Context, token *Token, uid string, action string) (string, error)
 	// Make link/alias for app
-	Link(ctx context.Context, token *Token, uid string, alias string) (*types.App, error)
+	Link(ctx context.Context, token *Token, uid string, alias string) (*application.Definition, error)
 	// Remove link
-	Unlink(ctx context.Context, token *Token, alias string) (*types.App, error)
+	Unlink(ctx context.Context, token *Token, alias string) (*application.Definition, error)
 }
 
 // API for global project
@@ -94,17 +90,17 @@ type ProjectAPI interface {
 	// Get all templates without filtering
 	AllTemplates(ctx context.Context, token *Token) ([]*TemplateStatus, error)
 	// List available apps (lambdas) in a project
-	List(ctx context.Context, token *Token) ([]*types.App, error)
+	List(ctx context.Context, token *Token) ([]application.Definition, error)
 	// Templates with filter by availability including embedded
 	Templates(ctx context.Context, token *Token) ([]*Template, error)
 	// Global last records
 	Stats(ctx context.Context, token *Token, limit int) ([]stats.Record, error)
 	// Create new app (lambda)
-	Create(ctx context.Context, token *Token) (*types.App, error)
+	Create(ctx context.Context, token *Token) (*application.Definition, error)
 	// Create new app/lambda/function using pre-defined template
-	CreateFromTemplate(ctx context.Context, token *Token, templateName string) (*types.App, error)
+	CreateFromTemplate(ctx context.Context, token *Token, templateName string) (*application.Definition, error)
 	// Create new app/lambda/function using remote Git repo
-	CreateFromGit(ctx context.Context, token *Token, repo string) (*types.App, error)
+	CreateFromGit(ctx context.Context, token *Token, repo string) (*application.Definition, error)
 }
 
 // User/admin profile API

@@ -40,9 +40,19 @@ func (d *dumped) readDump() error {
 	}
 	for i := 0; i < int(n); i++ {
 		var item stats.Record
-		err = item.DecodeMsg(reader)
-		if err != nil {
+		if legacy, err := isLegacyRecord(reader); err != nil {
 			return err
+		} else if legacy {
+			v, err := fromLegacy(reader)
+			if err != nil {
+				return err
+			}
+			item = *v
+		} else {
+			err = item.DecodeMsg(reader)
+			if err != nil {
+				return err
+			}
 		}
 		d.mem.Track(item)
 	}

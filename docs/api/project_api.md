@@ -188,7 +188,7 @@ Signed JWT
 List available apps (lambdas) in a project
 
 * Method: `ProjectAPI.List`
-* Returns: `[]*types.App`
+* Returns: `[]application.Definition`
 
 * Arguments:
 
@@ -207,14 +207,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Token
 
@@ -289,15 +289,8 @@ EOF
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| input | `[]byte` |  |
-| output | `[]byte` |  |
 | error | `string` |  |
-| code | `int` |  |
-| method | `string` |  |
-| remote | `string` |  |
-| origin | `string` |  |
-| uri | `string` |  |
-| token | `string` |  |
+| request | `types.Request` |  |
 | begin | `time.Time` |  |
 | end | `time.Time` |  |
 
@@ -311,7 +304,7 @@ Signed JWT
 Create new app (lambda)
 
 * Method: `ProjectAPI.Create`
-* Returns: `*types.App`
+* Returns: `*application.Definition`
 
 * Arguments:
 
@@ -330,14 +323,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Token
 
@@ -349,7 +342,7 @@ Signed JWT
 Create new app/lambda/function using pre-defined template
 
 * Method: `ProjectAPI.CreateFromTemplate`
-* Returns: `*types.App`
+* Returns: `*application.Definition`
 
 * Arguments:
 
@@ -369,14 +362,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Token
 
@@ -388,7 +381,7 @@ Signed JWT
 Create new app/lambda/function using remote Git repo
 
 * Method: `ProjectAPI.CreateFromGit`
-* Returns: `*types.App`
+* Returns: `*application.Definition`
 
 * Arguments:
 
@@ -408,14 +401,14 @@ curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:343
 EOF
 ```
 
-### App
+### Definition
 
 
 | Json | Type | Comment |
 |------|------|---------|
 | uid | `string` |  |
-| manifest | `Manifest` |  |
-| git | `bool` |  |
+| aliases | `types.JsonStringSet` |  |
+| manifest | `types.Manifest` |  |
 
 ### Token
 

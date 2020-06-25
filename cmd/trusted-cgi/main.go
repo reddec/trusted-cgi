@@ -5,12 +5,16 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/reddec/trusted-cgi/api/services"
 	"github.com/reddec/trusted-cgi/application"
+	"github.com/reddec/trusted-cgi/application/cases"
+	"github.com/reddec/trusted-cgi/application/platform"
 	"github.com/reddec/trusted-cgi/cmd/internal"
+	internal2 "github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/server"
 	"github.com/reddec/trusted-cgi/stats/impl/memlog"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -84,7 +88,7 @@ func run(ctx context.Context, config Config) error {
 		return err
 	}
 
-	var defCfg application.ProjectConfig
+	var defCfg application.Config
 	defCfg.User = config.InitialChrootUser
 
 	if config.Dev {
@@ -94,28 +98,36 @@ func run(ctx context.Context, config Config) error {
 		defCfg.User = ""
 	}
 
-	project, err := application.OpenProject(config.Dir, defCfg)
-	if err != nil {
-		return err
-	}
-	err = project.SetupSSHKey(config.SSHKey)
+	basePlatform, err := platform.New(filepath.Join(config.Dir, internal2.ProjectManifest))
 	if err != nil {
 		return err
 	}
 
-	projectApi := services.NewProjectSrv(project, tracker, config.Templates)
-	lambdaApi := services.NewLambdaSrv(project, tracker)
+	useCases, err := cases.New(basePlatform, config.Dir, config.Templates)
+	if err != nil {
+		return err
+	}
+
+	if config.SSHKey != "" {
+		err = useCases.SetOrCreatePrivateSSHKeyFile(config.SSHKey)
+		if err != nil {
+			return err
+		}
+	}
+
+	projectApi := services.NewProjectSrv(useCases, tracker)
+	lambdaApi := services.NewLambdaSrv(useCases, tracker)
 	userApi, err := services.CreateUserSrv(config.Config, config.InitialAdminPassword)
 	if err != nil {
 		return err
 	}
 
-	go runScheduler(ctx, config.SchedulerInterval, project)
+	go runScheduler(ctx, config.SchedulerInterval, useCases)
 
 	defer tracker.Dump()
 	go dumpTracker(ctx, config.StatsInterval, tracker)
 
-	handler, err := server.Handler(ctx, config.Dev, project, tracker, userApi, projectApi, lambdaApi, userApi)
+	handler, err := server.Handler(ctx, config.Dev, basePlatform, tracker, userApi, projectApi, lambdaApi, userApi)
 	if err != nil {
 		return err
 	}
@@ -141,9 +153,7 @@ func dumpTracker(ctx context.Context, each time.Duration, tracker interface {
 	}
 }
 
-func runScheduler(ctx context.Context, each time.Duration, runner interface {
-	RunCron(ctx context.Context)
-}) {
+func runScheduler(ctx context.Context, each time.Duration, runner application.Cases) {
 	t := time.NewTicker(each)
 	defer t.Stop()
 	for {
@@ -152,6 +162,6 @@ func runScheduler(ctx context.Context, each time.Duration, runner interface {
 		case <-ctx.Done():
 			return
 		}
-		runner.RunCron(ctx)
+		runner.RunScheduledActions(ctx)
 	}
 }

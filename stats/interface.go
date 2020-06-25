@@ -1,25 +1,19 @@
 package stats
 
-import "time"
+import (
+	"github.com/reddec/trusted-cgi/types"
+	"time"
+)
 
 //go:generate msgp
 
-//msgp:tuple Record
-
 // Tracking record
 type Record struct {
-	UID    string    `json:"uid"`              // app UID
-	Input  []byte    `json:"input,omitempty"`  // input data (could be empty if failed before read)
-	Output []byte    `json:"output,omitempty"` // output data (could be empty if failed before run)
-	Err    string    `json:"error,omitempty"`  // optional error
-	Code   int       `json:"code"`             // response HTTP code
-	Method string    `json:"method"`           // request HTTP method
-	Remote string    `json:"remote"`           // request remote address (usually ip:port)
-	Origin string    `json:"origin,omitempty"` // request origin header (could be empty)
-	URI    string    `json:"uri"`              // raw request URI
-	Token  string    `json:"token,omitempty"`  // request Authorization header (could be empty)
-	Begin  time.Time `json:"begin"`            // started time
-	End    time.Time `json:"end"`              // ended time
+	UID     string        `json:"uid" msg:"uid,omitempty"`             // app UID
+	Err     string        `json:"error,omitempty" msg:"err,omitempty"` // optional error
+	Request types.Request `json:"request" msg:"req,omitempty"`         // incoming request
+	Begin   time.Time     `json:"begin" msg:"beg,omitempty"`           // started time
+	End     time.Time     `json:"end" msg:"end,omitempty"`             // ended time
 }
 
 // Recorder for apps requests

@@ -15,7 +15,7 @@ jobs:
         go-version: 1.13
       id: go
     - name: Install deps
-      run: apt install -y python3 pandoc
+      run: sudo apt install -y python3 pandoc
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2

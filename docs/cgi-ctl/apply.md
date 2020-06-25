@@ -5,7 +5,7 @@ parent: Control util
 nav_order: 208
 ---
 
-## apply
+# apply
 
 Pushes local manifest to the remote platform and applies settings without a restart.
 

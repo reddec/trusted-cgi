@@ -6,3 +6,6 @@
 /docs/.bundle
 /docs/_site
 /docs/.jekyll-cache
+/MANUAL.md
+/*.gz
+/MANUAL.html

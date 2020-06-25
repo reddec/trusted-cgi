@@ -5,7 +5,7 @@ parent: Control util
 nav_order: 207
 ---
 
-## update manifest
+# update manifest
 
 Pulls remote lambda manifest and saves it locally. Useful to update only the configuration, while
 keeping files remotely unsynchronized with local environment.

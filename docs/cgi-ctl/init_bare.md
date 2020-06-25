@@ -4,7 +4,7 @@ title: init bare
 parent: Control util
 nav_order: 1
 ---
-## init bare
+# init bare
 
 From `0.3.0`
 

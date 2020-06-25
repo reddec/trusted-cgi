@@ -3,7 +3,7 @@ layout: default
 title: Nim
 parent: Templates
 ---
-### Nim lang
+# Nim lang
 
 Host requirements:
 

@@ -4,7 +4,7 @@ title: Blog
 parent: Examples
 nav_order: 1
 ---
-## Example
+# Blog example
 
 This is basic public comment board example: 
 

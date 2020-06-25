@@ -5,8 +5,6 @@ nav_order: 5
 has_children: true
 ---
 
-# Templates
-
 Templates are a special kind of JSON-based files that defines a structure and base files
 for a new lambdas/functions/apps.
 

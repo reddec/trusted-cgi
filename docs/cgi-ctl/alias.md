@@ -5,7 +5,7 @@ parent: Control util
 nav_order: 206
 ---
 
-## alias
+# alias
 
 Creates, removes or print [aliases](../../usage/aliases) for a lambda.
 

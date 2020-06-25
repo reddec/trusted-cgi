@@ -3,7 +3,7 @@ layout: default
 title: PHP
 parent: Templates
 ---
-### PHP
+# PHP
 
 Host requirements:
 

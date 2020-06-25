@@ -4,7 +4,7 @@ title: create
 parent: Control util
 nav_order: 205
 ---
-## create
+# create
 
 Creates a new lambda on the remote platform. Initializes local environment: 
 .cgiignore, [manifest.json](../../usage/manifest) and .cgictl.json files.

@@ -3,7 +3,7 @@ layout: default
 title: Python3
 parent: Templates
 ---
-### Python 3
+# Python 3
 
 Host requirements:
 

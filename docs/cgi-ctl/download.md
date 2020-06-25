@@ -4,7 +4,7 @@ title: download
 parent: Control util
 nav_order: 200
 ---
-## download
+# download
 
 From `0.3.1`
 

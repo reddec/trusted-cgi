@@ -67,6 +67,7 @@ nfpms:
       - /etc/trusted-cgi
     files:
       "debian/trusted-cgi.service": "/etc/systemd/system/trusted-cgi.service"
+      "trusted-cgi.1.gz" : "/usr/local/share/man/man1/trusted-cgi.1.gz"
     config_files:
       "debian/trusted-cgi.env": "/etc/trusted-cgi/trusted-cgi.env"
 uploads:
@@ -88,6 +89,8 @@ archives:
   files:
     - LICENSE
     - README.md
+    - MANUAL.md
+    - MANUAL.html
   format: tar.gz
   format_overrides:
     - goos: windows

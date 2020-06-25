@@ -5,6 +5,6 @@ import (
 	"os/exec"
 )
 
-func setCreds(cmd *exec.Cmd, creds *types.Credential) {
+func SetCreds(cmd *exec.Cmd, creds *types.Credential) {
 
 }

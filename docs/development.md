@@ -6,7 +6,7 @@ nav_order: 999
 # Development
 
 The project has Linux-specific features and aimed to be run in Linux ecosystem, however
-client control utility (cgi-ctl) shall work on most platform.
+client control utility (cgi-ctl) and server (trusted-cgi) shall work on most platform (Darwin, Linux, Windows).
 
 Requirements for backend
 

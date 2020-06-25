@@ -25,6 +25,8 @@ Features:
 
 # Installation
 
+Since `0.3.3` Linux, Darwin and even Windows OS supported: pre-built binaries could be found in [releases](https://github.com/reddec/trusted-cgi/releases)
+
 TL;DR;
 
 * for production for debian servers - use bintray repository (recommend)

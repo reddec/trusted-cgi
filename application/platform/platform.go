@@ -157,7 +157,14 @@ func (platform *platform) Add(uid string, lambda application.Lambda) error {
 	if platform.byUID == nil {
 		platform.byUID = make(map[string]record)
 	}
-	platform.byUID[uid] = record{lambda: lambda, aliases: make(types.JsonStringSet)}
+	rec := record{lambda: lambda, aliases: make(types.JsonStringSet)}
+	// search for already existent links
+	for alias, target := range platform.config.Links {
+		if target == uid {
+			rec.aliases.Set(alias)
+		}
+	}
+	platform.byUID[uid] = rec
 	platform.lock.Unlock()
 
 	if !exists {
@@ -179,6 +186,7 @@ func (platform *platform) Remove(uid string) {
 			delete(platform.config.Links, alias)
 		}
 	}
+	_ = platform.unsafeSaveConfig()
 }
 
 func (platform *platform) Invoke(ctx context.Context, lambda application.Lambda, request types.Request, out io.Writer) error {

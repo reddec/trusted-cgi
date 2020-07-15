@@ -62,6 +62,7 @@ func (local *localLambda) SetCredentials(creds *types.Credential) error {
 func (local *localLambda) Invoke(ctx context.Context, request types.Request, response io.Writer, globalEnv map[string]string) error {
 	local.lock.RLock()
 	defer local.lock.RUnlock()
+	defer request.Body.Close()
 
 	if !local.passSecurityCheck(&request) {
 		return fmt.Errorf("security checks failed")
@@ -85,7 +86,7 @@ func (local *localLambda) Invoke(ctx context.Context, request types.Request, res
 		ctx = cctx
 	}
 
-	var input = request.Body
+	var input io.Reader = request.Body
 
 	if local.manifest.MaximumPayload > 0 {
 		input = io.LimitReader(input, local.manifest.MaximumPayload)

@@ -13,7 +13,7 @@ type Request struct {
 	RemoteAddress string            `json:"remote_address" msg:"remote_address"`
 	Form          map[string]string `json:"form" msg:"form"`
 	Headers       map[string]string `json:"headers" msg:"headers"`
-	Body          io.Reader         `json:"-" msg:"-"`
+	Body          io.ReadCloser     `json:"-" msg:"-"`
 }
 
 // Create request from HTTP request
@@ -36,4 +36,14 @@ func FromHTTP(r *http.Request) *Request {
 		Headers:       headers,
 		Body:          r.Body,
 	}
+}
+
+// Returns shallow copy of request with new body
+func (z *Request) WithBody(reader io.ReadCloser) *Request {
+	if z == nil {
+		return nil
+	}
+	cp := *z
+	cp.Body = reader
+	return &cp
 }

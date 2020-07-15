@@ -126,7 +126,7 @@ func TestLocalLambda_Invoke(t *testing.T) {
 
 	var out bytes.Buffer
 	err = fn.Invoke(timeout, types.Request{
-		Body: bytes.NewBufferString("hello world"),
+		Body: ioutil.NopCloser(bytes.NewBufferString("hello world")),
 	}, &out, nil)
 	if !assert.NoError(t, err) {
 		return

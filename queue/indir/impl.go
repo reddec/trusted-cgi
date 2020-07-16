@@ -55,6 +55,10 @@ func (queue *inDirQueue) Commit(ctx context.Context) error {
 	return queue.backend.Commit()
 }
 
+func (queue *inDirQueue) Destroy() error {
+	return queue.backend.Destroy()
+}
+
 type readCloser struct {
 	reader io.Reader
 	closer io.Closer

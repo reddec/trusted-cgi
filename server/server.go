@@ -14,6 +14,7 @@ import (
 func Handler(ctx context.Context,
 	dev bool,
 	platform application.Platform,
+	queues application.Queues,
 	tracker stats.Stats,
 	tokenHandler interface {
 		ValidateToken(ctx context.Context, value *api.Token) error
@@ -25,9 +26,11 @@ func Handler(ctx context.Context,
 	// main API
 	apps := application.HandlerByUID(ctx, tracker, platform)
 	links := application.HandlerByLinks(ctx, tracker, platform)
+	queuesHandler := application.HandlerByQueues(queues)
 
 	mux.Handle("/a/", openedHandler(http.StripPrefix("/a/", apps)))
 	mux.Handle("/l/", openedHandler(http.StripPrefix("/l/", links)))
+	mux.Handle("/q/", openedHandler(http.StripPrefix("/q/", queuesHandler)))
 
 	// admin API
 	var router jsonrpc2.Router

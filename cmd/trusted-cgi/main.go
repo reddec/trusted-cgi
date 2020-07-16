@@ -7,8 +7,12 @@ import (
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/application/cases"
 	"github.com/reddec/trusted-cgi/application/platform"
+	"github.com/reddec/trusted-cgi/application/queues"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	internal2 "github.com/reddec/trusted-cgi/internal"
+	"github.com/reddec/trusted-cgi/queue"
+	"github.com/reddec/trusted-cgi/queue/indir"
+	"github.com/reddec/trusted-cgi/queue/inmemory"
 	"github.com/reddec/trusted-cgi/server"
 	"github.com/reddec/trusted-cgi/stats/impl/memlog"
 	"log"
@@ -25,6 +29,7 @@ type Config struct {
 	Config    string `short:"c" long:"config" env:"CONFIG" description:"Location of server configuration" default:"server.json"`
 	Dir       string `short:"d" long:"dir" env:"DIR" description:"Project directory" default:"."`
 	Templates string `long:"templates" env:"TEMPLATES" description:"Templates directory" default:".templates"`
+	Queues    string `long:"queues" env:"QUEUES" description:"Queues directory (- means memory)" default:".queues"`
 	//
 	InitialAdminPassword string        `long:"initial-admin-password" env:"INITIAL_ADMIN_PASSWORD" description:"Initial admin password" default:"admin"`
 	InitialChrootUser    string        `long:"initial-chroot-user" env:"INITIAL_CHROOT_USER" description:"Initial user for service" default:""`
@@ -103,7 +108,9 @@ func run(ctx context.Context, config Config) error {
 		return err
 	}
 
-	useCases, err := cases.New(basePlatform, config.Dir, config.Templates)
+	queueManager := queues.New(ctx, basePlatform, config.getQueueFactory())
+
+	useCases, err := cases.New(basePlatform, queueManager, config.Dir, config.Templates)
 	if err != nil {
 		return err
 	}
@@ -127,7 +134,7 @@ func run(ctx context.Context, config Config) error {
 	defer tracker.Dump()
 	go dumpTracker(ctx, config.StatsInterval, tracker)
 
-	handler, err := server.Handler(ctx, config.Dev, basePlatform, tracker, userApi, projectApi, lambdaApi, userApi)
+	handler, err := server.Handler(ctx, config.Dev, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi)
 	if err != nil {
 		return err
 	}
@@ -163,5 +170,16 @@ func runScheduler(ctx context.Context, each time.Duration, runner application.Ca
 			return
 		}
 		runner.RunScheduledActions(ctx)
+	}
+}
+
+func (cfg Config) getQueueFactory() func(name string) (queue.Queue, error) {
+	if cfg.Queues == "-" {
+		return func(name string) (queue.Queue, error) {
+			return inmemory.New(32), nil
+		}
+	}
+	return func(name string) (queue.Queue, error) {
+		return indir.New(filepath.Join(cfg.Queues, name))
 	}
 }

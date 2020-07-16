@@ -19,11 +19,18 @@ func HandlerByLinks(globalCtx context.Context, tracker stats.Recorder, platform 
 	return handler(globalCtx, platform, tracker, platform.FindByLink)
 }
 
-// Expose lambda handlers by UID (/a/) and by links (/l/)
-func Handler(globalCtx context.Context, tracker stats.Recorder, platform Platform) *http.ServeMux {
+// Expose queues over HTTP handler. First part of path will be used as queue name
+func HandlerByQueues(queues Queues) http.HandlerFunc {
+	return handlerQueue(queues)
+}
+
+// Expose lambda handlers by UID (/a/) and by links (/l/) and for queues (/q/)
+func Handler(globalCtx context.Context, tracker stats.Recorder, platform Platform, queues Queues) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("/a/", http.StripPrefix("/a/", HandlerByUID(globalCtx, tracker, platform)))
 	mux.Handle("/l/", http.StripPrefix("/l/", HandlerByLinks(globalCtx, tracker, platform)))
+	mux.Handle("/q/", http.StripPrefix("/q/", HandlerByQueues(queues)))
+	//TODO: queue balancer
 	return mux
 }
 
@@ -61,5 +68,22 @@ func handler(globalCtx context.Context, platform Platform, tracker stats.Recorde
 			record.Err = err.Error()
 		}
 		tracker.Track(record)
+	}
+}
+
+func handlerQueue(queues Queues) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		defer request.Body.Close()
+		sections := strings.SplitN(strings.Trim(request.URL.Path, "/"), "/", 2)
+		uid := sections[0]
+		req := types.FromHTTP(request)
+
+		err := queues.Put(uid, req)
+
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusNotFound)
+			return
+		}
+		writer.WriteHeader(http.StatusNoContent)
 	}
 }

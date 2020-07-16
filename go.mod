@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/jessevdk/go-flags v1.4.1-0.20180331124232-1c38ed7ad0cc
 	github.com/philhofer/fwd v1.0.0 // indirect
-	github.com/reddec/dfq v0.0.0-20200715120610-5e45d6cc3525
+	github.com/reddec/dfq v0.0.0-20200716124604-b347d756a38c
 	github.com/reddec/jsonrpc2 v0.1.18
 	github.com/robfig/cron v1.2.0
 	github.com/stretchr/testify v1.5.1

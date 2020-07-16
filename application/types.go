@@ -48,3 +48,8 @@ func (cfg *Config) ReadFile(file string) error {
 	defer f.Close()
 	return json.NewDecoder(f).Decode(cfg)
 }
+
+type Queue struct {
+	Name   string `json:"name"`
+	Target string `json:"target"`
+}

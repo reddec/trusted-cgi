@@ -5,6 +5,7 @@ import (
 	"github.com/reddec/trusted-cgi/templates"
 	"github.com/reddec/trusted-cgi/types"
 	"io"
+	"regexp"
 	"time"
 )
 
@@ -107,10 +108,31 @@ type Cases interface {
 	Remove(uid string) error
 	// Get underlying platform
 	Platform() Platform
+	// Get underlying queues manager
+	Queues() Queues
 	// Run scheduled actions from all lambda. Saves last run
 	RunScheduledActions(ctx context.Context)
 	// List of all templates without availability check
 	Templates() (map[string]*templates.Template, error)
 	// Content of SSH public key if set
 	PublicSSHKey() ([]byte, error)
+}
+
+// Queue name limitations
+var QueueNameReg = regexp.MustCompile(`^[a-z0-9A-Z-]{3,64}$`)
+
+// Queues manager. Manages queues and linked worker
+type Queues interface {
+	// Put request to queue. If queue not exists, an error will be thrown
+	Put(queue string, request *types.Request) error
+	// Add new queue. See QueueNameReg for limitations
+	Add(queue Queue) error
+	// Remove queue and worker
+	Remove(queue string) error
+	// Assign queue to another lambda. If lambda is empty, queue will be stopped (but Put will still work)
+	Assign(queue string, targetLambda string) error
+	// List of all defined queue.
+	List() []Queue
+	// Find queues linked to lambda
+	Find(targetLambda string) []Queue
 }

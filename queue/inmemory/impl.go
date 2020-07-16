@@ -107,3 +107,8 @@ func (queue *memoryQueue) Close() {
 		close(queue.stream)
 	}
 }
+
+func (queue *memoryQueue) Destroy() error {
+	queue.Close()
+	return nil
+}

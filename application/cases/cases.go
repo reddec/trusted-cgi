@@ -9,12 +9,13 @@ import (
 	"github.com/reddec/trusted-cgi/templates"
 	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
 )
 
-func New(platform application.Platform, dir, templateDir string) (*casesImpl, error) {
+func New(platform application.Platform, queues application.Queues, dir, templateDir string) (*casesImpl, error) {
 	aTemplateDir, err := filepath.Abs(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("resolve template dir: %w", err)
@@ -27,6 +28,7 @@ func New(platform application.Platform, dir, templateDir string) (*casesImpl, er
 		directory:    aDir,
 		templatesDir: aTemplateDir,
 		platform:     platform,
+		queues:       queues,
 	}
 	return cs, cs.Scan()
 }
@@ -37,6 +39,7 @@ type casesImpl struct {
 	directory     string
 	templatesDir  string
 	platform      application.Platform
+	queues        application.Queues
 }
 
 func (impl *casesImpl) Scan() error {
@@ -142,5 +145,16 @@ func (impl *casesImpl) Remove(uid string) error {
 		return fmt.Errorf("remove - find by uid %s: %w", uid, err)
 	}
 	impl.platform.Remove(uid)
+	// unlink queues
+	for _, q := range impl.queues.Find(uid) {
+		err := impl.queues.Remove(q.Name)
+		if err != nil {
+			log.Println("[ERROR]", "failed remove queue", q.Name)
+		}
+	}
 	return fn.Lambda.Remove()
+}
+
+func (impl *casesImpl) Queues() application.Queues {
+	return impl.queues
 }

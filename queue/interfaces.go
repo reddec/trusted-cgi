@@ -14,4 +14,6 @@ type Queue interface {
 	Peek(ctx context.Context) (*types.Request, error)
 	// Commit (remove) oldest record
 	Commit(ctx context.Context) error
+	// Clean all internal allocated resource
+	Destroy() error
 }

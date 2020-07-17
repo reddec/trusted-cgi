@@ -1,4 +1,4 @@
-package queues
+package queuemanager
 
 import (
 	"context"
@@ -14,29 +14,54 @@ import (
 	"time"
 )
 
-type platform interface {
-	FindByUID(uid string) (*application.Definition, error)
-	Invoke(ctx context.Context, lambda application.Lambda, request types.Request, out io.Writer) error
+// Store contains queues configuration for reload
+type Store interface {
+	// Save queues list
+	SetQueues(queues []application.Queue) error
+	// Load queues list
+	GetQueues() ([]application.Queue, error)
+}
+
+// Minimal required platform features
+type Platform interface {
+	InvokeByUID(ctx context.Context, uid string, request types.Request, out io.Writer) error
 }
 
 type QueueFactory func(name string) (queue.Queue, error)
 
-func New(ctx context.Context, platform platform, factory QueueFactory) *queueManager {
-	return &queueManager{
+func New(ctx context.Context, config Store, platform Platform, factory QueueFactory) (*queueManager, error) {
+	qm := &queueManager{
 		ctx:          ctx,
 		platform:     platform,
 		queues:       map[string]*queueDefinition{},
 		queueFactory: factory,
+		config:       config,
 	}
+	return qm, qm.init()
 }
 
 type queueManager struct {
 	ctx          context.Context
 	lock         sync.RWMutex
-	platform     platform
+	platform     Platform
 	queues       map[string]*queueDefinition
 	queueFactory QueueFactory
+	config       Store
 	wg           sync.WaitGroup
+}
+
+func (qm *queueManager) init() error {
+	list, err := qm.config.GetQueues()
+	if err != nil {
+		return err
+	}
+	for _, def := range list {
+		err := qm.addQueueUnsafe(def)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (qm *queueManager) Put(queue string, request *types.Request) error {
@@ -51,29 +76,32 @@ func (qm *queueManager) Put(queue string, request *types.Request) error {
 }
 
 func (qm *queueManager) Add(queue application.Queue) error {
+	qm.lock.Lock()
+	defer qm.lock.Unlock()
+	err := qm.addQueueUnsafe(queue)
+	if err != nil {
+		return err
+	}
+	return qm.config.SetQueues(qm.listUnsafe())
+}
+
+func (qm *queueManager) addQueueUnsafe(queue application.Queue) error {
 	if !application.QueueNameReg.MatchString(queue.Name) {
 		return fmt.Errorf("invalid queue name: should be %v", application.QueueNameReg)
 	}
-	qm.lock.Lock()
-	defer qm.lock.Unlock()
 	q, ok := qm.queues[queue.Name]
 	if ok {
 		return fmt.Errorf("queue %s already exists", queue.Name)
 	}
 
-	lambda, err := qm.platform.FindByUID(queue.Target)
-	if err != nil {
-		return err
-	}
-
 	back, err := qm.queueFactory(queue.Name)
 	if err != nil {
-		return err
+		return fmt.Errorf("add queue %s - create backend for queue: %w", queue.Name, err)
 	}
 
 	q = &queueDefinition{
-		Queue:  application.Queue{},
-		worker: startWorker(qm.ctx, back, lambda.Lambda, qm.platform, &qm.wg),
+		Queue:  queue,
+		worker: startWorker(qm.ctx, back, queue.Target, qm.platform, &qm.wg),
 		queue:  back,
 	}
 	if qm.queues == nil {
@@ -93,14 +121,14 @@ func (qm *queueManager) Remove(queue string) error {
 	q.worker.stop()
 	<-q.worker.done
 	delete(qm.queues, queue)
-	return q.queue.Destroy()
-}
-
-func (qm *queueManager) Assign(queue string, targetLambda string) error {
-	lambda, err := qm.platform.FindByUID(targetLambda)
+	err := q.queue.Destroy()
 	if err != nil {
 		return err
 	}
+	return qm.config.SetQueues(qm.listUnsafe())
+}
+
+func (qm *queueManager) Assign(queue string, targetLambda string) error {
 	qm.lock.Lock()
 	defer qm.lock.Unlock()
 	q, ok := qm.queues[queue]
@@ -110,20 +138,23 @@ func (qm *queueManager) Assign(queue string, targetLambda string) error {
 	q.worker.stop()
 	<-q.worker.done
 	q.Target = targetLambda
-	q.worker = startWorker(qm.ctx, q.queue, lambda.Lambda, qm.platform, &qm.wg)
-	return nil
+	q.worker = startWorker(qm.ctx, q.queue, targetLambda, qm.platform, &qm.wg)
+	return qm.config.SetQueues(qm.listUnsafe())
 }
 
 func (qm *queueManager) List() []application.Queue {
-	var ans = make([]application.Queue, 0, len(qm.queues))
-	qm.lock.RLock()
-	for _, q := range qm.queues {
-		ans = append(ans, q.Queue)
-	}
-	qm.lock.RUnlock()
+	var ans = qm.listUnsafe()
 	sort.Slice(ans, func(i, j int) bool {
 		return ans[i].Name < ans[j].Name
 	})
+	return ans
+}
+
+func (qm *queueManager) listUnsafe() []application.Queue {
+	var ans = make([]application.Queue, 0, len(qm.queues))
+	for _, q := range qm.queues {
+		ans = append(ans, q.Queue)
+	}
 	return ans
 }
 
@@ -154,12 +185,13 @@ type worker struct {
 	done chan struct{}
 }
 
-func startWorker(gctx context.Context, queue queue.Queue, lambda application.Lambda, plt platform, wg *sync.WaitGroup) *worker {
+func startWorker(gctx context.Context, queue queue.Queue, uid string, plt Platform, wg *sync.WaitGroup) *worker {
 	ctx, cancel := context.WithCancel(gctx)
 	w := &worker{
 		stop: cancel,
 		done: make(chan struct{}),
 	}
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer close(w.done)
@@ -174,7 +206,7 @@ func startWorker(gctx context.Context, queue queue.Queue, lambda application.Lam
 
 			if err != nil {
 				log.Println("queues: failed peek")
-			} else if err = plt.Invoke(ctx, lambda, *req, os.Stderr); err != nil {
+			} else if err = plt.InvokeByUID(ctx, uid, *req, os.Stderr); err != nil {
 				log.Println("queues: failed invoke:", err)
 			}
 			err = queue.Commit(ctx)

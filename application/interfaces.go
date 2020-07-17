@@ -36,6 +36,11 @@ type Actions interface {
 	DoScheduled(ctx context.Context, lastRun time.Time, globalEnv map[string]string)
 }
 
+type Invokable interface {
+	// Invoke request, write response. Required header should be set by invoker
+	Invoke(ctx context.Context, request types.Request, response io.Writer, globalEnv map[string]string) error
+}
+
 // Basic invokable entity
 //
 // Highlights:
@@ -47,6 +52,7 @@ type Actions interface {
 type Lambda interface {
 	FileSystem
 	Actions
+	Invokable
 	// Manifest configuration
 	Manifest() types.Manifest
 	// Update manifest and apply changes (re-index)
@@ -57,8 +63,6 @@ type Lambda interface {
 	SetCredentials(creds *types.Credential) error
 	// Remove lambda
 	Remove() error
-	// Invoke request, write response. Required header should be set by invoker
-	Invoke(ctx context.Context, request types.Request, response io.Writer, globalEnv map[string]string) error
 }
 
 // Platform should index lambda, keep shared info (like env) and apply global configuration
@@ -91,7 +95,9 @@ type Platform interface {
 	// Remove existent lambda from platform and index (doesn't call underlying Remove() method)
 	Remove(uid string)
 	// Invoke lambda with platform global environment and logs results to tracker (if set)
-	Invoke(ctx context.Context, lambda Lambda, request types.Request, out io.Writer) error
+	Invoke(ctx context.Context, lambda Invokable, request types.Request, out io.Writer) error
+	// Same as Find + Invoke, but caller has no control on NotFound error
+	InvokeByUID(ctx context.Context, uid string, request types.Request, out io.Writer) error
 	// Do lambda action target defined in Makefile with platform global environment. Time limit and out can be nil
 	Do(ctx context.Context, lambda Lambda, action string, timeLimit time.Duration, out io.Writer) error
 }

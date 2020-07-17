@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/jessevdk/go-flags"
 	"github.com/reddec/trusted-cgi/api/services"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/application/cases"
 	"github.com/reddec/trusted-cgi/application/platform"
-	"github.com/reddec/trusted-cgi/application/queues"
+	"github.com/reddec/trusted-cgi/application/queuemanager"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	internal2 "github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/queue"
@@ -29,7 +30,7 @@ type Config struct {
 	Config    string `short:"c" long:"config" env:"CONFIG" description:"Location of server configuration" default:"server.json"`
 	Dir       string `short:"d" long:"dir" env:"DIR" description:"Project directory" default:"."`
 	Templates string `long:"templates" env:"TEMPLATES" description:"Templates directory" default:".templates"`
-	Queues    string `long:"queues" env:"QUEUES" description:"Queues directory (- means memory)" default:".queues"`
+	Queues    Queues `group:"queues" namespace:"queues" env-namespace:"QUEUES"`
 	//
 	InitialAdminPassword string        `long:"initial-admin-password" env:"INITIAL_ADMIN_PASSWORD" description:"Initial admin password" default:"admin"`
 	InitialChrootUser    string        `long:"initial-chroot-user" env:"INITIAL_CHROOT_USER" description:"Initial user for service" default:""`
@@ -48,6 +49,28 @@ type HttpServer struct {
 	TLS              bool          `long:"tls" env:"TLS" description:"Enable HTTPS serving with TLS" json:"tls"`
 	CertFile         string        `long:"cert-file" env:"CERT_FILE" description:"Path to certificate for TLS" default:"server.crt" json:"crt_file"`
 	KeyFile          string        `long:"key-file" env:"KEY_FILE" description:"Path to private key for TLS" default:"server.key" json:"key_file"`
+}
+
+type Queues struct {
+	Config    string `long:"config" env:"CONFIG" description:"Path to queues configuration file" default:"queues.json"`
+	Kind      string `long:"kind" env:"KIND" description:"Queue kind" default:"directory" choice:"directory" choice:"memory"`
+	Directory string `long:"directory" env:"DIRECTORY" description:"Directory for queues if kind is directory" default:".queues"`
+	Depth     int    `long:"depth" env:"DEPTH" description:"Depth for in-memory queue" default:"100"`
+}
+
+func (q *Queues) Factory() (queuemanager.QueueFactory, error) {
+	switch q.Kind {
+	case "directory":
+		return func(name string) (queue.Queue, error) {
+			return indir.New(filepath.Join(q.Directory, name))
+		}, os.MkdirAll(q.Directory, 0755)
+	case "memory":
+		return func(name string) (queue.Queue, error) {
+			return inmemory.New(q.Depth), nil
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown queues kind: %s", q.Kind)
+	}
 }
 
 func (qs *HttpServer) Serve(globalCtx context.Context, handler http.Handler) error {
@@ -108,7 +131,15 @@ func run(ctx context.Context, config Config) error {
 		return err
 	}
 
-	queueManager := queues.New(ctx, basePlatform, config.getQueueFactory())
+	queueFactory, err := config.Queues.Factory()
+	if err != nil {
+		return err
+	}
+
+	queueManager, err := queuemanager.New(ctx, queuemanager.FileConfig(config.Queues.Config), basePlatform, queueFactory)
+	if err != nil {
+		return err
+	}
 
 	useCases, err := cases.New(basePlatform, queueManager, config.Dir, config.Templates)
 	if err != nil {
@@ -170,16 +201,5 @@ func runScheduler(ctx context.Context, each time.Duration, runner application.Ca
 			return
 		}
 		runner.RunScheduledActions(ctx)
-	}
-}
-
-func (cfg Config) getQueueFactory() func(name string) (queue.Queue, error) {
-	if cfg.Queues == "-" {
-		return func(name string) (queue.Queue, error) {
-			return inmemory.New(32), nil
-		}
-	}
-	return func(name string) (queue.Queue, error) {
-		return indir.New(filepath.Join(cfg.Queues, name))
 	}
 }

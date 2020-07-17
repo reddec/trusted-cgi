@@ -189,7 +189,16 @@ func (platform *platform) Remove(uid string) {
 	_ = platform.unsafeSaveConfig()
 }
 
-func (platform *platform) Invoke(ctx context.Context, lambda application.Lambda, request types.Request, out io.Writer) error {
+func (platform *platform) InvokeByUID(ctx context.Context, uid string, request types.Request, out io.Writer) error {
+	lambda, err := platform.FindByUID(uid)
+	if err != nil {
+		_ = request.Body.Close()
+		return err
+	}
+	return platform.Invoke(ctx, lambda.Lambda, request, out)
+}
+
+func (platform *platform) Invoke(ctx context.Context, lambda application.Invokable, request types.Request, out io.Writer) error {
 	return lambda.Invoke(ctx, request, out, platform.config.Environment)
 }
 

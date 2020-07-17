@@ -1,3 +1,9 @@
+---
+layout: default
+title: Queues
+parent: Usage
+nav_order: 7
+---
 # Queues
 
 Since `0.3.5`

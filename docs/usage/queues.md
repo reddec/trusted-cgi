@@ -1,6 +1,13 @@
 # Queues
 
+Since `0.3.5`
+
 **this is young feature** - functionality could be dramatically enriched in a future.
+
+By default, queues stored in a directory-based style. Each element of queue pipes directly from
+ incoming requests, as well as to lambda without caching. It means - RAM usage is almost constant regardless
+ of requests sizes and number of elements in a queue.
+ 
 
 Designed for
 

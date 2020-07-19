@@ -155,6 +155,7 @@ func run(ctx context.Context, config Config) error {
 
 	projectApi := services.NewProjectSrv(useCases, tracker)
 	lambdaApi := services.NewLambdaSrv(useCases, tracker)
+	queuesApi := services.NewQueuesSrv(queueManager)
 	userApi, err := services.CreateUserSrv(config.Config, config.InitialAdminPassword)
 	if err != nil {
 		return err
@@ -165,7 +166,7 @@ func run(ctx context.Context, config Config) error {
 	defer tracker.Dump()
 	go dumpTracker(ctx, config.StatsInterval, tracker)
 
-	handler, err := server.Handler(ctx, config.Dev, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi)
+	handler, err := server.Handler(ctx, config.Dev, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi, queuesApi)
 	if err != nil {
 		return err
 	}

@@ -110,3 +110,17 @@ type UserAPI interface {
 	// Change password for the user
 	ChangePassword(ctx context.Context, token *Token, password string) (bool, error)
 }
+
+// API for managing queues
+type QueuesAPI interface {
+	// Create queue and link it to lambda and start worker
+	Create(ctx context.Context, token *Token, name string, lambda string) (*application.Queue, error)
+	// Remove queue and stop worker
+	Remove(ctx context.Context, token *Token, name string) (bool, error)
+	// Linked queues for lambda
+	Linked(ctx context.Context, token *Token, lambda string) ([]application.Queue, error)
+	// List of all queues
+	List(ctx context.Context, token *Token) ([]application.Queue, error)
+	// Assign lambda to queue (re-link)
+	Assign(ctx context.Context, token *Token, name string, lambda string) (bool, error)
+}

@@ -23,12 +23,12 @@ export class QueuesAPI {
     /**
     Create queue and link it to lambda and start worker
     **/
-    async create(token, name, lambda){
+    async create(token, queue){
         return (await this.__call('Create', {
             "jsonrpc" : "2.0",
             "method" : "QueuesAPI.Create",
             "id" : this.__next_id(),
-            "params" : [token, name, lambda]
+            "params" : [token, queue]
         }));
     }
 

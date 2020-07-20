@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	jsonrpc2 "github.com/reddec/jsonrpc2"
 	api "github.com/reddec/trusted-cgi/api"
+	application "github.com/reddec/trusted-cgi/application"
 )
 
 func RegisterQueuesAPI(router *jsonrpc2.Router, wrap api.QueuesAPI, typeHandler interface {
@@ -13,13 +14,12 @@ func RegisterQueuesAPI(router *jsonrpc2.Router, wrap api.QueuesAPI, typeHandler 
 }) []string {
 	router.RegisterFunc("QueuesAPI.Create", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {
 		var args struct {
-			Arg0 *api.Token `json:"token"`
-			Arg1 string     `json:"name"`
-			Arg2 string     `json:"lambda"`
+			Arg0 *api.Token        `json:"token"`
+			Arg1 application.Queue `json:"queue"`
 		}
 		var err error
 		if positional {
-			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1, &args.Arg2)
+			err = jsonrpc2.UnmarshalArray(params, &args.Arg0, &args.Arg1)
 		} else {
 			err = json.Unmarshal(params, &args)
 		}
@@ -30,7 +30,7 @@ func RegisterQueuesAPI(router *jsonrpc2.Router, wrap api.QueuesAPI, typeHandler 
 		if err != nil {
 			return nil, err
 		}
-		return wrap.Create(ctx, args.Arg0, args.Arg1, args.Arg2)
+		return wrap.Create(ctx, args.Arg0, args.Arg1)
 	})
 
 	router.RegisterFunc("QueuesAPI.Remove", func(ctx context.Context, params json.RawMessage, positional bool) (interface{}, error) {

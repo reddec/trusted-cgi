@@ -14,12 +14,8 @@ type queuesSrv struct {
 	queues application.Queues
 }
 
-func (srv *queuesSrv) Create(ctx context.Context, token *api.Token, name string, lambda string) (*application.Queue, error) {
-	q := application.Queue{
-		Name:   name,
-		Target: lambda,
-	}
-	return &q, srv.queues.Add(q)
+func (srv *queuesSrv) Create(ctx context.Context, token *api.Token, queue application.Queue) (*application.Queue, error) {
+	return &queue, srv.queues.Add(queue)
 }
 
 func (srv *queuesSrv) Remove(ctx context.Context, token *api.Token, name string) (bool, error) {

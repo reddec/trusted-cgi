@@ -21,6 +21,12 @@ Queues that bound to the lambda could be found in Overview -> Endpoint page.
 
 Queue can be re-assigned to another lambda without destroy.
 
+In case of failure, task will be re-tried after defined interval with limited number of attempts. 0 retry means 
+no **additional attempts** - at least once the task will be processed. After failure, a queue worker will wait required 
+time, and it will not process other tasks.
+
+After lambda removal, linked queues are also will be **automatically removed**.
+
 Designed for
 
 * to provide async processing for long-running tasks;
@@ -28,8 +34,6 @@ Designed for
 NOT designed for
 
 * load balancing (but possible using multiple queues);
-* failure-tolerance: failed request will not be re-queued;
-
 
 Endpoint: `/q/:queue-name`
 

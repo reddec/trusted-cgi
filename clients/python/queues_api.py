@@ -10,11 +10,15 @@ from typing import Any, List, Optional
 class Queue:
     name: 'str'
     target: 'str'
+    retry: 'int'
+    interval: 'Any'
 
     def to_json(self) -> dict:
         return {
             "name": self.name,
             "target": self.target,
+            "retry": self.retry,
+            "interval": self.interval,
         }
 
     @staticmethod
@@ -22,6 +26,8 @@ class Queue:
         return Queue(
                 name=payload['name'],
                 target=payload['target'],
+                retry=payload['retry'],
+                interval=payload['interval'],
         )
 
 
@@ -56,7 +62,7 @@ class QueuesAPIClient:
         self.__id += 1
         return self.__id
 
-    async def create(self, token: Any, name: str, lambda: str) -> Queue:
+    async def create(self, token: Any, queue: Queue) -> Queue:
         """
         Create queue and link it to lambda and start worker
         """
@@ -64,7 +70,7 @@ class QueuesAPIClient:
             "jsonrpc": "2.0",
             "method": "QueuesAPI.Create",
             "id": self.__next_id(),
-            "params": [token, name, lambda, ]
+            "params": [token, queue.to_json(), ]
         })
         assert response.status // 100 == 2, str(response.status) + " " + str(response.reason)
         payload = await response.json()
@@ -156,11 +162,11 @@ class QueuesAPIBatch:
         self.__id += 1
         return self.__id
 
-    def create(self, token: Any, name: str, lambda: str):
+    def create(self, token: Any, queue: Queue):
         """
         Create queue and link it to lambda and start worker
         """
-        params = [token, name, lambda, ]
+        params = [token, queue.to_json(), ]
         method = "QueuesAPI.Create"
         self.__add_request(method, params, lambda payload: Queue.from_json(payload))
 

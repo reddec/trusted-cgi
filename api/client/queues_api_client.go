@@ -18,8 +18,8 @@ type QueuesAPIClient struct {
 }
 
 // Create queue and link it to lambda and start worker
-func (impl *QueuesAPIClient) Create(ctx context.Context, token *api.Token, name string, lambda string) (reply *application.Queue, err error) {
-	err = client.CallHTTP(ctx, impl.BaseURL, "QueuesAPI.Create", atomic.AddUint64(&impl.sequence, 1), &reply, token, name, lambda)
+func (impl *QueuesAPIClient) Create(ctx context.Context, token *api.Token, queue application.Queue) (reply *application.Queue, err error) {
+	err = client.CallHTTP(ctx, impl.BaseURL, "QueuesAPI.Create", atomic.AddUint64(&impl.sequence, 1), &reply, token, queue)
 	return
 }
 

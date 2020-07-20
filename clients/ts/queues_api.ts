@@ -13,7 +13,11 @@ export class QueuesAPIError extends Error {
 export interface Queue {
     name: string
     target: string
+    retry: number
+    interval: JsonDuration
 }
+
+export type JsonDuration = string; // suffixes: ns, us, ms, s, m, h
 
 export type Token = string;
 
@@ -183,12 +187,12 @@ export class QueuesAPI {
     /**
     Create queue and link it to lambda and start worker
     **/
-    async create(token: Token, name: string, lambda: string): Promise<Queue> {
+    async create(token: Token, queue: Queue): Promise<Queue> {
         return (await this.__call({
             "jsonrpc" : "2.0",
             "method" : "QueuesAPI.Create",
             "id" : this.__next_id(),
-            "params" : [token, name, lambda]
+            "params" : [token, queue]
         })) as Queue;
     }
 

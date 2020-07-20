@@ -29,8 +29,7 @@ Create queue and link it to lambda and start worker
 | Position | Name | Type |
 |----------|------|------|
 | 0 | token | `*Token` |
-| 1 | name | `string` |
-| 2 | lambda | `string` |
+| 1 | queue | `Queue` |
 
 ```bash
 curl -H 'Content-Type: application/json' --data-binary @- "https://127.0.0.1:3434/u/" <<EOF
@@ -50,6 +49,8 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | target | `string` |  |
+| retry | `int` |  |
+| interval | `types.JsonDuration` |  |
 
 ### Token
 
@@ -118,6 +119,8 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | target | `string` |  |
+| retry | `int` |  |
+| interval | `types.JsonDuration` |  |
 
 ### Token
 
@@ -155,6 +158,8 @@ EOF
 |------|------|---------|
 | name | `string` |  |
 | target | `string` |  |
+| retry | `int` |  |
+| interval | `types.JsonDuration` |  |
 
 ### Token
 

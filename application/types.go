@@ -50,6 +50,8 @@ func (cfg *Config) ReadFile(file string) error {
 }
 
 type Queue struct {
-	Name   string `json:"name"`
-	Target string `json:"target"`
+	Name     string             `json:"name"`
+	Target   string             `json:"target"`
+	Retry    int                `json:"retry"`    // number of additional attempts
+	Interval types.JsonDuration `json:"interval"` // delay between attempts
 }

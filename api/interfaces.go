@@ -114,7 +114,7 @@ type UserAPI interface {
 // API for managing queues
 type QueuesAPI interface {
 	// Create queue and link it to lambda and start worker
-	Create(ctx context.Context, token *Token, name string, lambda string) (*application.Queue, error)
+	Create(ctx context.Context, token *Token, queue application.Queue) (*application.Queue, error)
 	// Remove queue and stop worker
 	Remove(ctx context.Context, token *Token, name string) (bool, error)
 	// Linked queues for lambda

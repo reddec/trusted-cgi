@@ -101,7 +101,7 @@ func (qm *queueManager) addQueueUnsafe(queue application.Queue) error {
 
 	q = &queueDefinition{
 		Queue:  queue,
-		worker: startWorker(qm.ctx, queue.Name, back, queue.Target, qm.platform, &qm.wg),
+		worker: startWorker(qm.ctx, back, queue, qm.platform, &qm.wg),
 		queue:  back,
 	}
 	if qm.queues == nil {
@@ -138,7 +138,7 @@ func (qm *queueManager) Assign(queue string, targetLambda string) error {
 	q.worker.stop()
 	<-q.worker.done
 	q.Target = targetLambda
-	q.worker = startWorker(qm.ctx, queue, q.queue, targetLambda, qm.platform, &qm.wg)
+	q.worker = startWorker(qm.ctx, q.queue, q.Queue, qm.platform, &qm.wg)
 	return qm.config.SetQueues(qm.listUnsafe())
 }
 
@@ -185,7 +185,7 @@ type worker struct {
 	done chan struct{}
 }
 
-func startWorker(gctx context.Context, name string, queue queue.Queue, uid string, plt Platform, wg *sync.WaitGroup) *worker {
+func startWorker(gctx context.Context, queue queue.Queue, definition application.Queue, plt Platform, wg *sync.WaitGroup) *worker {
 	ctx, cancel := context.WithCancel(gctx)
 	w := &worker{
 		stop: cancel,
@@ -196,18 +196,14 @@ func startWorker(gctx context.Context, name string, queue queue.Queue, uid strin
 		defer wg.Done()
 		defer close(w.done)
 		for {
-			req, err := queue.Peek(ctx)
-
+			err := doTask(ctx, plt, definition, queue)
+			if err != nil {
+				log.Println("queues: queue", definition.Name, "failed process task:", err)
+			}
 			select {
 			case <-ctx.Done():
 				return
 			default:
-			}
-
-			if err != nil {
-				log.Println("queues: failed peek", name, ":", err)
-			} else if err = plt.InvokeByUID(ctx, uid, *req, os.Stderr); err != nil {
-				log.Println("queues: failed invoke by uid", uid, "from queue", name, ":", err)
 			}
 			err = queue.Commit(ctx)
 			if err != nil {
@@ -222,6 +218,33 @@ func startWorker(gctx context.Context, name string, queue queue.Queue, uid strin
 	}()
 
 	return w
+}
+
+func doTask(ctx context.Context, plt Platform, definition application.Queue, queue queue.Queue) error {
+	for i := 0; i <= definition.Retry; i++ {
+		req, err := queue.Peek(ctx)
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		if err != nil {
+			log.Println("queues: failed peek", definition.Name, ":", err)
+		} else if err = plt.InvokeByUID(ctx, definition.Target, *req, os.Stderr); err != nil {
+			log.Println("queues: failed invoke by uid", definition.Target, "from queue", definition.Name, ":", err)
+		} else {
+			return nil
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Duration(definition.Interval)):
+		}
+	}
+	return fmt.Errorf("failed to process task for queue %s after all attempts", definition.Name)
 }
 
 const commitFailedDelay = 3 * time.Second

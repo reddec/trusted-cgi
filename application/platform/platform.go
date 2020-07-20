@@ -16,7 +16,11 @@ import (
 
 var allowedName = regexp.MustCompile("^[a-zA-Z0-9._-]{1,255}$")
 
-func New(configFile string) (*platform, error) {
+type Validator interface {
+	Inspect(lambda string, request *types.Request) error
+}
+
+func New(configFile string, validator Validator) (*platform, error) {
 	var config application.Config
 	err := config.ReadFile(configFile)
 	if err != nil && !os.IsNotExist(err) {
@@ -25,6 +29,7 @@ func New(configFile string) (*platform, error) {
 	pl := &platform{
 		configLocation: configFile,
 		config:         config,
+		validator:      validator,
 	}
 	return pl, pl.SetConfig(config)
 }
@@ -35,6 +40,7 @@ type platform struct {
 	config         application.Config
 	configLocation string
 	byUID          map[string]record
+	validator      Validator
 }
 
 type record struct {

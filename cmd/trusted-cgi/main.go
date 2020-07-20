@@ -131,8 +131,12 @@ func run(ctx context.Context, config Config) error {
 	} else if config.DisableChroot {
 		defCfg.User = ""
 	}
+	policies, err := policy.New(policy.FileConfig(config.Policies.Config))
+	if err != nil {
+		return err
+	}
 
-	basePlatform, err := platform.New(filepath.Join(config.Dir, internal2.ProjectManifest))
+	basePlatform, err := platform.New(filepath.Join(config.Dir, internal2.ProjectManifest), policies)
 	if err != nil {
 		return err
 	}
@@ -143,11 +147,6 @@ func run(ctx context.Context, config Config) error {
 	}
 
 	queueManager, err := queuemanager.New(ctx, queuemanager.FileConfig(config.Queues.Config), basePlatform, queueFactory)
-	if err != nil {
-		return err
-	}
-
-	policies, err := policy.New(policy.FileConfig(config.Policies.Config))
 	if err != nil {
 		return err
 	}

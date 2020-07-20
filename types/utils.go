@@ -4,6 +4,14 @@ import "encoding/json"
 
 type JsonStringSet map[string]bool
 
+func StringSet(values ...string) JsonStringSet {
+	var ans = make(JsonStringSet)
+	for _, v := range values {
+		ans[v] = true
+	}
+	return ans
+}
+
 func (s *JsonStringSet) MarshalJSON() ([]byte, error) {
 	var keys = make([]string, 0, len(*s))
 	for k := range *s {

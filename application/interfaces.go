@@ -142,3 +142,22 @@ type Queues interface {
 	// Find queues linked to lambda
 	Find(targetLambda string) []Queue
 }
+
+// Manage policies for the all kind of resource.
+// Lambda can have only one policy at one time, but one policy can be used by many lambdas.
+type Policies interface {
+	// List all policies
+	List() []Policy
+	// Create new policy
+	Create(policy string, definition PolicyDefinition) (*Policy, error)
+	// Remove policy
+	Remove(policy string) error
+	// Update policy definition
+	Update(policy string, definition PolicyDefinition) error
+	// Apply policy for the resource
+	Apply(lambda string, policy string) error
+	// Clear applied policy for the lambda
+	Clear(lambda string) error
+	// Inspect request according policy (if applied). Returns null if all checks successful
+	Inspect(lambda string, request *types.Request) error
+}

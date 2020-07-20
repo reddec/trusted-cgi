@@ -55,3 +55,16 @@ type Queue struct {
 	Retry    int                `json:"retry"`    // number of additional attempts
 	Interval types.JsonDuration `json:"interval"` // delay between attempts
 }
+
+type PolicyDefinition struct {
+	AllowedIP     types.JsonStringSet `json:"allowed_ip,omitempty"`     // limit incoming connections from list of IP
+	AllowedOrigin types.JsonStringSet `json:"allowed_origin,omitempty"` // limit incoming connections by origin header
+	Public        bool                `json:"public"`                   // if public, tokens are ignores
+	Tokens        map[string]string   `json:"tokens,omitempty"`         // limit request by value in Authorization header (token => title)
+}
+
+type Policy struct {
+	ID         string              `json:"id"`
+	Definition PolicyDefinition    `json:"definition"`
+	Lambdas    types.JsonStringSet `json:"lambdas"`
+}

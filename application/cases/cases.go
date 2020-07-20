@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func New(platform application.Platform, queues application.Queues, dir, templateDir string) (*casesImpl, error) {
+func New(platform application.Platform, queues application.Queues, policies application.Policies, dir, templateDir string) (*casesImpl, error) {
 	aTemplateDir, err := filepath.Abs(templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("resolve template dir: %w", err)
@@ -29,6 +29,7 @@ func New(platform application.Platform, queues application.Queues, dir, template
 		templatesDir: aTemplateDir,
 		platform:     platform,
 		queues:       queues,
+		policies:     policies,
 	}
 	return cs, cs.Scan()
 }
@@ -40,6 +41,7 @@ type casesImpl struct {
 	templatesDir  string
 	platform      application.Platform
 	queues        application.Queues
+	policies      application.Policies
 }
 
 func (impl *casesImpl) Scan() error {
@@ -151,6 +153,11 @@ func (impl *casesImpl) Remove(uid string) error {
 		if err != nil {
 			log.Println("[ERROR]", "failed remove queue", q.Name)
 		}
+	}
+	// unlink from policies
+	err = impl.policies.Clear(uid)
+	if err != nil {
+		log.Println("[ERROR]", "failed clear linked policy for lambda", uid, ":", err)
 	}
 	return fn.Lambda.Remove()
 }

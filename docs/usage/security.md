@@ -56,7 +56,14 @@ Should be defined in default notation `XXX.YYY.ZZZ.TTT`, IPv6 has to be supporte
 
 The performance almost not impacted regardless number of IP. 
 
-## Planned features:
+# Policies
 
-* 'security group' entity that aggregates security settings and could be linked to
-many applications (one-to-many).
+Since `0.3.5` most security migrated to separate entity - Policy.
+
+Policy is a combination of restrictions described above, however, they can be applied to
+several objects.
+
+For example, you can make one policy called `my-customer-1`, that will contain several tokens,
+IP restrictions etc.., and apply it to several lambdas, keeping access information in one place.
+
+Currently, lambda can be linked to only one policy, but one policy could be linked to multiple lambdas.  

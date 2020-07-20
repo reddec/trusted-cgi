@@ -8,6 +8,7 @@ import (
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/application/cases"
 	"github.com/reddec/trusted-cgi/application/platform"
+	"github.com/reddec/trusted-cgi/application/policy"
 	"github.com/reddec/trusted-cgi/application/queuemanager"
 	"github.com/reddec/trusted-cgi/cmd/internal"
 	internal2 "github.com/reddec/trusted-cgi/internal"
@@ -27,10 +28,11 @@ const version = "dev"
 
 type Config struct {
 	HttpServer
-	Config    string `short:"c" long:"config" env:"CONFIG" description:"Location of server configuration" default:"server.json"`
-	Dir       string `short:"d" long:"dir" env:"DIR" description:"Project directory" default:"."`
-	Templates string `long:"templates" env:"TEMPLATES" description:"Templates directory" default:".templates"`
-	Queues    Queues `group:"queues" namespace:"queues" env-namespace:"QUEUES"`
+	Config    string   `short:"c" long:"config" env:"CONFIG" description:"Location of server configuration" default:"server.json"`
+	Dir       string   `short:"d" long:"dir" env:"DIR" description:"Project directory" default:"."`
+	Templates string   `long:"templates" env:"TEMPLATES" description:"Templates directory" default:".templates"`
+	Queues    Queues   `group:"queues" namespace:"queues" env-namespace:"QUEUES"`
+	Policies  Policies `group:"policies" namespace:"policies" env-namespace:"POLICIES"`
 	//
 	InitialAdminPassword string        `long:"initial-admin-password" env:"INITIAL_ADMIN_PASSWORD" description:"Initial admin password" default:"admin"`
 	InitialChrootUser    string        `long:"initial-chroot-user" env:"INITIAL_CHROOT_USER" description:"Initial user for service" default:""`
@@ -56,6 +58,10 @@ type Queues struct {
 	Kind      string `long:"kind" env:"KIND" description:"Queue kind" default:"directory" choice:"directory" choice:"memory"`
 	Directory string `long:"directory" env:"DIRECTORY" description:"Directory for queues if kind is directory" default:".queues"`
 	Depth     int    `long:"depth" env:"DEPTH" description:"Depth for in-memory queue" default:"100"`
+}
+
+type Policies struct {
+	Config string `long:"config" env:"CONFIG" description:"Path to policies configuration file" default:"policies.json"`
 }
 
 func (q *Queues) Factory() (queuemanager.QueueFactory, error) {
@@ -141,7 +147,12 @@ func run(ctx context.Context, config Config) error {
 		return err
 	}
 
-	useCases, err := cases.New(basePlatform, queueManager, config.Dir, config.Templates)
+	policies, err := policy.New(policy.FileConfig(config.Policies.Config))
+	if err != nil {
+		return err
+	}
+
+	useCases, err := cases.New(basePlatform, queueManager, policies, config.Dir, config.Templates)
 	if err != nil {
 		return err
 	}
@@ -156,6 +167,7 @@ func run(ctx context.Context, config Config) error {
 	projectApi := services.NewProjectSrv(useCases, tracker)
 	lambdaApi := services.NewLambdaSrv(useCases, tracker)
 	queuesApi := services.NewQueuesSrv(queueManager)
+	policiesApi := services.NewPoliciesSrv(policies)
 	userApi, err := services.CreateUserSrv(config.Config, config.InitialAdminPassword)
 	if err != nil {
 		return err
@@ -166,7 +178,7 @@ func run(ctx context.Context, config Config) error {
 	defer tracker.Dump()
 	go dumpTracker(ctx, config.StatsInterval, tracker)
 
-	handler, err := server.Handler(ctx, config.Dev, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi, queuesApi)
+	handler, err := server.Handler(ctx, config.Dev, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi, queuesApi, policiesApi)
 	if err != nil {
 		return err
 	}

@@ -124,3 +124,19 @@ type QueuesAPI interface {
 	// Assign lambda to queue (re-link)
 	Assign(ctx context.Context, token *Token, name string, lambda string) (bool, error)
 }
+
+// API for managing policies
+type PoliciesAPI interface {
+	// List all policies
+	List(ctx context.Context, token *Token) ([]application.Policy, error)
+	// Create new policy
+	Create(ctx context.Context, token *Token, policy string, definition application.PolicyDefinition) (*application.Policy, error)
+	// Remove policy
+	Remove(ctx context.Context, token *Token, policy string) (bool, error)
+	// Update policy definition
+	Update(ctx context.Context, token *Token, policy string, definition application.PolicyDefinition) (bool, error)
+	// Apply policy for the resource
+	Apply(ctx context.Context, token *Token, lambda string, policy string) (bool, error)
+	// Clear applied policy for the lambda
+	Clear(ctx context.Context, token *Token, lambda string) (bool, error)
+}

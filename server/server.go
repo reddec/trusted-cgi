@@ -22,7 +22,9 @@ func Handler(ctx context.Context,
 	projectAPI api.ProjectAPI,
 	lambdaAPI api.LambdaAPI,
 	userAPI api.UserAPI,
-	queuesAPI api.QueuesAPI) (http.Handler, error) {
+	queuesAPI api.QueuesAPI,
+	policiesAPI api.PoliciesAPI,
+) (http.Handler, error) {
 	var mux http.ServeMux
 	// main API
 	apps := application.HandlerByUID(ctx, tracker, platform)
@@ -40,6 +42,7 @@ func Handler(ctx context.Context,
 	handlers.RegisterLambdaAPI(&router, lambdaAPI, tokenHandler)
 	handlers.RegisterProjectAPI(&router, projectAPI, tokenHandler)
 	handlers.RegisterQueuesAPI(&router, queuesAPI, tokenHandler)
+	handlers.RegisterPoliciesAPI(&router, policiesAPI, tokenHandler)
 	mux.Handle("/u/", chooseHandler(dev, jsonrpc2.HandlerRestContext(ctx, &router)))
 
 	// UI

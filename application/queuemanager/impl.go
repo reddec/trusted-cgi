@@ -101,7 +101,7 @@ func (qm *queueManager) addQueueUnsafe(queue application.Queue) error {
 
 	q = &queueDefinition{
 		Queue:  queue,
-		worker: startWorker(qm.ctx, back, queue.Target, qm.platform, &qm.wg),
+		worker: startWorker(qm.ctx, queue.Name, back, queue.Target, qm.platform, &qm.wg),
 		queue:  back,
 	}
 	if qm.queues == nil {
@@ -138,7 +138,7 @@ func (qm *queueManager) Assign(queue string, targetLambda string) error {
 	q.worker.stop()
 	<-q.worker.done
 	q.Target = targetLambda
-	q.worker = startWorker(qm.ctx, q.queue, targetLambda, qm.platform, &qm.wg)
+	q.worker = startWorker(qm.ctx, queue, q.queue, targetLambda, qm.platform, &qm.wg)
 	return qm.config.SetQueues(qm.listUnsafe())
 }
 
@@ -185,7 +185,7 @@ type worker struct {
 	done chan struct{}
 }
 
-func startWorker(gctx context.Context, queue queue.Queue, uid string, plt Platform, wg *sync.WaitGroup) *worker {
+func startWorker(gctx context.Context, name string, queue queue.Queue, uid string, plt Platform, wg *sync.WaitGroup) *worker {
 	ctx, cancel := context.WithCancel(gctx)
 	w := &worker{
 		stop: cancel,
@@ -205,9 +205,9 @@ func startWorker(gctx context.Context, queue queue.Queue, uid string, plt Platfo
 			}
 
 			if err != nil {
-				log.Println("queues: failed peek")
+				log.Println("queues: failed peek", name, ":", err)
 			} else if err = plt.InvokeByUID(ctx, uid, *req, os.Stderr); err != nil {
-				log.Println("queues: failed invoke:", err)
+				log.Println("queues: failed invoke by uid", uid, "from queue", name, ":", err)
 			}
 			err = queue.Commit(ctx)
 			if err != nil {

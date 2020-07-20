@@ -30,6 +30,8 @@ github.com/reddec/dfq v0.0.0-20200715120610-5e45d6cc3525 h1:jg6PJi3G9DxsR8qQ6ISo
 github.com/reddec/dfq v0.0.0-20200715120610-5e45d6cc3525/go.mod h1:bm9WMLIEIvDiGGBnP4I68xEToCNrjwW9h/57coRF85w=
 github.com/reddec/dfq v0.0.0-20200716124604-b347d756a38c h1:tKG0C1oACT46G3PtrlUEHbCGp/+aLuW9fGx0LA8WU7E=
 github.com/reddec/dfq v0.0.0-20200716124604-b347d756a38c/go.mod h1:bm9WMLIEIvDiGGBnP4I68xEToCNrjwW9h/57coRF85w=
+github.com/reddec/dfq v0.0.0-20200720022748-4befa9f0e225 h1:IOC2onOgDY9vaDSnIeg7zGNzSvrZv2VTxSTviiCQXzI=
+github.com/reddec/dfq v0.0.0-20200720022748-4befa9f0e225/go.mod h1:bm9WMLIEIvDiGGBnP4I68xEToCNrjwW9h/57coRF85w=
 github.com/reddec/godetector v0.0.0-20200420065712-f938e1104afe/go.mod h1:CzQ4Kf0yOsagWbBdC+5pRPJxMnL1uO3/7DimjqEr6Q8=
 github.com/reddec/jsonrpc2 v0.1.18 h1:yeVtTlRcbsyAWcXE70E51NKgcFg6T/NqOSNmsEQotws=
 github.com/reddec/jsonrpc2 v0.1.18/go.mod h1:heiBKpIJpxXGrQ3W9YKahxgfD6yCsnBsqBedjSOSTQI=

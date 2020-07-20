@@ -146,7 +146,7 @@ func run(ctx context.Context, config Config) error {
 		return err
 	}
 
-	queueManager, err := queuemanager.New(ctx, queuemanager.FileConfig(config.Queues.Config), basePlatform, queueFactory)
+	queueManager, err := queuemanager.New(ctx, queuemanager.FileConfig(config.Queues.Config), basePlatform, queueFactory, policies)
 	if err != nil {
 		return err
 	}

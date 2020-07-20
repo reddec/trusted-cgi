@@ -26,6 +26,8 @@ type localLambda struct {
 	lock      sync.RWMutex
 }
 
+func (local *localLambda) UID() string { return local.uid }
+
 func (local *localLambda) Manifest() types.Manifest {
 	local.lock.RLock()
 	defer local.lock.RUnlock()

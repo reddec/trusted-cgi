@@ -29,10 +29,11 @@ type Platform interface {
 
 type QueueFactory func(name string) (queue.Queue, error)
 
-func New(ctx context.Context, config Store, platform Platform, factory QueueFactory) (*queueManager, error) {
+func New(ctx context.Context, config Store, platform Platform, factory QueueFactory, validator application.Validator) (*queueManager, error) {
 	qm := &queueManager{
 		ctx:          ctx,
 		platform:     platform,
+		validator:    validator,
 		queues:       map[string]*queueDefinition{},
 		queueFactory: factory,
 		config:       config,
@@ -44,6 +45,7 @@ type queueManager struct {
 	ctx          context.Context
 	lock         sync.RWMutex
 	platform     Platform
+	validator    application.Validator
 	queues       map[string]*queueDefinition
 	queueFactory QueueFactory
 	config       Store
@@ -71,6 +73,9 @@ func (qm *queueManager) Put(queue string, request *types.Request) error {
 	q, ok := qm.queues[queue]
 	if !ok {
 		return fmt.Errorf("queue %s does not exist", queue)
+	}
+	if err := qm.validator.Inspect(q.Target, request); err != nil {
+		return fmt.Errorf("put: security validation failed: %w", err)
 	}
 	return q.queue.Put(qm.ctx, request)
 }

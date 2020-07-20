@@ -12,7 +12,7 @@ Since `0.3.5`
 
 By default, queues stored in a directory-based style. Each element of queue pipes directly from incoming requests, as well as to lambda without caching. It means - RAM usage is almost constant regardless of request sizes and a number of elements in a queue.
 
-Currently, there are no security restrictions for the queue on append time. All checks will be performed before lambda
+Security restrictions (policies) checked twice: on append time and before lambda
 execution in the same way as it defined in security. 
 
 Queues that bound to the lambda could be found in Overview -> Endpoint page.

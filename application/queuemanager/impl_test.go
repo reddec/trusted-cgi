@@ -28,6 +28,13 @@ func (mini *mockPlatform) InvokeByUID(ctx context.Context, uid string, request t
 	return handler(request, out)
 }
 
+type bypass struct {
+}
+
+func (b bypass) Inspect(lambda string, request *types.Request) error {
+	return nil
+}
+
 func TestNew(t *testing.T) {
 	var echoText string
 	var echoCh = make(chan struct{})
@@ -58,7 +65,7 @@ func TestNew(t *testing.T) {
 			Target: "greeter",
 		}), platform, func(name string) (queue.Queue, error) {
 			return inmemory.New(10), nil
-		})
+		}, &bypass{})
 	if err != nil {
 		t.Error(err)
 		return

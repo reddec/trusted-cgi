@@ -39,6 +39,8 @@ type Actions interface {
 type Invokable interface {
 	// Invoke request, write response. Required header should be set by invoker
 	Invoke(ctx context.Context, request types.Request, response io.Writer, globalEnv map[string]string) error
+	// Unique ID
+	UID() string
 }
 
 // Basic invokable entity
@@ -143,9 +145,15 @@ type Queues interface {
 	Find(targetLambda string) []Queue
 }
 
+type Validator interface {
+	// Inspect request according policy (if applied). Returns null if all checks successful
+	Inspect(lambda string, request *types.Request) error
+}
+
 // Manage policies for the all kind of resource.
 // Lambda can have only one policy at one time, but one policy can be used by many lambdas.
 type Policies interface {
+	Validator
 	// List all policies
 	List() []Policy
 	// Create new policy
@@ -158,6 +166,4 @@ type Policies interface {
 	Apply(lambda string, policy string) error
 	// Clear applied policy for the lambda
 	Clear(lambda string) error
-	// Inspect request according policy (if applied). Returns null if all checks successful
-	Inspect(lambda string, request *types.Request) error
 }

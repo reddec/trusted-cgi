@@ -2,9 +2,10 @@ package policy
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/types"
-	"sync"
 )
 
 // Store contains policies configuration for reload
@@ -37,7 +38,8 @@ func (policies *policiesImpl) load() error {
 		return err
 	}
 	for _, item := range list {
-		policies.policiesByID[item.ID] = &item
+		cp := item
+		policies.policiesByID[item.ID] = &cp
 		for lambda := range item.Lambdas {
 			policies.policiesByLambda[lambda] = item.ID
 		}

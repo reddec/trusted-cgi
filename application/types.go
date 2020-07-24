@@ -2,8 +2,9 @@ package application
 
 import (
 	"encoding/json"
-	"github.com/reddec/trusted-cgi/types"
 	"os"
+
+	"github.com/reddec/trusted-cgi/types"
 )
 
 type Definition struct {
@@ -50,10 +51,11 @@ func (cfg *Config) ReadFile(file string) error {
 }
 
 type Queue struct {
-	Name     string             `json:"name"`
-	Target   string             `json:"target"`
-	Retry    int                `json:"retry"`    // number of additional attempts
-	Interval types.JsonDuration `json:"interval"` // delay between attempts
+	Name           string             `json:"name"`
+	Target         string             `json:"target"`
+	Retry          int                `json:"retry"`            // number of additional attempts
+	MaxElementSize int64              `json:"max_element_size"` // max request size
+	Interval       types.JsonDuration `json:"interval"`         // delay between attempts
 }
 
 type PolicyDefinition struct {

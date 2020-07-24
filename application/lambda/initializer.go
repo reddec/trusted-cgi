@@ -16,8 +16,7 @@ import (
 // Create dummy public lambda in defined path with manifest based on execution specified binary with args
 func DummyPublic(path string, bin string, args ...string) (*localLambda, error) {
 	var manifest = types.Manifest{
-		Public: true,
-		Run:    append([]string{bin}, args...),
+		Run: append([]string{bin}, args...),
 	}
 	err := manifest.SaveAs(filepath.Join(path, internal.ManifestFile))
 	if err != nil {

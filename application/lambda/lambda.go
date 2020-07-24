@@ -3,11 +3,8 @@ package lambda
 import (
 	"context"
 	"fmt"
-	"github.com/reddec/trusted-cgi/internal"
-	"github.com/reddec/trusted-cgi/types"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -15,6 +12,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/reddec/trusted-cgi/internal"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 type localLambda struct {
@@ -65,10 +65,6 @@ func (local *localLambda) Invoke(ctx context.Context, request types.Request, res
 	local.lock.RLock()
 	defer local.lock.RUnlock()
 	defer request.Body.Close()
-
-	if !local.passSecurityCheck(&request) {
-		return fmt.Errorf("security checks failed")
-	}
 
 	if local.staticDir != "" && request.Method == http.MethodGet {
 		return local.writeStaticFile(request.Path, response)
@@ -178,25 +174,6 @@ func (local *localLambda) readIgnore() ([]string, error) {
 		return nil, nil
 	}
 	return nil, fmt.Errorf("read ignore file: %w", err)
-}
-
-func (local *localLambda) passSecurityCheck(req *types.Request) bool {
-	manifest := local.manifest
-	host, _, _ := net.SplitHostPort(req.RemoteAddress)
-	if len(manifest.AllowedIP) > 0 && !manifest.AllowedIP.Has(host) {
-		return false
-	}
-	if len(manifest.AllowedOrigin) > 0 && !manifest.AllowedOrigin.Has(req.Headers["Origin"]) {
-		return false
-	}
-
-	if !manifest.Public {
-		_, ok := manifest.Tokens[req.Headers["Authorization"]]
-		if !ok {
-			return false
-		}
-	}
-	return true
 }
 
 func (local *localLambda) writeStaticFile(path string, out io.Writer) error {

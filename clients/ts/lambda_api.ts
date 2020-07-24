@@ -39,10 +39,6 @@ export interface Manifest {
     path_env: string | null
     time_limit: JsonDuration | null
     maximum_payload: number | null
-    allowed_ip: JsonStringSet | null
-    allowed_origin: JsonStringSet | null
-    public: boolean
-    tokens: any | null
     cron: Array<Schedule> | null
     static: string | null
 }

@@ -105,7 +105,6 @@ Replace url to the real
 `,
 				Run:            []string{"./venv/bin/python3", "app.py"},
 				TimeLimit:      types.JsonDuration(time.Second),
-				Public:         true,
 				MaximumPayload: 8192,
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
@@ -136,7 +135,6 @@ Replace url to the real
 `,
 				Run:            []string{"node", "app.js"},
 				TimeLimit:      types.JsonDuration(time.Second),
-				Public:         true,
 				MaximumPayload: 8192,
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
@@ -156,7 +154,6 @@ Replace url to the real
 `,
 				Run:            []string{"php", "app.php"},
 				TimeLimit:      types.JsonDuration(time.Second),
-				Public:         true,
 				MaximumPayload: 8192,
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",
@@ -181,7 +178,6 @@ Replace url to the real
 `,
 				Run:            []string{"./bin/lambda"},
 				TimeLimit:      types.JsonDuration(time.Second),
-				Public:         true,
 				MaximumPayload: 8192,
 				OutputHeaders: map[string]string{
 					"Content-Type": "application/json",

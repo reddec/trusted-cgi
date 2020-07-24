@@ -3,9 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/robfig/cron"
 	"os"
 	"time"
+
+	"github.com/robfig/cron"
 )
 
 type Manifest struct {
@@ -21,13 +22,8 @@ type Manifest struct {
 	PathEnv        string            `json:"path_env,omitempty"`        // map requested path to environment
 	TimeLimit      JsonDuration      `json:"time_limit,omitempty"`      // time limit to run (zero is infinity)
 	MaximumPayload int64             `json:"maximum_payload,omitempty"` // limit incoming payload (zero is unlimited)
-	AllowedIP      JsonStringSet     `json:"allowed_ip,omitempty"`      // limit incoming connections from list of IP
-	AllowedOrigin  JsonStringSet     `json:"allowed_origin,omitempty"`  // limit incoming connections by origin header
-	Public         bool              `json:"public"`                    // if public, tokens are ignores
-	Tokens         map[string]string `json:"tokens,omitempty"`          // limit request by value in Authorization header (token => title)
-	//Aliases        JsonStringSet     `json:"aliases,omitempty"`         // aliases to the current app
-	Cron   []Schedule `json:"cron,omitempty"`   // crontab expression and action name to invoke
-	Static string     `json:"static,omitempty"` // relative path to static folder
+	Cron           []Schedule        `json:"cron,omitempty"`            // crontab expression and action name to invoke
+	Static         string            `json:"static,omitempty"`          // relative path to static folder
 }
 
 type Schedule struct {

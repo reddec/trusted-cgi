@@ -14,6 +14,7 @@ export interface Queue {
     name: string
     target: string
     retry: number
+    max_element_size: number
     interval: JsonDuration
 }
 

@@ -3,15 +3,17 @@ package queuemanager
 import (
 	"context"
 	"fmt"
-	"github.com/reddec/trusted-cgi/application"
-	"github.com/reddec/trusted-cgi/queue"
-	"github.com/reddec/trusted-cgi/types"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/reddec/trusted-cgi/application"
+	"github.com/reddec/trusted-cgi/queue"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 // Store contains queues configuration for reload
@@ -69,13 +71,17 @@ func (qm *queueManager) init() error {
 func (qm *queueManager) Put(queue string, request *types.Request) error {
 	qm.lock.RLock()
 	defer qm.lock.RUnlock()
-	defer request.Body.Close()
+	stream := request.Body
+	defer stream.Close()
 	q, ok := qm.queues[queue]
 	if !ok {
 		return fmt.Errorf("queue %s does not exist", queue)
 	}
 	if err := qm.validator.Inspect(q.Target, request); err != nil {
 		return fmt.Errorf("put: security validation failed: %w", err)
+	}
+	if q.MaxElementSize > 0 {
+		request.Body = ioutil.NopCloser(io.LimitReader(stream, q.MaxElementSize))
 	}
 	return q.queue.Put(qm.ctx, request)
 }

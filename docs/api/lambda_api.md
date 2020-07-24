@@ -312,10 +312,6 @@ EOF
 | path_env | `string` |  |
 | time_limit | `JsonDuration` |  |
 | maximum_payload | `int64` |  |
-| allowed_ip | `JsonStringSet` |  |
-| allowed_origin | `JsonStringSet` |  |
-| public | `bool` |  |
-| tokens | `map[string]string` |  |
 | cron | `[]Schedule` |  |
 | static | `string` |  |
 

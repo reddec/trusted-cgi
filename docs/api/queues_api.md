@@ -50,6 +50,7 @@ EOF
 | name | `string` |  |
 | target | `string` |  |
 | retry | `int` |  |
+| max_element_size | `int64` |  |
 | interval | `types.JsonDuration` |  |
 
 ### Token
@@ -120,6 +121,7 @@ EOF
 | name | `string` |  |
 | target | `string` |  |
 | retry | `int` |  |
+| max_element_size | `int64` |  |
 | interval | `types.JsonDuration` |  |
 
 ### Token
@@ -159,6 +161,7 @@ EOF
 | name | `string` |  |
 | target | `string` |  |
 | retry | `int` |  |
+| max_element_size | `int64` |  |
 | interval | `types.JsonDuration` |  |
 
 ### Token

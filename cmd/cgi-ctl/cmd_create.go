@@ -65,7 +65,6 @@ func (cmd *create) Execute(args []string) error {
 
 	info.Manifest.Name = filepath.Base(wd)
 	info.Manifest.Description = cmd.Description
-	info.Manifest.Public = cmd.Public
 
 	log.Println("updating manifest...")
 	info, err = cmd.Lambdas().Update(ctx, token, info.UID, info.Manifest)

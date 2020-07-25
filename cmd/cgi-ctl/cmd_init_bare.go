@@ -14,7 +14,6 @@ import (
 type Bare struct {
 	Git         bool          `long:"git" env:"GIT" description:"Enable Git"`
 	Description string        `short:"d" long:"description" env:"DESCRIPTION" description:"Description" default:"Bare project"`
-	Private     bool          `short:"P" long:"private" env:"PRIVATE" description:"Mark as private"`
 	TimeLimit   time.Duration `short:"t" long:"time-limit" env:"TIME_LIMIT" description:"Time limit for execution" default:"10s"`
 	MaxPayload  int64         `short:"p" long:"max-payload" env:"MAX_PAYLOAD" description:"Maximum payload" default:"8192"`
 }
@@ -34,7 +33,6 @@ func (b Bare) Execute(args []string) error {
 		},
 		TimeLimit:      types.JsonDuration(b.TimeLimit),
 		MaximumPayload: b.MaxPayload,
-		Public:         !b.Private,
 	}
 
 	err = def.SaveAs(internal_app.ManifestFile)

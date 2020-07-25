@@ -21,6 +21,7 @@ Features:
 * Permanent links (aliases)
 * Actions - independent instruction that could be run via UI/API on server
 * Scheduler: run actions in cron-tab like style
+* Queues and retries
 * ... etc - [see docs](https://trusted-cgi.reddec.net) 
 
 # Installation

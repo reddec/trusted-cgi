@@ -44,10 +44,6 @@ Example: for python with virtualenv with main script `app.py` it will look like:
 * **method_env** (optional, string): map request path to specified environment variable
 * **time_limit** (optional, time string): limit maximum execution time for the lambda. 
 * **maximumPayload** (optional, number): limit incoming request size in bytes
-* **allowed_ip** (optional, array of string): allow requests only from IP defined in the list
-* **allowed_origin** (optional, array of string): allow requests only with `Origin` header value the list
-* **tokens** (optional, array of string): allow requests only with `Authorization` header value the list; applicable only if `public: false`
-* **public** (optional, boolean): if false, check all requests against `tokens`
 * **cron** (option, array of `Cron`): scheduled actions
 * **static** (optional, string): path to directory inside lambda to serve static files; if defined the GET and HEAD methods will not be available for handler
 
@@ -80,3 +76,13 @@ Example: `1h30m25s`, `15s`
 
 Since `0.3.3` field `aliases` moved to platform level. Migration from `0.3.x` (x < 3) to `0.3.3` 
 version should be done automatically after a restart.
+
+### 0.3.5
+
+* **allowed_ip** (optional, array of string): allow requests only from IP defined in the list
+* **allowed_origin** (optional, array of string): allow requests only with `Origin` header value the list
+* **tokens** (optional, array of string): allow requests only with `Authorization` header value the list; applicable only if `public: false`
+* **public** (optional, boolean): if false, check all requests against `tokens`
+
+Since `0.3.5` fields `allowed_ip`, `allowed_origin`, `tokens`, `public` moved to [policies](../administrating/policies.md). 
+Migration from `0.3.x` (x < 5) to `0.3.5` version should be done automatically after a restart. 

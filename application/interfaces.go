@@ -2,11 +2,12 @@ package application
 
 import (
 	"context"
-	"github.com/reddec/trusted-cgi/templates"
-	"github.com/reddec/trusted-cgi/types"
 	"io"
 	"regexp"
 	"time"
+
+	"github.com/reddec/trusted-cgi/templates"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 type FileSystem interface {
@@ -166,4 +167,8 @@ type Policies interface {
 	Apply(lambda string, policy string) error
 	// Clear applied policy for the lambda
 	Clear(lambda string) error
+	// Get policy by name or return error
+	Get(policy string) (*Policy, error)
+	// Find policy by lambda
+	Find(lambda string) (*Policy, error)
 }

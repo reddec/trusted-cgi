@@ -131,6 +131,30 @@ func (policies *policiesImpl) Clear(lambda string) error {
 	return policies.store.SetPolicies(policies.unsafeList())
 }
 
+func (policies *policiesImpl) Get(policy string) (*application.Policy, error) {
+	policies.lock.RLock()
+	defer policies.lock.RUnlock()
+	inst, exists := policies.policiesByID[policy]
+	if !exists {
+		return nil, fmt.Errorf("policy %s does not exist", policy)
+	}
+	return inst, nil
+}
+
+func (policies *policiesImpl) Find(lambda string) (*application.Policy, error) {
+	policies.lock.RLock()
+	defer policies.lock.RUnlock()
+	policy, exists := policies.policiesByLambda[lambda]
+	if !exists {
+		return nil, fmt.Errorf("lambda %s has no applied policy", lambda)
+	}
+	inst, exists := policies.policiesByID[policy]
+	if !exists {
+		return nil, fmt.Errorf("policy %s does not exist - corrupted data", policy)
+	}
+	return inst, nil
+}
+
 func (policies *policiesImpl) unsafeUnlink(lambda string) bool {
 	policyId, hasPolicy := policies.policiesByLambda[lambda]
 	if !hasPolicy {

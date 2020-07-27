@@ -2,17 +2,20 @@ package server
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/reddec/jsonrpc2"
+
 	"github.com/reddec/trusted-cgi/api"
 	"github.com/reddec/trusted-cgi/api/handlers"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/assets"
 	"github.com/reddec/trusted-cgi/stats"
-	"net/http"
 )
 
 func Handler(ctx context.Context,
 	dev bool,
+	policies application.Validator,
 	platform application.Platform,
 	queues application.Queues,
 	tracker stats.Stats,
@@ -27,8 +30,8 @@ func Handler(ctx context.Context,
 ) (http.Handler, error) {
 	var mux http.ServeMux
 	// main API
-	apps := application.HandlerByUID(ctx, tracker, platform)
-	links := application.HandlerByLinks(ctx, tracker, platform)
+	apps := application.HandlerByUID(ctx, policies, tracker, platform)
+	links := application.HandlerByLinks(ctx, policies, tracker, platform)
 	queuesHandler := application.HandlerByQueues(queues)
 
 	mux.Handle("/a/", openedHandler(http.StripPrefix("/a/", apps)))

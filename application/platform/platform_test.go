@@ -1,13 +1,24 @@
 package platform_test
 
 import (
-	"github.com/reddec/trusted-cgi/application/lambda"
-	"github.com/reddec/trusted-cgi/application/platform"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/reddec/trusted-cgi/application/lambda"
+	"github.com/reddec/trusted-cgi/application/platform"
+	"github.com/reddec/trusted-cgi/types"
+
+	"github.com/stretchr/testify/assert"
 )
+
+type mockValidator struct {
+	forbidden map[string]error
+}
+
+func (mv *mockValidator) Inspect(lambda string, request *types.Request) error {
+	return mv.forbidden[lambda]
+}
 
 func TestPlatform_AddWithOldAliases(t *testing.T) {
 	temp, err := ioutil.TempFile("", "")
@@ -33,7 +44,7 @@ func TestPlatform_AddWithOldAliases(t *testing.T) {
 		return
 	}
 
-	plato, err := platform.New(temp.Name())
+	plato, err := platform.New(temp.Name(), &mockValidator{})
 	if !assert.NoError(t, err) {
 		return
 	}

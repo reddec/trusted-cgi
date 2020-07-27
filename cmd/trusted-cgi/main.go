@@ -3,7 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/jessevdk/go-flags"
+
 	"github.com/reddec/trusted-cgi/api/services"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/application/cases"
@@ -17,11 +24,6 @@ import (
 	"github.com/reddec/trusted-cgi/queue/inmemory"
 	"github.com/reddec/trusted-cgi/server"
 	"github.com/reddec/trusted-cgi/stats/impl/memlog"
-	"log"
-	"net/http"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 const version = "dev"
@@ -177,7 +179,7 @@ func run(ctx context.Context, config Config) error {
 	defer tracker.Dump()
 	go dumpTracker(ctx, config.StatsInterval, tracker)
 
-	handler, err := server.Handler(ctx, config.Dev, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi, queuesApi, policiesApi)
+	handler, err := server.Handler(ctx, config.Dev, policies, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi, queuesApi, policiesApi)
 	if err != nil {
 		return err
 	}

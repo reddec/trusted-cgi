@@ -3,8 +3,6 @@ package platform
 import (
 	"context"
 	"fmt"
-	"github.com/reddec/trusted-cgi/application"
-	"github.com/reddec/trusted-cgi/types"
 	"io"
 	"os"
 	"os/user"
@@ -12,11 +10,14 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/reddec/trusted-cgi/application"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 var allowedName = regexp.MustCompile("^[a-zA-Z0-9._-]{1,255}$")
 
-func New(configFile string, validator application.Validator) (*platform, error) {
+func New(configFile string) (*platform, error) {
 	var config application.Config
 	err := config.ReadFile(configFile)
 	if err != nil && !os.IsNotExist(err) {
@@ -25,7 +26,6 @@ func New(configFile string, validator application.Validator) (*platform, error) 
 	pl := &platform{
 		configLocation: configFile,
 		config:         config,
-		validator:      validator,
 	}
 	return pl, pl.SetConfig(config)
 }
@@ -36,7 +36,6 @@ type platform struct {
 	config         application.Config
 	configLocation string
 	byUID          map[string]record
-	validator      application.Validator
 }
 
 type record struct {
@@ -201,10 +200,6 @@ func (platform *platform) InvokeByUID(ctx context.Context, uid string, request t
 }
 
 func (platform *platform) Invoke(ctx context.Context, lambda application.Invokable, request types.Request, out io.Writer) error {
-	err := platform.validator.Inspect(lambda.UID(), &request)
-	if err != nil {
-		return err
-	}
 	return lambda.Invoke(ctx, request, out, platform.config.Environment)
 }
 

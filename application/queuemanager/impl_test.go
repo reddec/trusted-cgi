@@ -3,16 +3,17 @@ package queuemanager_test
 import (
 	"bytes"
 	"context"
-	"github.com/reddec/trusted-cgi/application"
-	"github.com/reddec/trusted-cgi/application/queuemanager"
-	"github.com/reddec/trusted-cgi/queue"
-	"github.com/reddec/trusted-cgi/queue/inmemory"
-	"github.com/reddec/trusted-cgi/types"
 	"io"
 	"io/ioutil"
 	"os"
 	"sort"
 	"testing"
+
+	"github.com/reddec/trusted-cgi/application"
+	"github.com/reddec/trusted-cgi/application/queuemanager"
+	"github.com/reddec/trusted-cgi/queue"
+	"github.com/reddec/trusted-cgi/queue/inmemory"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 type hf func(request types.Request, out io.Writer) error
@@ -26,13 +27,6 @@ func (mini *mockPlatform) InvokeByUID(ctx context.Context, uid string, request t
 		return os.ErrNotExist
 	}
 	return handler(request, out)
-}
-
-type bypass struct {
-}
-
-func (b bypass) Inspect(lambda string, request *types.Request) error {
-	return nil
 }
 
 func TestNew(t *testing.T) {
@@ -65,7 +59,7 @@ func TestNew(t *testing.T) {
 			Target: "greeter",
 		}), platform, func(name string) (queue.Queue, error) {
 			return inmemory.New(10), nil
-		}, &bypass{})
+		})
 	if err != nil {
 		t.Error(err)
 		return

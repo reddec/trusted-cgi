@@ -102,10 +102,6 @@ class Manifest:
     path_env: 'Optional[str]'
     time_limit: 'Optional[Any]'
     maximum_payload: 'Optional[int]'
-    allowed_ip: 'Optional[Any]'
-    allowed_origin: 'Optional[Any]'
-    public: 'bool'
-    tokens: 'Optional[Any]'
     cron: 'Optional[List[Schedule]]'
     static: 'Optional[str]'
 
@@ -123,10 +119,6 @@ class Manifest:
             "path_env": self.path_env,
             "time_limit": self.time_limit,
             "maximum_payload": self.maximum_payload,
-            "allowed_ip": self.allowed_ip,
-            "allowed_origin": self.allowed_origin,
-            "public": self.public,
-            "tokens": self.tokens,
             "cron": [x.to_json() for x in self.cron],
             "static": self.static,
         }
@@ -146,10 +138,6 @@ class Manifest:
                 path_env=payload['path_env'],
                 time_limit=payload['time_limit'],
                 maximum_payload=payload['maximum_payload'],
-                allowed_ip=payload['allowed_ip'],
-                allowed_origin=payload['allowed_origin'],
-                public=payload['public'],
-                tokens=payload['tokens'],
                 cron=[Schedule.from_json(x) for x in (payload['cron'] or [])],
                 static=payload['static'],
         )

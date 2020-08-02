@@ -116,7 +116,7 @@ func TestLocalLambda_Invoke(t *testing.T) {
 	}
 	defer os.RemoveAll(d)
 
-	fn, err := DummyPublic(d, "/usr/bin/cat", "-")
+	fn, err := DummyPublic(d, "cat", "-")
 	if !assert.NoError(t, err) {
 		return
 	}

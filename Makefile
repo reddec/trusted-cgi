@@ -24,3 +24,6 @@ regen: json-rpc2
 
 embed_ui: bindata update_ui
 	cd assets && $(shell go env GOPATH)/bin/go-bindata -pkg assets -prefix ../ui/dist/spa -fs ../ui/dist/spa/...
+
+test:
+	go test -v ./...

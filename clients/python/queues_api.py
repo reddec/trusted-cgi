@@ -11,6 +11,7 @@ class Queue:
     name: 'str'
     target: 'str'
     retry: 'int'
+    max_element_size: 'int'
     interval: 'Any'
 
     def to_json(self) -> dict:
@@ -18,6 +19,7 @@ class Queue:
             "name": self.name,
             "target": self.target,
             "retry": self.retry,
+            "max_element_size": self.max_element_size,
             "interval": self.interval,
         }
 
@@ -27,6 +29,7 @@ class Queue:
                 name=payload['name'],
                 target=payload['target'],
                 retry=payload['retry'],
+                max_element_size=payload['max_element_size'],
                 interval=payload['interval'],
         )
 

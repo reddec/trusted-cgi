@@ -138,7 +138,7 @@ func run(ctx context.Context, config Config) error {
 		return err
 	}
 
-	basePlatform, err := platform.New(filepath.Join(config.Dir, internal2.ProjectManifest), policies)
+	basePlatform, err := platform.New(filepath.Join(config.Dir, internal2.ProjectManifest))
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func run(ctx context.Context, config Config) error {
 		return err
 	}
 
-	queueManager, err := queuemanager.New(ctx, queuemanager.FileConfig(config.Queues.Config), basePlatform, queueFactory, policies)
+	queueManager, err := queuemanager.New(ctx, queuemanager.FileConfig(config.Queues.Config), basePlatform, queueFactory)
 	if err != nil {
 		return err
 	}
@@ -179,10 +179,22 @@ func run(ctx context.Context, config Config) error {
 	defer tracker.Dump()
 	go dumpTracker(ctx, config.StatsInterval, tracker)
 
-	handler, err := server.Handler(ctx, config.Dev, policies, basePlatform, queueManager, tracker, userApi, projectApi, lambdaApi, userApi, queuesApi, policiesApi)
-	if err != nil {
-		return err
+	srv := &server.Server{
+		Policies:     policies,
+		Platform:     basePlatform,
+		Cases:        useCases,
+		Queues:       queueManager,
+		Dev:          config.Dev,
+		Tracker:      tracker,
+		TokenHandler: userApi,
+		ProjectAPI:   projectApi,
+		LambdaAPI:    lambdaApi,
+		UserAPI:      userApi,
+		QueuesAPI:    queuesApi,
+		PoliciesAPI:  policiesApi,
 	}
+
+	handler := srv.Handler(ctx)
 	log.Println("running on", config.Bind)
 	return config.Serve(ctx, handler)
 }

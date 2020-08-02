@@ -144,6 +144,8 @@ type Queues interface {
 	List() []Queue
 	// Find queues linked to lambda
 	Find(targetLambda string) []Queue
+	// Get queue by ID or return ErrNotExists
+	Get(queue string) (*Queue, error)
 }
 
 type Validator interface {

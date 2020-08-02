@@ -5,20 +5,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/reddec/trusted-cgi/application/lambda"
 	"github.com/reddec/trusted-cgi/application/platform"
-	"github.com/reddec/trusted-cgi/types"
-
-	"github.com/stretchr/testify/assert"
 )
-
-type mockValidator struct {
-	forbidden map[string]error
-}
-
-func (mv *mockValidator) Inspect(lambda string, request *types.Request) error {
-	return mv.forbidden[lambda]
-}
 
 func TestPlatform_AddWithOldAliases(t *testing.T) {
 	temp, err := ioutil.TempFile("", "")
@@ -34,7 +25,7 @@ func TestPlatform_AddWithOldAliases(t *testing.T) {
 	}
 	defer os.RemoveAll(workdir)
 
-	dummy, err := lambda.DummyPublic(workdir, "/usr/bin/cat", "-")
+	dummy, err := lambda.DummyPublic(workdir, "cat", "-")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -44,7 +35,7 @@ func TestPlatform_AddWithOldAliases(t *testing.T) {
 		return
 	}
 
-	plato, err := platform.New(temp.Name(), &mockValidator{})
+	plato, err := platform.New(temp.Name())
 	if !assert.NoError(t, err) {
 		return
 	}

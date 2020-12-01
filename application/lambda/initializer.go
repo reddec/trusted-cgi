@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/reddec/trusted-cgi/internal"
-	"github.com/reddec/trusted-cgi/templates"
-	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/reddec/trusted-cgi/internal"
+	"github.com/reddec/trusted-cgi/templates"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 // Create dummy public lambda in defined path with manifest based on execution specified binary with args
@@ -53,7 +54,11 @@ func FromTemplate(ctx context.Context, template templates.Template, path string)
 	}
 	for fileName, content := range template.Files {
 		destFile := filepath.Join(path, fileName)
-		err := ioutil.WriteFile(destFile, []byte(content), 0755)
+		err := os.MkdirAll(filepath.Dir(destFile), 0755)
+		if err != nil {
+			return nil, fmt.Errorf("create file %s directory: %w", fileName, err)
+		}
+		err = ioutil.WriteFile(destFile, []byte(content), 0755)
 		if err != nil {
 			return nil, fmt.Errorf("write file %s content: %w", fileName, err)
 		}

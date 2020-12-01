@@ -24,6 +24,11 @@ Features:
 * Queues and retries
 * ... etc - [see docs](https://trusted-cgi.reddec.net) 
 
+
+P.S
+
+There is minimal version of trusted-cgi: [nano-run](https://github.com/reddec/nano-run). Check it out - it DevOps friendly with configuration-first approach (ie easier to use for infrastructure-as-a-code).
+
 # Installation
 
 Since `0.3.3` Linux, Darwin and even Windows OS supported: pre-built binaries could be found in [releases](https://github.com/reddec/trusted-cgi/releases)

@@ -39,7 +39,7 @@ TL;DR;
 * locally or non-debian server - [download binary](https://github.com/reddec/trusted-cgi/releases) and run
 * for quick tests or for limited production - use docker image (`docker run --rm -p 3434:3434 reddec/trusted-cgi`)
 
-See [installation manual](https://trusted-cgi.reddec.net/installation)
+See [installation manual](https://trusted-cgi.reddec.net/administrating/installation/)
 
 # Overview 
 

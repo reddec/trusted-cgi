@@ -17,6 +17,8 @@ type FileSystem interface {
 	ReadFile(path string, output io.Writer) error
 	// Write content to file
 	WriteFile(path string, input io.Reader) error
+	// Ensure directory exists
+	EnsureDir(path string) error
 	// Remove selected file
 	RemoveFile(path string) error
 	// Rename local file

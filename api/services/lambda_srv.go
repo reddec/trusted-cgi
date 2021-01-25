@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+
 	"github.com/reddec/trusted-cgi/api"
 	"github.com/reddec/trusted-cgi/application"
 	"github.com/reddec/trusted-cgi/stats"
@@ -104,7 +105,11 @@ func (srv *lambdaSrv) CreateFile(ctx context.Context, token *api.Token, uid stri
 	if err != nil {
 		return false, err
 	}
-	err = fn.Lambda.WriteFile(path, bytes.NewBufferString(""))
+	if dir {
+		err = fn.Lambda.EnsureDir(path)
+	} else {
+		err = fn.Lambda.WriteFile(path, bytes.NewBufferString(""))
+	}
 	return err == nil, err
 }
 

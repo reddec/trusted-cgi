@@ -4,12 +4,13 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/reddec/trusted-cgi/types"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/reddec/trusted-cgi/types"
 )
 
 func (local *localLambda) ListFiles(path string) ([]types.File, error) {
@@ -72,6 +73,18 @@ func (local *localLambda) WriteFile(path string, input io.Reader) error {
 		return nil
 	}
 	return os.Chown(path, creds.User, creds.Group)
+}
+
+func (local *localLambda) EnsureDir(path string) error {
+	path, isLocal := local.resolvePath(local.rootDir, path)
+	if !isLocal {
+		return fmt.Errorf("non-local file")
+	}
+	err := os.MkdirAll(path, 0600)
+	if err != nil {
+		return err
+	}
+	return local.applyFilesOwner()
 }
 
 func (local *localLambda) RemoveFile(path string) error {

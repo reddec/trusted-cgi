@@ -19,6 +19,13 @@ update_ui:
 	git submodule update --init --recursive
 	cd ui && git pull origin master && git lfs pull && npm install . && npx @quasar/cli build
 
+snapshot:
+	python3 assemble_md.py ./docs --exclude ./docs/vendor ./docs/.bundle ./docs/.jekyll-cache ./docs/_site  > MANUAL.md
+	pandoc MANUAL.md -s -t man -o trusted-cgi.1
+	pandoc --metadata title="Trusted-CGI manual" MANUAL.md -s --include-in-header=./docs/assets/github-pandoc.css --toc -o MANUAL.html
+	gzip -f trusted-cgi.1
+	goreleaser --snapshot --rm-dist
+
 regen: json-rpc2
 	go generate api/handlers/*.go
 

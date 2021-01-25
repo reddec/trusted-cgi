@@ -6,3 +6,22 @@ echo "deb https://dl.bintray.com/reddec/debian all main" | sudo tee /etc/apt/sou
 sudo apt update
 sudo apt install trusted-cgi
 ```
+
+Optionally you may install a server and a client separately.
+
+
+**Server only**
+
+Daemon only.
+
+```bash
+sudo apt install trusted-cgi-server
+```
+
+**Client only**
+
+CLI tools only.
+
+```bash
+sudo apt install trusted-cgi-client
+```

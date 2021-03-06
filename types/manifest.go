@@ -23,6 +23,7 @@ type Manifest struct {
 	TimeLimit      JsonDuration      `json:"time_limit,omitempty"`      // time limit to run (zero is infinity)
 	MaximumPayload int64             `json:"maximum_payload,omitempty"` // limit incoming payload (zero is unlimited)
 	Cron           []Schedule        `json:"cron,omitempty"`            // crontab expression and action name to invoke
+	Serial         bool              `json:"serial,omitempty"`          // serial execution - only one running instance of lambda allowed
 	Static         string            `json:"static,omitempty"`          // relative path to static folder
 }
 

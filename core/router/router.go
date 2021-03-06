@@ -10,6 +10,18 @@ import (
 	"github.com/reddec/trusted-cgi/core/queue"
 )
 
+func New(
+	lambdaStorage lambdas.Storage,
+	policyStorage policy.Storage,
+	queue queue.Queue,
+) *Router {
+	return &Router{
+		lambdaStorage: lambdaStorage,
+		policyStorage: policyStorage,
+		queue:         queue,
+	}
+}
+
 type Router struct {
 	lambdaStorage lambdas.Storage
 	policyStorage policy.Storage
@@ -30,6 +42,7 @@ func (router *Router) Async() http.Handler {
 
 func (router *Router) routeRequest(res http.ResponseWriter, req *http.Request, sync bool) {
 	// TODO: add log everywhere
+	defer req.Body.Close()
 	uid := router.getLambdaUID(req)
 
 	lambda, err := router.lambdaStorage.Find(uid)

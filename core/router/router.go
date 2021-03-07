@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -10,8 +11,12 @@ import (
 	"github.com/reddec/trusted-cgi/core/queue"
 )
 
+type LambdaProvider interface {
+	Find(name string) (http.Handler, error)
+}
+
 func New(
-	lambdaStorage lambdas.Storage,
+	lambdaStorage LambdaProvider,
 	policyStorage policy.Storage,
 	queue queue.Queue,
 ) *Router {
@@ -23,7 +28,7 @@ func New(
 }
 
 type Router struct {
-	lambdaStorage lambdas.Storage
+	lambdaStorage LambdaProvider
 	policyStorage policy.Storage
 	queue         queue.Queue
 }
@@ -41,16 +46,17 @@ func (router *Router) Async() http.Handler {
 }
 
 func (router *Router) routeRequest(res http.ResponseWriter, req *http.Request, sync bool) {
-	// TODO: add log everywhere
 	defer req.Body.Close()
 	uid := router.getLambdaUID(req)
 
 	lambda, err := router.lambdaStorage.Find(uid)
 	if errors.Is(err, lambdas.ErrNotFound) {
+		log.Println("lambda", uid, "not found")
 		http.NotFound(res, req)
 		return
 	}
 	if err != nil {
+		log.Println("lookup for lambda", uid, "failed:", err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -66,6 +72,7 @@ func (router *Router) routeRequest(res http.ResponseWriter, req *http.Request, s
 
 	correlationID, err := router.queue.Enqueue(req)
 	if err != nil {
+		log.Println("failed enqueue lambda", uid, ":", err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -81,9 +88,11 @@ func (router *Router) isAllowed(lambdaUID string, res http.ResponseWriter, req *
 	switch {
 	case errors.Is(err, policy.ErrNotFound): // no policy assigned - do nothing
 	case err != nil:
+		log.Println("lookup policy for lambda", lambdaUID, "failed:", err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return false
 	case !assignedPolicy.IsAllowed(req): // prohibited
+		log.Println("can invoke lambda", lambdaUID, "due to policy restriction")
 		res.WriteHeader(http.StatusUnauthorized)
 		return false
 	}

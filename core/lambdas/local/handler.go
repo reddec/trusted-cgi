@@ -17,35 +17,74 @@ import (
 	"github.com/reddec/trusted-cgi/types"
 )
 
-type lambdaManager struct {
+// New lambda manager with backed by local filesystem.
+// To put all lambdas to index cache call ScanAll.
+func New(rootDir string) *LambdaManager {
+	return &LambdaManager{
+		rootDir: rootDir,
+	}
+}
+
+type LambdaManager struct {
+	rootDir   string
 	locks     sync.Map
 	creds     *types.Credential
-	globalEnv map[string]string  // atomic swap, immutable
-	lambdas   map[string]*lambda // atomic swap, immutable
+	globalEnv struct {
+		lock sync.RWMutex
+		data map[string]string
+	}
+	lambdas struct {
+		lock sync.RWMutex
+		data map[string]*lambdaDefinition
+	}
 }
 
-func (mgr *lambdaManager) getLock(name string) *sync.Mutex {
-	v, _ := mgr.locks.LoadOrStore(name, &sync.Mutex{})
-	return v.(*sync.Mutex)
+// Set environment variable.
+func (mgr *LambdaManager) SetEnv(key, value string) *LambdaManager {
+	mgr.globalEnv.lock.Lock()
+	defer mgr.globalEnv.lock.Unlock()
+	if mgr.globalEnv.data == nil {
+		mgr.globalEnv.data = make(map[string]string)
+	}
+	mgr.globalEnv.data[key] = value
+	return mgr
 }
 
-func (mgr *lambdaManager) Find(name string) (lambdas.Lambda, error) {
-	lmb, ok := mgr.lambdas[name]
+// Find lambda handler by name (UID) in cache. ScanAll or Scan should be called first to put lambdas into the cache.
+func (mgr *LambdaManager) Find(name string) (http.Handler, error) {
+	mgr.lambdas.lock.RLock()
+	defer mgr.lambdas.lock.RUnlock()
+
+	lmb, ok := mgr.lambdas.data[name]
 	if !ok {
 		return nil, lambdas.ErrNotFound
 	}
 	return lmb, nil
 }
 
-type lambda struct {
+func (mgr *LambdaManager) env() []string {
+	cp := make([]string, 0, len(mgr.globalEnv.data))
+	mgr.globalEnv.lock.RLock()
+	defer mgr.globalEnv.lock.RUnlock()
+	for k, v := range mgr.globalEnv.data {
+		cp = append(cp, k+"="+v)
+	}
+	return cp
+}
+
+func (mgr *LambdaManager) getLock(name string) *sync.Mutex {
+	v, _ := mgr.locks.LoadOrStore(name, &sync.Mutex{})
+	return v.(*sync.Mutex)
+}
+
+type lambdaDefinition struct {
 	uid      string
-	manager  *lambdaManager
+	manager  *LambdaManager
 	manifest types.Manifest
 	rootDir  string
 }
 
-func (local *lambda) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	// TODO: log
+func (local *lambdaDefinition) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	if local.asStatic(response, request) {
 		return
 	}
@@ -62,8 +101,9 @@ func (local *lambda) ServeHTTP(response http.ResponseWriter, request *http.Reque
 		defer lock.Unlock()
 	}
 
-	if local.manifest.Method != "" && local.manifest.Method != local.manifest.Method {
+	if local.manifest.Method != "" && request.Method != local.manifest.Method {
 		response.WriteHeader(http.StatusMethodNotAllowed)
+		log.Println("method", request.Method, "not allowed for lambda", local.uid)
 		return
 	}
 
@@ -89,9 +129,7 @@ func (local *lambda) ServeHTTP(response http.ResponseWriter, request *http.Reque
 	internal.SetCreds(cmd, local.manager.creds)
 	internal.SetFlags(cmd)
 	var environments = os.Environ()
-	for header, mapped := range local.manager.globalEnv {
-		environments = append(environments, header+"="+mapped)
-	}
+	environments = append(environments, local.manager.env()...)
 	for header, mapped := range local.manifest.InputHeaders {
 		environments = append(environments, mapped+"="+request.Header.Get(header))
 	}
@@ -112,6 +150,7 @@ func (local *lambda) ServeHTTP(response http.ResponseWriter, request *http.Reque
 
 	if err == nil {
 		_, _ = peekableResponse.flush()
+		log.Println("lambda", local.uid, "invoked successfully")
 		return
 	}
 
@@ -128,7 +167,7 @@ func (local *lambda) ServeHTTP(response http.ResponseWriter, request *http.Reque
 	response.WriteHeader(http.StatusInternalServerError)
 }
 
-func (local *lambda) asStatic(response http.ResponseWriter, request *http.Request) bool {
+func (local *lambdaDefinition) asStatic(response http.ResponseWriter, request *http.Request) bool {
 	if local.manifest.Static == "" {
 		return false
 	}

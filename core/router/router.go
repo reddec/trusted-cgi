@@ -83,18 +83,24 @@ func (router *Router) routeRequest(res http.ResponseWriter, req *http.Request, s
 }
 
 func (router *Router) isAllowed(lambdaUID string, res http.ResponseWriter, req *http.Request) bool {
-	assignedPolicy, err := router.policyStorage.FindByLambda(lambdaUID)
+	assignedPolicies, err := router.policyStorage.FindByLambda(lambdaUID)
 
-	switch {
-	case errors.Is(err, policy.ErrNotFound): // no policy assigned - do nothing
-	case err != nil:
+	if errors.Is(err, policy.ErrNotFound) {
+		return true
+	}
+
+	if err != nil {
 		log.Println("lookup policy for lambda", lambdaUID, "failed:", err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return false
-	case !assignedPolicy.IsAllowed(req): // prohibited
-		log.Println("can invoke lambda", lambdaUID, "due to policy restriction")
-		res.WriteHeader(http.StatusUnauthorized)
-		return false
+	}
+
+	for _, assignedPolicy := range assignedPolicies {
+		if assignedPolicy.IsAllowed(req) {
+			log.Println("can invoke lambda", lambdaUID, "due to policy", assignedPolicy, "restriction")
+			res.WriteHeader(http.StatusUnauthorized)
+			return false
+		}
 	}
 	return true
 }

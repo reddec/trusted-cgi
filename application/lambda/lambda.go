@@ -67,7 +67,8 @@ func (local *localLambda) Invoke(ctx context.Context, request types.Request, res
 	defer request.Body.Close()
 
 	if local.staticDir != "" && request.Method == http.MethodGet {
-		return local.writeStaticFile(request.Path, response)
+		path := strings.SplitN(request.Path, "/", 2)[1]
+		return local.writeStaticFile(path, response)
 	}
 
 	if len(local.manifest.Run) == 0 {

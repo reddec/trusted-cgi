@@ -80,7 +80,7 @@ func (local *localLambda) EnsureDir(path string) error {
 	if !isLocal {
 		return fmt.Errorf("non-local file")
 	}
-	err := os.MkdirAll(path, 0600)
+	err := os.MkdirAll(path, 0700)
 	if err != nil {
 		return err
 	}

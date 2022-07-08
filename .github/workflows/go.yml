@@ -45,4 +45,3 @@ jobs:
         args: release --rm-dist --release-footer _footer.md --release-header release-note.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        UPLOAD_BINTRAY_SECRET: ${{ secrets.UPLOAD_BINTRAY_SECRET }}

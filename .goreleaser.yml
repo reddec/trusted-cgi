@@ -9,10 +9,6 @@ builds:
     - amd64
     - arm
     - arm64
-  goarm:
-    - 5
-    - 6
-    - 7
   goos:
     - linux
     - windows
@@ -28,10 +24,6 @@ builds:
     - amd64
     - arm
     - arm64
-  goarm:
-    - 5
-    - 6
-    - 7
   goos:
     - linux
     - windows
@@ -81,14 +73,19 @@ nfpms:
     scripts:
       postinstall: "debian/postinstall.sh"
       preremove: "debian/preremove.sh"
-    empty_folders:
-      - /var/trusted-cgi
-      - /etc/trusted-cgi
-    files:
-      "debian/trusted-cgi.service": "/etc/systemd/system/trusted-cgi.service"
-      "trusted-cgi.1.gz" : "/usr/local/share/man/man1/trusted-cgi.1.gz"
-    config_files:
-      "debian/trusted-cgi.env": "/etc/trusted-cgi/trusted-cgi.env"
+
+    contents:
+      - dst: /var/trusted-cgi
+        type: dir
+      - dst: /etc/trusted-cgi
+        type: dir
+      - src: debian/trusted-cgi.service
+        dst: /etc/systemd/system/trusted-cgi.service
+      - src: trusted-cgi.1.gz
+        dst: /usr/local/share/man/man1/trusted-cgi.1.gz
+      - src: debian/trusted-cgi.env
+        dst: /etc/trusted-cgi/trusted-cgi.env
+        type: config
   - id: debian-client
     package_name: "trusted-cgi-client"
     file_name_template: "{{ .ProjectName }}-client_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
@@ -120,8 +117,8 @@ archives:
     - goos: windows
       format: zip
 dockers:
-  - binaries:
-      - trusted-cgi
+  - ids:
+      - server
     dockerfile: Dockerfile
     image_templates:
       - "reddec/trusted-cgi:{{ .Tag }}"
@@ -129,8 +126,8 @@ dockers:
       - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}"
       - "reddec/trusted-cgi:latest"
 
-  - binaries:
-      - trusted-cgi
+  - ids:
+      - server
     dockerfile: Dockerfile.minimal
     image_templates:
       - "reddec/trusted-cgi:{{ .Tag }}-light"

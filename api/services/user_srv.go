@@ -6,14 +6,15 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
-	"github.com/reddec/jsonrpc2"
-	"github.com/reddec/trusted-cgi/api"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
+	"github.com/reddec/jsonrpc2"
+	"github.com/reddec/trusted-cgi/api"
 )
 
 const (

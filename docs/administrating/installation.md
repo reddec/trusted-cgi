@@ -9,25 +9,23 @@ nav_order: 1
 
 TL;DR;
 
-* for production for debian servers - use bintray repository (recommend)
+* for production for debian servers - use ~~bintray repository~~ github release (recommend)
 * locally or non-debian server - download binary and run
 * for quick tests or for limited production - use docker image
 
 ## Debian/Ubuntu
 
-Add the repository (needed only once)
+Download the latest release.
 
 ```bash
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
-echo "deb https://dl.bintray.com/reddec/debian all main" | sudo tee /etc/apt/sources.list.d/trusted-cgi.list
-sudo apt update
+sudo wget -O trusted-cgi_0.3.6_linux_amd64.deb https://github.com/reddec/trusted-cgi/releases/download/v0.3.6/trusted-cgi_0.3.6_linux_amd64.deb
 ```
 
 Install your distribution:
 
-* standard (basic templates supported): `sudo apt install trusted-cgi`
-*  minimal (actions will not work): `sudo apt install --no-install-recommends trusted-cgi`
-* maximum (all pre-made templates available): `sudo apt install trusted-cgi php-cli nodejs npm`
+* standard (basic templates supported): `sudo apt install ./trusted-cgi_0.3.6_linux_amd64.deb`
+*  minimal (actions will not work): `sudo apt install --no-install-recommends ./trusted-cgi_0.3.6_linux_amd64.deb`
+* maximum (all pre-made templates available): `sudo apt install ./trusted-cgi_0.3.6_linux_amd64.deb php-cli nodejs npm`
 
 Of course, you may install required packages later.
 

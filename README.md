@@ -3,9 +3,6 @@
 [![license](https://img.shields.io/github/license/reddec/trusted-cgi.svg)](https://github.com/reddec/trusted-cgi)
 [![](https://godoc.org/github.com/reddec/trusted-cgi?status.svg)](http://godoc.org/github.com/reddec/trusted-cgi/application)
 [![donate](https://img.shields.io/badge/help_by️-donate❤-ff69b4)](http://reddec.net/about/#donate)
-[![Download](https://api.bintray.com/packages/reddec/debian/trusted-cgi/images/download.svg)](https://bintray.com/reddec/debian/trusted-cgi/_latestVersion)
-
-![](https://bintray-binary-objects-or-production.s3-accelerate.amazonaws.com/80ee75735ebc642670140a263e7e94f32fb8ce932933626ef3c4812006295af0)
 
 Lightweight self-hosted lambda/applications/cgi/serverless-functions engine. 
 
@@ -35,7 +32,7 @@ Since `0.3.3` Linux, Darwin and even Windows OS supported: pre-built binaries co
 
 TL;DR;
 
-* for production for debian servers - use bintray repository (recommend)
+* for production for debian servers - use ~~bintray repository~~ github release (recommend)
 * locally or non-debian server - [download binary](https://github.com/reddec/trusted-cgi/releases) and run
 * for quick tests or for limited production - use docker image (`docker run --rm -p 3434:3434 reddec/trusted-cgi`)
 

@@ -103,15 +103,6 @@ nfpms:
       - deb
     builds:
       - client
-uploads:
-  - name: bintray
-    method: PUT
-    mode: archive
-    username: reddec
-    custom_artifact_name: true
-    ids:
-      - debian
-    target: 'https://api.bintray.com/content/reddec/debian/{{ .ProjectName }}/{{ .Version }}/{{ .ArtifactName }};publish=1;deb_component=main;deb_distribution=all;deb_architecture={{ .Arch }}'
 archives:
 - replacements:
     Linux: linux

@@ -18,14 +18,14 @@ TL;DR;
 Download the latest release.
 
 ```bash
-sudo wget -O trusted-cgi_0.3.6_linux_amd64.deb https://github.com/reddec/trusted-cgi/releases/download/v0.3.6/trusted-cgi_0.3.6_linux_amd64.deb
+sudo wget -O trusted-cgi_0.3.7_linux_amd64.deb https://github.com/reddec/trusted-cgi/releases/download/v0.3.7/trusted-cgi_0.3.7_linux_amd64.deb
 ```
 
 Install your distribution:
 
-* standard (basic templates supported): `sudo apt install ./trusted-cgi_0.3.6_linux_amd64.deb`
-*  minimal (actions will not work): `sudo apt install --no-install-recommends ./trusted-cgi_0.3.6_linux_amd64.deb`
-* maximum (all pre-made templates available): `sudo apt install ./trusted-cgi_0.3.6_linux_amd64.deb php-cli nodejs npm`
+* standard (basic templates supported): `sudo apt install ./trusted-cgi_0.3.7_linux_amd64.deb`
+*  minimal (actions will not work): `sudo apt install --no-install-recommends ./trusted-cgi_0.3.7_linux_amd64.deb`
+* maximum (all pre-made templates available): `sudo apt install ./trusted-cgi_0.3.7_linux_amd64.deb php-cli nodejs npm`
 
 Of course, you may install required packages later.
 

@@ -74,7 +74,7 @@ func (srv *userSrv) Login(ctx context.Context, login, password string) (*api.Tok
 	}
 
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iat":  time.Now().Add(srv.config.LifeTime),
+		"exp":  time.Now().Add(srv.config.LifeTime).Unix(),
 		"user": login,
 	})
 	v, err := tok.SignedString([]byte(srv.secret))

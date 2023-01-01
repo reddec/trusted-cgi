@@ -34,9 +34,6 @@ nfpms:
   - id: debian
     package_name: "trusted-cgi"
     file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    replacements:
-      Linux: linux
-      386: i386
     homepage: https://github.com/reddec/trusted-cgi
     maintainer: Baryshnikov Aleksandr <owner@reddec.net>
     description: Lightweigt runner for lambda functions/apps in CGI like mode
@@ -50,9 +47,6 @@ nfpms:
   - id: debian-server
     package_name: "trusted-cgi-server"
     file_name_template: "{{ .ProjectName }}-server_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    replacements:
-      Linux: linux
-      386: i386
     homepage: https://github.com/reddec/trusted-cgi
     maintainer: Baryshnikov Aleksandr <owner@reddec.net>
     description:  Lightweigt runner for lambda functions/apps in CGI like mode
@@ -89,9 +83,6 @@ nfpms:
   - id: debian-client
     package_name: "trusted-cgi-client"
     file_name_template: "{{ .ProjectName }}-client_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-    replacements:
-      Linux: linux
-      386: i386
     homepage: https://github.com/reddec/trusted-cgi
     maintainer: Baryshnikov Aleksandr <owner@reddec.net>
     description: Client for lightweigt runner for lambda functions/apps in CGI like mode
@@ -101,12 +92,7 @@ nfpms:
     builds:
       - client
 archives:
-- replacements:
-    Linux: linux
-    386: i386
-    windows: windows
-    darwin: darwin
-  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+- name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
   files:
     - LICENSE
     - README.md

@@ -40,7 +40,6 @@ Example: for python with virtualenv with main script `app.py` it will look like:
 * **query** (optional, map of strings): query (or form) mapping, where key is query parameter name and value is environment variable name to be fulfilled
 * **environment** (optional, map of strings): environment variables that will be added to the lambda
 * **method** (optional, string): allow requests only for specified HTTP method (POST, GET, etc..., but OPTIONS is not allowed)
-* **method_env** (optional, string): map actual request method to specified environment variable
 * **method_env** (optional, string): map request path to specified environment variable
 * **time_limit** (optional, time string): limit maximum execution time for the lambda. 
 * **maximumPayload** (optional, number): limit incoming request size in bytes

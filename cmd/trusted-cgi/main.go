@@ -41,6 +41,7 @@ type Config struct {
 	DisableChroot        bool          `long:"disable-chroot" env:"DISABLE_CHROOT" description:"Disable use different user for spawn"`
 	SSHKey               string        `long:"ssh-key" env:"SSH_KEY" description:"Path to ssh key. If not empty and not exists - it will be generated" default:".id_rsa"`
 	Dev                  bool          `long:"dev" env:"DEV" description:"Enabled dev mode (disables chroot)"`
+	BehindProxy          bool          `long:"behind-proxy" env:"BEHIND_PROXY" description:"Respect X-Real-Ip and X-Forwarded-For"`
 	StatsCache           uint          `long:"stats-cache" env:"STATS_CACHE" description:"Maximum cache for stats" default:"8192"`
 	StatsFile            string        `long:"stats-file" env:"STATS_FILE" description:"Binary file for statistics dump" default:".stats"`
 	StatsInterval        time.Duration `long:"stats-interval" env:"STATS_INTERVAL" description:"Interval for dumping stats to file" default:"30s"`
@@ -185,6 +186,7 @@ func run(ctx context.Context, config Config) error {
 		Cases:        useCases,
 		Queues:       queueManager,
 		Dev:          config.Dev,
+		BehindProxy:  config.BehindProxy,
 		Tracker:      tracker,
 		TokenHandler: userApi,
 		ProjectAPI:   projectApi,

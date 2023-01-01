@@ -26,6 +26,7 @@ type Server struct {
 	Cases        application.Cases
 	Queues       application.Queues
 	Dev          bool
+	BehindProxy  bool
 	Tracker      stats.Recorder
 	TokenHandler TokenHandler
 	ProjectAPI   api.ProjectAPI
@@ -137,7 +138,7 @@ func (srv *Server) withRequest(ctx context.Context, next resourceHandler) http.H
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		sections := strings.SplitN(strings.Trim(request.URL.Path, "/"), "/", 2)
 		uid := sections[0]
-		req := types.FromHTTP(request)
+		req := types.FromHTTP(request, srv.BehindProxy)
 		var record = stats.Record{
 			UID:     uid,
 			Request: *req,

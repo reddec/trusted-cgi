@@ -67,3 +67,10 @@ instead of real address.
 Should be defined in default notation `XXX.YYY.ZZZ.TTT`, IPv6 has to be supported but not tested.
 
 The performance almost not impacted regardless number of IP. 
+
+Since `0.3.8` the following headers are respected if `--behind-proxy` (`BEHIND_PROXY=true`) flag is set:
+
+- `X-Real-Ip`
+- `X-Forwarded-For`
+
+The first address in chain will be used as client address.

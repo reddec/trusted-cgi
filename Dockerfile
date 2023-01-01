@@ -1,5 +1,5 @@
 FROM nimlang/nim:1.6.10-alpine
-RUN apk add --no-cache python3 py3-setuptools py3-virtualenv php nodejs npm make git
+RUN apk add --no-cache python3 py3-setuptools py3-virtualenv php nodejs npm make git bash
 EXPOSE 3434
 VOLUME /data
 WORKDIR /data

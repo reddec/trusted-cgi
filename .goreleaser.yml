@@ -117,23 +117,82 @@ archives:
     - goos: windows
       format: zip
 dockers:
-  - ids:
-      - server
+  # build full images for ARM and AMD64
+  - image_templates:
+      - "reddec/trusted-cgi:{{ .Tag }}-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "reddec/trusted-cgi:latest-amd64"
+    use: buildx
     dockerfile: Dockerfile
-    image_templates:
-      - "reddec/trusted-cgi:{{ .Tag }}"
-      - "reddec/trusted-cgi:v{{ .Major }}"
-      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}"
-      - "reddec/trusted-cgi:latest"
-
-  - ids:
+    ids:
       - server
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "reddec/trusted-cgi:{{ .Tag }}-arm64v8"
+      - "reddec/trusted-cgi:v{{ .Major }}-arm64v8"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-arm64v8"
+      - "reddec/trusted-cgi:latest-arm64v8"
+    use: buildx
+    goarch: arm64
+    dockerfile: Dockerfile
+    ids:
+      - server
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+
+  # build light images for ARM and AMD64
+  - image_templates:
+      - "reddec/trusted-cgi:{{ .Tag }}-light-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}-light-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-amd64"
+      - "reddec/trusted-cgi:latest-light-amd64"
+    use: buildx
     dockerfile: Dockerfile.minimal
+    ids:
+      - server
+    build_flag_templates:
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "reddec/trusted-cgi:{{ .Tag }}-light-arm64v8"
+      - "reddec/trusted-cgi:v{{ .Major }}-light-arm64v8"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-arm64v8"
+      - "reddec/trusted-cgi:latest-light-arm64v8"
+    use: buildx
+    goarch: arm64
+    dockerfile: Dockerfile.minimal
+    ids:
+      - server
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+docker_manifests:
+  # full versions
+  - name_template: "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}"
     image_templates:
-      - "reddec/trusted-cgi:{{ .Tag }}-light"
-      - "reddec/trusted-cgi:v{{ .Major }}-light"
-      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light"
-      - "reddec/trusted-cgi:latest-light"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-arm64v8"
+  - name_template: "reddec/trusted-cgi:v{{ .Major }}"
+    image_templates:
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-arm64v8"
+  - name_template: "reddec/trusted-cgi:latest"
+    image_templates:
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-arm64v8"
+  # light versions
+  - name_template: "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light"
+    image_templates:
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-arm64v8"
+  - name_template: "reddec/trusted-cgi:v{{ .Major }}-light"
+    image_templates:
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-arm64v8"
+  - name_template: "reddec/trusted-cgi:light"
+    image_templates:
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-amd64"
+      - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-arm64v8"
 checksum:
   name_template: 'checksums.txt'
 snapshot:

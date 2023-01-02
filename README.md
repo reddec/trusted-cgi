@@ -1,10 +1,18 @@
 # Trusted-CGI
 
+THIS IS WORK-IN-PROGRESS branch!
+
+Changes:
+
+- HCL-based configuration
+- Total internal refactoring
+- Separation of lambda and endpoints, which allows more flexible configuration
+
 [![license](https://img.shields.io/github/license/reddec/trusted-cgi.svg)](https://github.com/reddec/trusted-cgi)
 [![](https://godoc.org/github.com/reddec/trusted-cgi?status.svg)](http://godoc.org/github.com/reddec/trusted-cgi/application)
 [![donate](https://img.shields.io/badge/help_by️-donate❤-ff69b4)](http://reddec.net/about/#donate)
 
-Lightweight self-hosted lambda/applications/cgi/serverless-functions engine. 
+Lightweight self-hosted lambda/applications/cgi/serverless-functions engine.
 
 [see docs](https://trusted-cgi.reddec.net)
 
@@ -19,16 +27,17 @@ Features:
 * Actions - independent instruction that could be run via UI/API on server
 * Scheduler: run actions in cron-tab like style
 * Queues and retries
-* ... etc - [see docs](https://trusted-cgi.reddec.net) 
-
+* ... etc - [see docs](https://trusted-cgi.reddec.net)
 
 P.S
 
-There is minimal version of trusted-cgi: [nano-run](https://github.com/reddec/nano-run). Check it out - it DevOps friendly with configuration-first approach (ie easier to use for infrastructure-as-a-code).
+There is minimal version of trusted-cgi: [nano-run](https://github.com/reddec/nano-run). Check it out - it DevOps
+friendly with configuration-first approach (ie easier to use for infrastructure-as-a-code).
 
 # Installation
 
-Since `0.3.3` Linux, Darwin and even Windows OS supported: pre-built binaries could be found in [releases](https://github.com/reddec/trusted-cgi/releases)
+Since `0.3.3` Linux, Darwin and even Windows OS supported: pre-built binaries could be found
+in [releases](https://github.com/reddec/trusted-cgi/releases)
 
 TL;DR;
 
@@ -38,20 +47,24 @@ TL;DR;
 
 See [installation manual](https://trusted-cgi.reddec.net/administrating/installation/)
 
-# Overview 
+# Overview
 
 The process flow is quite straightforward: one light daemon in background listens for requests and launches scripts/apps
-on demand. An executable shall read standard input (stdin) for request data and write a response to standard output (stdout).
+on demand. An executable shall read standard input (stdin) for request data and write a response to standard output (
+stdout).
 
-Technically any script/application that can parse STDIN and write something to STDOUT should be capable of the execution.
+Technically any script/application that can parse STDIN and write something to STDOUT should be capable of the
+execution.
 
 Trusted-cgi designed keeping in mind that input and output data is quite small and contains structured data (json/xml),
 however, there are no restrictions on the platform itself.
 
 Key differences with classic CGI:
 
-* Only request body is being piped to scripts input (CGI pipes everything, and application has to parse it by itself - it could be very not trivial and slow (it depends))
-* Request headers, form fields, and query params are pre-parsed by the platform and can be passed as an environment variable (see mapping)
+* Only request body is being piped to scripts input (CGI pipes everything, and application has to parse it by itself -
+  it could be very not trivial and slow (it depends))
+* Request headers, form fields, and query params are pre-parsed by the platform and can be passed as an environment
+  variable (see mapping)
 * Response headers are pre-defined in manifest
 
 Due to changes, it's possible to make the simplest script with JSON input and output like this:
@@ -76,16 +89,16 @@ It's best (but not limited) for
 * for projects with a low number of requests: webhooks, scheduled processing, etc..
 * for a project working on low-end machines: raspberry pi, cheapest VPS, etc..
 
-However, if your projects have overgrown the platform limitations, it should be quite easy to migrate to any other solutions, because
-most low-level details are hidden and could be replaced in a few days (basically - just wrap script to HTTP service)  
+However, if your projects have overgrown the platform limitations, it should be quite easy to migrate to any other
+solutions, because
+most low-level details are hidden and could be replaced in a few days (basically - just wrap script to HTTP service)
 
 Also, it is possible to scale the platform performance by just launching the same instances of the platform
 with a shared file system (or docker images) with a balancer in front of it.
 
-
 # Contributing
 
-The platform is quite simple Golang project with Vue + Quasar frontend 
+The platform is quite simple Golang project with Vue + Quasar frontend
 and should be easy for newcomers. Caveats and tips for backend check [here](https://trusted-cgi.reddec.net/development)
 
 For UI check [sub-repo](https://github.com/reddec/trusted-cgi-ui)

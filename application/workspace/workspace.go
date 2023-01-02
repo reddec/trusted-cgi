@@ -13,6 +13,7 @@ import (
 type Config struct {
 	Creds    *types.Credential
 	QueueDir string
+	Cache    CacheStorage
 }
 
 func Load(cfg Config, files ...string) (*Workspace, error) {
@@ -70,19 +71,19 @@ func (wrk *Workspace) addFile(cfg Config, file string) error {
 	}
 	// add endpoints
 	group := chi.NewMux()
-	if err := wrk.addEndpoints(group, http.MethodGet, project.Get); err != nil {
+	if err := wrk.addEndpoints(group, http.MethodGet, project.Get, cfg.Cache); err != nil {
 		return fmt.Errorf("add GET endpoints: %w", err)
 	}
-	if err := wrk.addEndpoints(group, http.MethodPost, project.Post); err != nil {
+	if err := wrk.addEndpoints(group, http.MethodPost, project.Post, cfg.Cache); err != nil {
 		return fmt.Errorf("add POST endpoints: %w", err)
 	}
-	if err := wrk.addEndpoints(group, http.MethodPut, project.Put); err != nil {
+	if err := wrk.addEndpoints(group, http.MethodPut, project.Put, cfg.Cache); err != nil {
 		return fmt.Errorf("add PUT endpoints: %w", err)
 	}
-	if err := wrk.addEndpoints(group, http.MethodPatch, project.Patch); err != nil {
+	if err := wrk.addEndpoints(group, http.MethodPatch, project.Patch, cfg.Cache); err != nil {
 		return fmt.Errorf("add PATCH endpoints: %w", err)
 	}
-	if err := wrk.addEndpoints(group, http.MethodDelete, project.Delete); err != nil {
+	if err := wrk.addEndpoints(group, http.MethodDelete, project.Delete, cfg.Cache); err != nil {
 		return fmt.Errorf("add DELETE endpoints: %w", err)
 	}
 	if project.Static != "" {
@@ -107,37 +108,48 @@ func (wrk *Workspace) addFile(cfg Config, file string) error {
 	return nil
 }
 
-func (wrk *Workspace) addEndpoints(router chi.Router, method string, endpoints []config.Endpoint) error {
+func (wrk *Workspace) addEndpoints(router chi.Router, method string, endpoints []config.Endpoint, cache CacheStorage) error {
 	for _, ep := range endpoints {
 		queues, calls, err := wrk.resolve(ep.Enqueues, ep.Calls)
 		if err != nil {
-			return fmt.Errorf("endpoint %s %s: %w", method, ep.Path, err)
+			return fmt.Errorf("resolve endpoint %s %s: %w", method, ep.Path, err)
 		}
 
-		handler := NewEndpoint(ep, calls, queues)
+		handler, err := NewEndpoint(ep, cache, calls, queues)
+		if err != nil {
+			return fmt.Errorf("create endpoint %s %s: %w", method, ep.Path, err)
+		}
 		router.Method(method, ep.Path, handler)
 	}
 	return nil
 }
 
-func (wrk *Workspace) resolve(toEnqueue []config.Enqueue, toCall []config.Call) ([]*Queue, []*Lambda, error) {
-	var queues []*Queue
-	var calls []*Lambda
+func (wrk *Workspace) resolve(toEnqueue []config.Enqueue, toCall []config.Call) ([]*Async, []*Sync, error) {
+	var asyncs []*Async
+	var syncs []*Sync
 	// resolve queues
 	for _, queue := range toEnqueue {
 		q, ok := wrk.queues[queue.Queue]
 		if !ok {
 			return nil, nil, fmt.Errorf("refernce to uknown queue '%s'", queue.Queue)
 		}
-		queues = append(queues, q)
+		async, err := NewAsync(queue, q)
+		if err != nil {
+			return nil, nil, fmt.Errorf("create async link to queue %s: %w", queue.Queue, err)
+		}
+		asyncs = append(asyncs, async)
 	}
-	// resolve lambdas
+	// resolve lambdas (sync call)
 	for _, lambda := range toCall {
 		l, ok := wrk.lambdas[lambda.Lambda]
 		if !ok {
 			return nil, nil, fmt.Errorf("refernce to uknown lambda '%s'", lambda.Lambda)
 		}
-		calls = append(calls, l)
+		sync, err := NewSync(lambda, l)
+		if err != nil {
+			return nil, nil, fmt.Errorf("create sync link to lambda %s: %w", lambda.Lambda, err)
+		}
+		syncs = append(syncs, sync)
 	}
-	return queues, calls, nil
+	return asyncs, syncs, nil
 }

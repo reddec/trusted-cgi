@@ -29,9 +29,8 @@ get "time" { // get/post/put/patch/delete
     }
     call "format" {
         environment  = {
-            FORWARDED_FOR  = "headers.X-Forwarded-For"
-            LIMIT          = "query.limit"
-            REQUEST_METHOD = "method"
+            FORWARDED_FOR  = "{{Header.X-Forwarded-For}}"
+            LIMIT          = "{{Query.limit}}"
         }
     } // multiple calls allowed, response will be concatenated from the all calls results
 }

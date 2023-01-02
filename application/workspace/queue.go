@@ -4,22 +4,29 @@ import (
 	"context"
 	"fmt"
 	"github.com/reddec/trusted-cgi/application/config"
+	"io"
 )
 
 func NewQueue(rootDir string, cfg config.Queue) (*Queue, error) {
 	return nil, fmt.Errorf("TODO")
 }
 
-type Envelope struct {
+type Message struct {
+	Environment map[string]string
+	Payload     io.ReadCloser
 }
 
 type Queue struct {
 }
 
-func (q *Queue) Push(ctx context.Context, message Envelope) error {
+func (q *Queue) Push(ctx context.Context, env map[string]string, data io.Reader) error {
 	return nil
 }
 
-func (q *Queue) Pull(ctx context.Context) (Envelope, error) {
-	return Envelope{}, nil
+func (q *Queue) Peek(ctx context.Context) (*Message, error) {
+	return nil, nil
+}
+
+func (q *Queue) Commit(ctx context.Context) error {
+
 }

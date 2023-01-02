@@ -5,6 +5,6 @@ import (
 	"github.com/robfig/cron"
 )
 
-func NewCron(cfg config.Cron, calls []*Lambda, queues []*Queue) cron.Job {
+func NewCron(cfg config.Cron, sync []*Sync, async []*Async) cron.Job {
 	return nil // TODO
 }

@@ -17,16 +17,19 @@ type Lambda struct {
 	WorkDir string   `hcl:"workDir,optional"`
 }
 
-type Call struct {
-	Lambda      string            `hcl:"lambda,label"`
+type Invoke struct {
 	Payload     *string           `hcl:"payload,optional"`
 	Environment map[string]string `hcl:"environment,optional"`
 }
 
+type Call struct {
+	Lambda string `hcl:"lambda,label"`
+	Invoke `hcl:",remain"`
+}
+
 type Enqueue struct {
-	Queue       string            `hcl:"queue,label"`
-	Payload     *string           `hcl:"payload,optional"`
-	Environment map[string]string `hcl:"environment,optional"`
+	Queue  string `hcl:"queue,label"`
+	Invoke `hcl:",remain"`
 }
 
 type Cron struct {
@@ -53,7 +56,7 @@ type Endpoint struct {
 }
 
 type Project struct {
-	Name   string     `hcl:"-"` // to be filled by directory name
+	Name   string     // to be filled by directory name
 	Static string     `hcl:"static,optional"`
 	Get    []Endpoint `hcl:"get,block"`
 	Post   []Endpoint `hcl:"post,block"`

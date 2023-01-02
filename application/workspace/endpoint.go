@@ -25,6 +25,15 @@ func NewEndpoint(cfg config.Endpoint, cache CacheStorage, sync []*Sync, async []
 	if err != nil {
 		return nil, fmt.Errorf("parse header: %w", err)
 	}
+	if cfg.Status <= 0 {
+		if len(async) > 0 && len(sync) == 0 {
+			cfg.Status = http.StatusCreated
+		} else if len(async) == 0 && len(sync) == 0 {
+			cfg.Status = http.StatusNoContent
+		} else {
+			cfg.Status = http.StatusOK
+		}
+	}
 	return &Endpoint{
 		status:  cfg.Status,
 		sync:    sync,

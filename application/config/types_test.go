@@ -49,7 +49,7 @@ queue "fetch-video" {
     size = 1024
     interval = 10
     retry = -1
-    lambda = "time"
+	call "time" {}
 }
 
 cron "* * * * *" {

@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-func NewQueue(rootDir string, cfg config.Queue) (*Queue, error) {
+func NewQueue(rootDir string, cfg config.Queue, sync *Sync) (*Queue, error) {
 	return nil, fmt.Errorf("TODO")
 }
 

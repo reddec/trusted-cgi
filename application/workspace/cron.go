@@ -1,10 +1,58 @@
 package workspace
 
 import (
-	"github.com/reddec/trusted-cgi/application/config"
+	"bytes"
+	"context"
+	"github.com/hashicorp/go-multierror"
 	"github.com/robfig/cron"
+	"io"
+	"log"
 )
 
-func NewCron(cfg config.Cron, sync []*Sync, async []*Async) cron.Job {
-	return nil // TODO
+var emptyStream = bytes.NewReader([]byte{})
+var emptyContext = struct{}{}
+
+func NewCron(sync []*Sync, async []*Async) cron.Job {
+	return &cronJob{
+		sync:  sync,
+		async: async,
+	}
+}
+
+type cronJob struct {
+	sync  []*Sync
+	async []*Async
+}
+
+func (cj *cronJob) Run() {
+	ctx := context.Background()
+
+	var wg multierror.Group
+
+	for _, a := range cj.async {
+		ref := a
+		wg.Go(func() error {
+			return ref.Push(ctx, emptyStream, &emptyContext)
+		})
+	}
+
+	for _, s := range cj.sync {
+		ref := s
+		wg.Go(func() error {
+			out, err := ref.Call(ctx, emptyStream, &emptyContext)
+			if err != nil {
+				return err
+			}
+			_, err = io.Copy(io.Discard, out)
+			if err != nil {
+				_ = out.Close()
+				return err
+			}
+			return out.Close()
+		})
+	}
+
+	if err := wg.Wait().ErrorOrNil(); err != nil {
+		log.Println("cron failed:", err)
+	}
 }

@@ -40,7 +40,7 @@ type Cron struct {
 
 type Queue struct {
 	Name     string  `hcl:"name,label"`
-	Lambda   string  `hcl:"lambda"`
+	Call     Call    `hcl:"call,block"` // reserve for future extension: multiple calls, enqueue, etc
 	Interval Seconds `hcl:"interval,optional"`
 	Size     int64   `hcl:"size,optional"`
 	Retry    int64   `hcl:"retry,optional"`

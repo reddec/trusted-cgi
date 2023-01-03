@@ -23,6 +23,8 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/ohler55/ojg v1.15.0 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect

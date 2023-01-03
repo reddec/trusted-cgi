@@ -3,6 +3,7 @@ package workspace
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/ohler55/ojg/jp"
@@ -25,6 +26,10 @@ func NewEndpoint(cfg config.Endpoint, cache CacheStorage, sync []*Sync, async []
 	if err != nil {
 		return nil, fmt.Errorf("parse header: %w", err)
 	}
+	vars, err := parseEnvTemplate(cfg.Vars)
+	if err != nil {
+		return nil, fmt.Errorf("parse vars: %w", err)
+	}
 	if cfg.Status <= 0 {
 		if len(async) > 0 && len(sync) == 0 {
 			cfg.Status = http.StatusCreated
@@ -34,19 +39,21 @@ func NewEndpoint(cfg config.Endpoint, cache CacheStorage, sync []*Sync, async []
 			cfg.Status = http.StatusOK
 		}
 	}
-	return &Endpoint{
+	return sizeLimit(cfg.Body, &Endpoint{
 		status:  cfg.Status,
 		sync:    sync,
 		async:   async,
 		headers: headers,
 		cache:   cache,
-	}, nil
+		vars:    vars,
+	}), nil
 }
 
 type Endpoint struct {
 	status  int
 	sync    []*Sync
 	async   []*Async
+	vars    map[string]*template.Template
 	headers map[string]*template.Template
 	cache   CacheStorage
 }
@@ -56,6 +63,10 @@ func (ep *Endpoint) ServeHTTP(original http.ResponseWriter, request *http.Reques
 
 	defer request.Body.Close()
 	cacheID, err := ep.cache.Write(request.Body)
+	if errors.Is(err, ErrTooLarge) {
+		writer.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	}
 	if err != nil {
 		log.Println("failed write request data to cache:", err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -66,6 +77,18 @@ func (ep *Endpoint) ServeHTTP(original http.ResponseWriter, request *http.Reques
 		req:     request,
 		cacheID: cacheID,
 		cache:   ep.cache,
+		vars:    map[string]string{},
+	}
+
+	// render vars
+	for k, t := range ep.vars {
+		v, err := renderTemplate(t, ec)
+		if err != nil {
+			log.Println("failed render var:", err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		ec.vars[k] = v
 	}
 
 	ctx := request.Context()
@@ -140,6 +163,7 @@ type endpointContext struct {
 	req     *http.Request
 	form    url.Values
 	query   url.Values
+	vars    map[string]string
 	path    struct {
 		parsed bool
 		data   map[string]string
@@ -152,6 +176,10 @@ type endpointContext struct {
 		cached bool
 		data   []byte
 	}
+}
+
+func (rc *endpointContext) Var() map[string]string {
+	return rc.vars
 }
 
 func (rc *endpointContext) Path() map[string]string {
@@ -279,4 +307,51 @@ func (ws *writeStatusOnce) WriteHeader(statusCode int) {
 	}
 	ws.status = true
 	ws.wrapped.WriteHeader(statusCode)
+}
+
+func sizeLimit(maxSize int64, handler http.Handler) http.Handler {
+	if maxSize <= 0 {
+		return handler
+	}
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.ContentLength > 0 && request.ContentLength > maxSize {
+			writer.WriteHeader(http.StatusRequestEntityTooLarge)
+			return
+		}
+		request.Body = &limitedReader{
+			wrap: request.Body,
+			left: maxSize,
+		}
+		handler.ServeHTTP(writer, request)
+	})
+}
+
+var ErrTooLarge = fmt.Errorf("entity is too large")
+
+type limitedReader struct {
+	wrap io.ReadCloser
+	left int64
+}
+
+func (l *limitedReader) Read(p []byte) (n int, err error) {
+	if l.left < 0 {
+		err = ErrTooLarge
+		return
+	}
+	if int64(len(p)) > l.left {
+		p = p[:l.left+1]
+	}
+	n, err = l.wrap.Read(p)
+	l.left -= int64(n)
+	if err != nil {
+		return
+	}
+	if l.left < 0 {
+		err = ErrTooLarge
+	}
+	return
+}
+
+func (l *limitedReader) Close() error {
+	return l.wrap.Close()
 }

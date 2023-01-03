@@ -109,7 +109,6 @@ func (q *Queue) processMessage(ctx context.Context) error {
 		return fmt.Errorf("peek message: %w", err)
 	}
 	defer m.Payload.Close()
-
 	out, err := q.call.Call(ctx, m.Environment, m.Payload, emptyContext)
 	if err != nil {
 		return fmt.Errorf("call lambda: %w", err)

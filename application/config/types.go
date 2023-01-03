@@ -50,6 +50,7 @@ type Endpoint struct {
 	Path     string            `hcl:"path,label"`
 	Body     int64             `hcl:"body,optional"`
 	Status   int               `hcl:"status,optional"`
+	Vars     map[string]string `hcl:"vars,optional"` // parsed and stored before headers and calls
 	Headers  map[string]string `hcl:"headers,optional"`
 	Enqueues []Enqueue         `hcl:"enqueue,block"`
 	Calls    []Call            `hcl:"call,block"`

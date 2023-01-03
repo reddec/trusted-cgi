@@ -52,7 +52,7 @@ func (pl *Lambda) Invoke(global context.Context, environment map[string]string, 
 	for k, v := range environment {
 		env = append(env, k+"="+v)
 	}
-
+	cmd.Env = env
 	if err := cmd.Start(); err != nil {
 		cancel()
 		_ = wr.Close()

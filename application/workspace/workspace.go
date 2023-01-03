@@ -1,10 +1,12 @@
 package workspace
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/reddec/trusted-cgi/application/config"
+	"github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"github.com/robfig/cron"
 	"net/http"
@@ -35,6 +37,7 @@ func New(cfg Config, dir string) (*Workspace, error) {
 	wp := &Workspace{
 		scheduler: cron.New(),
 		router:    chi.NewRouter(),
+		queues:    internal.NewDaemonSet(true),
 	}
 	for _, entry := range list {
 		if !entry.IsDir() {
@@ -46,23 +49,28 @@ func New(cfg Config, dir string) (*Workspace, error) {
 			continue
 		}
 		if err != nil {
-			wp.Close()
 			return nil, fmt.Errorf("add file %s: %w", file, err)
 		}
 		wp.addProject(pr)
 	}
-	// start cron scheduler
-	wp.scheduler.Start()
+
 	return wp, nil
 }
 
 type Workspace struct {
 	scheduler *cron.Cron
 	router    chi.Router
+	queues    *internal.DaemonSet
 }
 
-func (wrk *Workspace) Close() {
-	wrk.scheduler.Stop()
+func (wrk *Workspace) Run(ctx context.Context) error {
+	wrk.scheduler.Start()
+	defer wrk.scheduler.Stop()
+	return wrk.queues.Run(ctx)
+}
+
+func (wrk *Workspace) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	wrk.router.ServeHTTP(writer, request)
 }
 
 func (wrk *Workspace) addProject(project *Project) {
@@ -72,16 +80,19 @@ func (wrk *Workspace) addProject(project *Project) {
 	for _, entry := range project.scheduler.Entries() {
 		wrk.scheduler.Schedule(entry.Schedule, entry.Job)
 	}
+
+	wrk.queues.Add(project.queuesDaemons.Jobs()...)
 }
 
 type Project struct {
-	lambdas   map[string]*Lambda
-	queues    map[string]*Queue
-	scheduler *cron.Cron
-	router    chi.Router
-	config    *config.Project
-	settings  Config
-	cache     CacheStorage
+	lambdas       map[string]*Lambda
+	queues        map[string]*Queue
+	scheduler     *cron.Cron
+	router        chi.Router
+	config        *config.Project
+	settings      Config
+	cache         CacheStorage
+	queuesDaemons *internal.DaemonSet
 }
 
 func newProject(file string, cfg Config, cache CacheStorage) (*Project, error) {
@@ -90,13 +101,14 @@ func newProject(file string, cfg Config, cache CacheStorage) (*Project, error) {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 	pr := &Project{
-		lambdas:   map[string]*Lambda{},
-		queues:    map[string]*Queue{},
-		scheduler: cron.New(),
-		router:    chi.NewMux(),
-		config:    projectConfig,
-		settings:  cfg,
-		cache:     cache,
+		lambdas:       map[string]*Lambda{},
+		queues:        map[string]*Queue{},
+		scheduler:     cron.New(),
+		router:        chi.NewMux(),
+		config:        projectConfig,
+		settings:      cfg,
+		cache:         cache,
+		queuesDaemons: internal.NewDaemonSet(true),
 	}
 
 	if err := pr.indexLambdas(); err != nil {
@@ -140,6 +152,7 @@ func (pr *Project) indexQueues() error {
 			return fmt.Errorf("create queue %s: %w", queue.Name, err)
 		}
 		pr.queues[queue.Name] = instance
+		pr.queuesDaemons.Add(instance)
 	}
 	return nil
 }
@@ -162,7 +175,7 @@ func (pr *Project) addEndpoints() error {
 		return fmt.Errorf("add DELETE endpoints: %w", err)
 	}
 	if pr.config.Static != "" {
-		group.Handle("*", http.FileServer(http.Dir(pr.config.Static)))
+		group.Handle("/*", http.FileServer(http.Dir(pr.config.Static)))
 	}
 	return nil
 }
@@ -178,7 +191,11 @@ func (pr *Project) mountEndpoints(router chi.Router, method string, endpoints []
 		if err != nil {
 			return fmt.Errorf("create endpoint %s %s: %w", method, ep.Path, err)
 		}
-		router.Method(method, ep.Path, handler)
+		path := ep.Path
+		if !strings.HasPrefix(path, "/") {
+			path = "/" + path
+		}
+		router.Method(method, path, handler)
 	}
 	return nil
 }

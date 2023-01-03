@@ -1,14 +1,25 @@
 package internal
 
-import "context"
+import (
+	"context"
+	"github.com/hashicorp/go-multierror"
+)
 
-type DemonFunc func(ctx context.Context) error
+type DaemonFunc func(ctx context.Context) error
 
-func Spawn(fn DemonFunc) *Daemon {
+type DaemonHandler interface {
+	Run(ctx context.Context) error
+}
+
+func (df DaemonFunc) Run(ctx context.Context) error {
+	return df(ctx)
+}
+
+func Spawn(fn DaemonHandler) *Daemon {
 	return SpawnContext(context.Background(), fn)
 }
 
-func SpawnContext(global context.Context, fn DemonFunc) *Daemon {
+func SpawnContext(global context.Context, fn DaemonHandler) *Daemon {
 	ctx, cancel := context.WithCancel(global)
 
 	d := &Daemon{
@@ -19,7 +30,7 @@ func SpawnContext(global context.Context, fn DemonFunc) *Daemon {
 	go func() {
 		defer cancel()
 		defer close(d.done)
-		d.err = fn(ctx)
+		d.err = fn.Run(ctx)
 	}()
 
 	return d
@@ -38,4 +49,45 @@ func (d *Daemon) Stop() {
 
 func (d *Daemon) Error() error {
 	return d.err
+}
+
+func NewDaemonSet(fragile bool) *DaemonSet {
+	return &DaemonSet{fragile: fragile}
+}
+
+type DaemonSet struct {
+	funcs   []DaemonHandler
+	fragile bool
+}
+
+func (ds *DaemonSet) Start() *Daemon {
+	return Spawn(ds)
+}
+
+func (ds *DaemonSet) Jobs() []DaemonHandler {
+	return ds.funcs
+}
+
+func (ds *DaemonSet) Add(fn ...DaemonHandler) {
+	ds.funcs = append(ds.funcs, fn...)
+}
+
+func (ds *DaemonSet) Run(ctx context.Context) error {
+	var wg multierror.Group
+
+	var cancel = func() {}
+
+	if ds.fragile { // abort all if one process stopped
+		ctx, cancel = context.WithCancel(ctx)
+	}
+	defer cancel()
+
+	for _, fn := range ds.funcs {
+		ref := fn
+		wg.Go(func() error {
+			defer cancel()
+			return ref.Run(ctx)
+		})
+	}
+	return wg.Wait().ErrorOrNil()
 }

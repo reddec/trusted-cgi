@@ -1,7 +1,9 @@
 -- name: AddEndpointStat :exec
 INSERT INTO endpoint_stat
-(project, method, path, request_url, started_at, finished_at, payload_size, headers, status, body, truncated)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+(project, method, path, request_url, started_at, finished_at,
+ request_size, request_headers, request_body,
+ response_size, response_headers, response_body, status)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id;
 
 -- name: ListEndpointStats :many

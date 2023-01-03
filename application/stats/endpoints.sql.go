@@ -12,23 +12,27 @@ import (
 
 const addEndpointStat = `-- name: AddEndpointStat :exec
 INSERT INTO endpoint_stat
-(project, method, path, request_url, started_at, finished_at, payload_size, headers, status, body, truncated)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+(project, method, path, request_url, started_at, finished_at,
+ request_size, request_headers, request_body,
+ response_size, response_headers, response_body, status)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id
 `
 
 type AddEndpointStatParams struct {
-	Project     string    `json:"project"`
-	Method      string    `json:"method"`
-	Path        string    `json:"path"`
-	RequestUrl  string    `json:"request_url"`
-	StartedAt   time.Time `json:"started_at"`
-	FinishedAt  time.Time `json:"finished_at"`
-	PayloadSize int64     `json:"payload_size"`
-	Headers     string    `json:"headers"`
-	Status      int64     `json:"status"`
-	Body        []byte    `json:"body"`
-	Truncated   bool      `json:"truncated"`
+	Project         string    `json:"project"`
+	Method          string    `json:"method"`
+	Path            string    `json:"path"`
+	RequestUrl      string    `json:"request_url"`
+	StartedAt       time.Time `json:"started_at"`
+	FinishedAt      time.Time `json:"finished_at"`
+	RequestSize     int64     `json:"request_size"`
+	RequestHeaders  string    `json:"request_headers"`
+	RequestBody     []byte    `json:"request_body"`
+	ResponseSize    int64     `json:"response_size"`
+	ResponseHeaders string    `json:"response_headers"`
+	ResponseBody    []byte    `json:"response_body"`
+	Status          int64     `json:"status"`
 }
 
 func (q *Queries) AddEndpointStat(ctx context.Context, arg AddEndpointStatParams) error {
@@ -39,11 +43,13 @@ func (q *Queries) AddEndpointStat(ctx context.Context, arg AddEndpointStatParams
 		arg.RequestUrl,
 		arg.StartedAt,
 		arg.FinishedAt,
-		arg.PayloadSize,
-		arg.Headers,
+		arg.RequestSize,
+		arg.RequestHeaders,
+		arg.RequestBody,
+		arg.ResponseSize,
+		arg.ResponseHeaders,
+		arg.ResponseBody,
 		arg.Status,
-		arg.Body,
-		arg.Truncated,
 	)
 	return err
 }
@@ -60,7 +66,7 @@ func (q *Queries) GCEndpointStats(ctx context.Context, startedAt time.Time) erro
 }
 
 const getEndpointStat = `-- name: GetEndpointStat :one
-SELECT id, project, method, path, request_url, started_at, finished_at, payload_size, headers, body, truncated, status
+SELECT id, project, method, path, request_url, started_at, finished_at, request_headers, request_body, request_size, response_headers, response_body, response_size, status
 FROM endpoint_stat
 WHERE id = ?
 `
@@ -76,17 +82,19 @@ func (q *Queries) GetEndpointStat(ctx context.Context, id int64) (EndpointStat, 
 		&i.RequestUrl,
 		&i.StartedAt,
 		&i.FinishedAt,
-		&i.PayloadSize,
-		&i.Headers,
-		&i.Body,
-		&i.Truncated,
+		&i.RequestHeaders,
+		&i.RequestBody,
+		&i.RequestSize,
+		&i.ResponseHeaders,
+		&i.ResponseBody,
+		&i.ResponseSize,
 		&i.Status,
 	)
 	return i, err
 }
 
 const listEndpointStats = `-- name: ListEndpointStats :many
-SELECT id, project, method, path, request_url, started_at, finished_at, payload_size, headers, body, truncated, status
+SELECT id, project, method, path, request_url, started_at, finished_at, request_headers, request_body, request_size, response_headers, response_body, response_size, status
 FROM endpoint_stat
 ORDER BY id DESC
 LIMIT ? OFFSET ?
@@ -114,10 +122,12 @@ func (q *Queries) ListEndpointStats(ctx context.Context, arg ListEndpointStatsPa
 			&i.RequestUrl,
 			&i.StartedAt,
 			&i.FinishedAt,
-			&i.PayloadSize,
-			&i.Headers,
-			&i.Body,
-			&i.Truncated,
+			&i.RequestHeaders,
+			&i.RequestBody,
+			&i.RequestSize,
+			&i.ResponseHeaders,
+			&i.ResponseBody,
+			&i.ResponseSize,
 			&i.Status,
 		); err != nil {
 			return nil, err
@@ -134,7 +144,7 @@ func (q *Queries) ListEndpointStats(ctx context.Context, arg ListEndpointStatsPa
 }
 
 const listProjectEndpointStats = `-- name: ListProjectEndpointStats :many
-SELECT id, project, method, path, request_url, started_at, finished_at, payload_size, headers, body, truncated, status
+SELECT id, project, method, path, request_url, started_at, finished_at, request_headers, request_body, request_size, response_headers, response_body, response_size, status
 FROM endpoint_stat
 WHERE project = ?
 ORDER BY id DESC
@@ -164,10 +174,12 @@ func (q *Queries) ListProjectEndpointStats(ctx context.Context, arg ListProjectE
 			&i.RequestUrl,
 			&i.StartedAt,
 			&i.FinishedAt,
-			&i.PayloadSize,
-			&i.Headers,
-			&i.Body,
-			&i.Truncated,
+			&i.RequestHeaders,
+			&i.RequestBody,
+			&i.RequestSize,
+			&i.ResponseHeaders,
+			&i.ResponseBody,
+			&i.ResponseSize,
 			&i.Status,
 		); err != nil {
 			return nil, err
@@ -184,7 +196,7 @@ func (q *Queries) ListProjectEndpointStats(ctx context.Context, arg ListProjectE
 }
 
 const listProjectSpecificEndpointStats = `-- name: ListProjectSpecificEndpointStats :many
-SELECT id, project, method, path, request_url, started_at, finished_at, payload_size, headers, body, truncated, status
+SELECT id, project, method, path, request_url, started_at, finished_at, request_headers, request_body, request_size, response_headers, response_body, response_size, status
 FROM endpoint_stat
 WHERE project = ?
   AND method = ?
@@ -224,10 +236,12 @@ func (q *Queries) ListProjectSpecificEndpointStats(ctx context.Context, arg List
 			&i.RequestUrl,
 			&i.StartedAt,
 			&i.FinishedAt,
-			&i.PayloadSize,
-			&i.Headers,
-			&i.Body,
-			&i.Truncated,
+			&i.RequestHeaders,
+			&i.RequestBody,
+			&i.RequestSize,
+			&i.ResponseHeaders,
+			&i.ResponseBody,
+			&i.ResponseSize,
 			&i.Status,
 		); err != nil {
 			return nil, err

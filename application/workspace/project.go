@@ -116,7 +116,7 @@ func (pr *Project) mountEndpoints(router chi.Router, method string, endpoints []
 		if err != nil {
 			return fmt.Errorf("resolve endpoint %s %s: %w", method, ep.Path, err)
 		}
-
+		//TODO: mount policies
 		handler, err := NewEndpoint(ep, cache, calls, queues)
 		if err != nil {
 			return fmt.Errorf("create endpoint %s %s: %w", method, ep.Path, err)
@@ -125,7 +125,7 @@ func (pr *Project) mountEndpoints(router chi.Router, method string, endpoints []
 		if !strings.HasPrefix(path, "/") {
 			path = "/" + path
 		}
-		router.Method(method, path, handler)
+		router.Method(method, path, pr.monitor.Endpoint(method, ep.Path, handler))
 	}
 	return nil
 }

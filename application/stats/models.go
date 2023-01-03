@@ -18,18 +18,20 @@ type CronStat struct {
 }
 
 type EndpointStat struct {
-	ID          int64     `json:"id"`
-	Project     string    `json:"project"`
-	Method      string    `json:"method"`
-	Path        string    `json:"path"`
-	RequestUrl  string    `json:"request_url"`
-	StartedAt   time.Time `json:"started_at"`
-	FinishedAt  time.Time `json:"finished_at"`
-	PayloadSize int64     `json:"payload_size"`
-	Headers     string    `json:"headers"`
-	Body        []byte    `json:"body"`
-	Truncated   bool      `json:"truncated"`
-	Status      int64     `json:"status"`
+	ID              int64     `json:"id"`
+	Project         string    `json:"project"`
+	Method          string    `json:"method"`
+	Path            string    `json:"path"`
+	RequestUrl      string    `json:"request_url"`
+	StartedAt       time.Time `json:"started_at"`
+	FinishedAt      time.Time `json:"finished_at"`
+	RequestHeaders  string    `json:"request_headers"`
+	RequestBody     []byte    `json:"request_body"`
+	RequestSize     int64     `json:"request_size"`
+	ResponseHeaders string    `json:"response_headers"`
+	ResponseBody    []byte    `json:"response_body"`
+	ResponseSize    int64     `json:"response_size"`
+	Status          int64     `json:"status"`
 }
 
 type LambdaStat struct {

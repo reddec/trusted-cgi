@@ -32,14 +32,14 @@ func (cj *cronJob) Run() {
 	for _, a := range cj.async {
 		ref := a
 		wg.Go(func() error {
-			return ref.Push(ctx, emptyStream, &emptyContext)
+			return ref.Push(nil, emptyStream, &emptyContext)
 		})
 	}
 
 	for _, s := range cj.sync {
 		ref := s
 		wg.Go(func() error {
-			out, err := ref.Call(ctx, emptyStream, &emptyContext)
+			out, err := ref.Call(ctx, nil, emptyStream, &emptyContext)
 			if err != nil {
 				return err
 			}

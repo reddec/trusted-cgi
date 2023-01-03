@@ -89,7 +89,7 @@ func (ep *Endpoint) ServeHTTP(original http.ResponseWriter, request *http.Reques
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		err = async.Push(ctx, data, ec)
+		err = async.Push(nil, data, ec)
 		_ = data.Close()
 		if err != nil {
 			log.Println("failed push to queue:", err)
@@ -119,7 +119,7 @@ func (ep *Endpoint) callSync(ctx context.Context, sync *Sync, ec *endpointContex
 	}
 	defer data.Close()
 
-	out, err := sync.Call(ctx, data, ec)
+	out, err := sync.Call(ctx, nil, data, ec)
 	if err != nil {
 		return fmt.Errorf("call lambda: %w", err)
 	}
@@ -248,7 +248,9 @@ func (rc *endpointContext) Form() (url.Values, error) {
 }
 
 func (rc *endpointContext) resetBody() error {
-	_ = rc.req.Body.Close()
+	if err := rc.req.Body.Close(); err != nil {
+		return fmt.Errorf("close old body: %w", err)
+	}
 	in, err := rc.cache.Open(rc.cacheID)
 	if err != nil {
 		return fmt.Errorf("get from cache: %w", err)

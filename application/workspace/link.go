@@ -27,8 +27,8 @@ type Sync struct {
 	link   *Link
 }
 
-func (s *Sync) Call(ctx context.Context, payload io.Reader, dataContext any) (io.ReadCloser, error) {
-	envs, payload, err := s.link.prepare(payload, dataContext)
+func (s *Sync) Call(ctx context.Context, env map[string]string, payload io.Reader, dataContext any) (io.ReadCloser, error) {
+	envs, payload, err := s.link.prepare(env, payload, dataContext)
 	if err != nil {
 		return nil, fmt.Errorf("prepare: %w", err)
 	}
@@ -52,13 +52,13 @@ type Async struct {
 	link  *Link
 }
 
-func (as *Async) Push(ctx context.Context, payload io.Reader, dataContext any) error {
-	envs, payload, err := as.link.prepare(payload, dataContext)
+func (as *Async) Push(env map[string]string, payload io.Reader, dataContext any) error {
+	envs, payload, err := as.link.prepare(env, payload, dataContext)
 	if err != nil {
 		return fmt.Errorf("prepare: %w", err)
 	}
 
-	return as.queue.Push(ctx, envs, payload)
+	return as.queue.Push(envs, payload)
 }
 
 func newLink(cfg config.Invoke) (*Link, error) {
@@ -85,8 +85,11 @@ type Link struct {
 	payload *template.Template
 }
 
-func (link *Link) prepare(payload io.Reader, dataContext any) (map[string]string, io.Reader, error) {
+func (link *Link) prepare(env map[string]string, payload io.Reader, dataContext any) (map[string]string, io.Reader, error) {
 	var envs = make(map[string]string, len(link.envs))
+	for k, v := range env {
+		envs[k] = v
+	}
 	for k, t := range link.envs {
 		v, err := renderTemplate(t, dataContext)
 		if err != nil {

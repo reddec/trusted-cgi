@@ -18,13 +18,18 @@ const ProjectFile = "cgi.hcl"
 type Config struct {
 	Creds    *types.Credential
 	QueueDir string
-	Cache    CacheStorage
+	CacheDir string
 }
 
 func New(cfg Config, dir string) (*Workspace, error) {
 	list, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("list dir %s: %w", dir, err)
+	}
+
+	cache, err := NewFileCache(cfg.CacheDir)
+	if err != nil {
+		return nil, fmt.Errorf("create cache in %s: %w", cfg.CacheDir, err)
 	}
 
 	wp := &Workspace{
@@ -36,7 +41,7 @@ func New(cfg Config, dir string) (*Workspace, error) {
 			continue
 		}
 		file := filepath.Join(dir, entry.Name(), ProjectFile)
-		pr, err := newProject(file, cfg)
+		pr, err := newProject(file, cfg, cache)
 		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
@@ -76,9 +81,10 @@ type Project struct {
 	router    chi.Router
 	config    *config.Project
 	settings  Config
+	cache     CacheStorage
 }
 
-func newProject(file string, cfg Config) (*Project, error) {
+func newProject(file string, cfg Config, cache CacheStorage) (*Project, error) {
 	projectConfig, err := config.ParseFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
@@ -90,6 +96,7 @@ func newProject(file string, cfg Config) (*Project, error) {
 		router:    chi.NewMux(),
 		config:    projectConfig,
 		settings:  cfg,
+		cache:     cache,
 	}
 
 	if err := pr.indexLambdas(); err != nil {
@@ -139,19 +146,19 @@ func (pr *Project) indexQueues() error {
 
 func (pr *Project) addEndpoints() error {
 	group := pr.router
-	if err := pr.mountEndpoints(group, http.MethodGet, pr.config.Get, pr.settings.Cache); err != nil {
+	if err := pr.mountEndpoints(group, http.MethodGet, pr.config.Get, pr.cache); err != nil {
 		return fmt.Errorf("add GET endpoints: %w", err)
 	}
-	if err := pr.mountEndpoints(group, http.MethodPost, pr.config.Post, pr.settings.Cache); err != nil {
+	if err := pr.mountEndpoints(group, http.MethodPost, pr.config.Post, pr.cache); err != nil {
 		return fmt.Errorf("add POST endpoints: %w", err)
 	}
-	if err := pr.mountEndpoints(group, http.MethodPut, pr.config.Put, pr.settings.Cache); err != nil {
+	if err := pr.mountEndpoints(group, http.MethodPut, pr.config.Put, pr.cache); err != nil {
 		return fmt.Errorf("add PUT endpoints: %w", err)
 	}
-	if err := pr.mountEndpoints(group, http.MethodPatch, pr.config.Patch, pr.settings.Cache); err != nil {
+	if err := pr.mountEndpoints(group, http.MethodPatch, pr.config.Patch, pr.cache); err != nil {
 		return fmt.Errorf("add PATCH endpoints: %w", err)
 	}
-	if err := pr.mountEndpoints(group, http.MethodDelete, pr.config.Delete, pr.settings.Cache); err != nil {
+	if err := pr.mountEndpoints(group, http.MethodDelete, pr.config.Delete, pr.cache); err != nil {
 		return fmt.Errorf("add DELETE endpoints: %w", err)
 	}
 	if pr.config.Static != "" {

@@ -128,6 +128,70 @@ func TestNew_Workspace(t *testing.T) {
 	require.NoError(t, wg.Wait().ErrorOrNil())
 }
 
+func TestNewReloadable(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+	workspaceDir := filepath.Join(tmpDir, "workspace")
+	queueDir := filepath.Join(tmpDir, "queues")
+	cacheDir := filepath.Join(tmpDir, "cache")
+	err = os.MkdirAll(workspaceDir, 0755)
+	require.NoError(t, err)
+
+	addProject(workspaceDir, "project-a", map[string]string{
+		workspace.ProjectFile: projA,
+	})
+
+	wrk, err := workspace.NewReloadable(workspace.Config{
+		QueueDir: queueDir,
+		CacheDir: cacheDir,
+	}, workspaceDir)
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var wg multierror.Group
+
+	wg.Go(func() error {
+		return wrk.Run(ctx)
+	})
+
+	t.Run("reload should point to the new endpoint", func(t *testing.T) {
+		// first should not work
+		req := httptest.NewRequest(http.MethodGet, "/project-b", nil)
+		rec := httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusNotFound, rec.Code)
+
+		addProject(workspaceDir, "project-b", map[string]string{
+			workspace.ProjectFile: `
+lambda "hell" {
+	exec = ["echo", "-n", "hell in world"]
+}
+
+get "" {
+	call "hell" {}
+}
+`,
+		})
+
+		err = wrk.Reload()
+		require.NoError(t, err)
+
+		// after the reload this endpoint should work (we added project)
+		req = httptest.NewRequest(http.MethodGet, "/project-b", nil)
+		rec = httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Equal(t, "hell in world", rec.Body.String())
+
+	})
+
+	cancel()
+	require.NoError(t, wg.Wait().ErrorOrNil())
+}
+
 func addProject(rootDir, name string, files map[string]string) {
 	p := filepath.Join(rootDir, name)
 	err := os.MkdirAll(p, 0755)

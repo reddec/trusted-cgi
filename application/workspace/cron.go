@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/hashicorp/go-multierror"
+	"github.com/reddec/trusted-cgi/application/stats"
 	"github.com/robfig/cron"
 	"io"
 	"log"
@@ -12,21 +13,23 @@ import (
 var emptyStream = bytes.NewReader([]byte{})
 var emptyContext = struct{}{}
 
-func NewCron(sync []*Sync, async []*Async) cron.Job {
+func NewCron(sync []*Sync, async []*Async, monitor *stats.CronMonitor) cron.Job {
 	return &cronJob{
-		sync:  sync,
-		async: async,
+		monitor: monitor,
+		sync:    sync,
+		async:   async,
 	}
 }
 
 type cronJob struct {
-	sync  []*Sync
-	async []*Async
+	monitor *stats.CronMonitor
+	sync    []*Sync
+	async   []*Async
 }
 
 func (cj *cronJob) Run() {
 	ctx := context.Background()
-
+	running := cj.monitor.Started()
 	var wg multierror.Group
 
 	for _, a := range cj.async {
@@ -51,8 +54,9 @@ func (cj *cronJob) Run() {
 			return out.Close()
 		})
 	}
-
-	if err := wg.Wait().ErrorOrNil(); err != nil {
+	err := wg.Wait().ErrorOrNil()
+	if err != nil {
 		log.Println("cron failed:", err)
 	}
+	_ = running.Finished(err)
 }

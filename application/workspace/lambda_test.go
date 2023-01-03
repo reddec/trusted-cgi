@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 			WorkDir: "/tmp",
 		}
 
-		lm, err := workspace.NewLambda(cfg, nil)
+		lm, err := workspace.NewLambda(cfg, nil, nil)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, lm)
 	})
@@ -30,7 +30,7 @@ func TestNew(t *testing.T) {
 			WorkDir: "/tmp",
 		}
 
-		_, err := workspace.NewLambda(cfg, nil)
+		_, err := workspace.NewLambda(cfg, nil, nil)
 		assert.Error(t, err)
 	})
 }
@@ -43,7 +43,7 @@ func TestLambda_Invoke(t *testing.T) {
 			WorkDir: "/tmp",
 		}
 
-		lm, err := workspace.NewLambda(cfg, nil)
+		lm, err := workspace.NewLambda(cfg, nil, nil)
 		require.NoError(t, err)
 
 		out, err := lm.Invoke(context.Background(), nil, nil)
@@ -63,7 +63,7 @@ func TestLambda_Invoke(t *testing.T) {
 			WorkDir: "/tmp",
 		}
 
-		lm, err := workspace.NewLambda(cfg, nil)
+		lm, err := workspace.NewLambda(cfg, nil, nil)
 		require.NoError(t, err)
 
 		out, err := lm.Invoke(context.Background(), nil, nil)

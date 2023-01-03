@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/reddec/trusted-cgi/application/config"
+	"github.com/reddec/trusted-cgi/application/stats"
 	"github.com/reddec/trusted-cgi/internal"
 	"github.com/robfig/cron"
 	"net/http"
@@ -21,6 +22,7 @@ type Project struct {
 	settings      Config
 	cache         CacheStorage
 	queuesDaemons *internal.DaemonSet
+	monitor       *stats.ProjectMonitor
 }
 
 func newProject(file string, cfg Config, cache CacheStorage) (*Project, error) {
@@ -59,7 +61,7 @@ func newProject(file string, cfg Config, cache CacheStorage) (*Project, error) {
 
 func (pr *Project) indexLambdas() error {
 	for _, lambda := range pr.config.Lambda {
-		instance, err := NewLambda(lambda, pr.settings.Creds)
+		instance, err := NewLambda(lambda, pr.settings.Creds, pr.monitor.Lambda(lambda.Name))
 		if err != nil {
 			return fmt.Errorf("create lambda %s: %w", lambda.Name, err)
 		}
@@ -135,7 +137,7 @@ func (pr *Project) addCronTabs() error {
 			return fmt.Errorf("resolve cron %s: %w", cronTab.Schedule, err)
 		}
 
-		err = pr.scheduler.AddJob(cronTab.Schedule, NewCron(calls, queues))
+		err = pr.scheduler.AddJob(cronTab.Schedule, NewCron(calls, queues, pr.monitor.Cron(cronTab.Schedule)))
 		if err != nil {
 			return fmt.Errorf("add cron task %s: %w", cronTab.Schedule, err)
 		}

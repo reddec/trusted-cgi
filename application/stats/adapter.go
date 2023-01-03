@@ -12,8 +12,8 @@ import (
 
 const DatabaseTimeout = 5 * time.Second // we can not use global ctx or we can not record cancellation event
 
-func NewMonitor(dbtx DBTX) *WorkspaceMonitor {
-	return &WorkspaceMonitor{q: New(dbtx)}
+func NewMonitor(dbtx DBTX, sniffBodySize int64) *WorkspaceMonitor {
+	return &WorkspaceMonitor{q: New(dbtx), maxBody: sniffBodySize}
 }
 
 type WorkspaceMonitor struct {

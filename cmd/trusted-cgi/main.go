@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
+	"github.com/reddec/trusted-cgi/application/stats"
+	"github.com/reddec/trusted-cgi/application/workspace"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +20,6 @@ import (
 	"github.com/reddec/trusted-cgi/application/platform"
 	"github.com/reddec/trusted-cgi/application/policy"
 	"github.com/reddec/trusted-cgi/application/queuemanager"
-	"github.com/reddec/trusted-cgi/cmd/internal"
 	internal2 "github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/queue"
 	"github.com/reddec/trusted-cgi/queue/indir"
@@ -46,6 +48,10 @@ type Config struct {
 	StatsFile            string        `long:"stats-file" env:"STATS_FILE" description:"Binary file for statistics dump" default:".stats"`
 	StatsInterval        time.Duration `long:"stats-interval" env:"STATS_INTERVAL" description:"Interval for dumping stats to file" default:"30s"`
 	SchedulerInterval    time.Duration `long:"scheduler-interval" env:"SCHEDULER_INTERVAL" description:"Interval to check cron records" default:"30s"`
+	Stats                struct {
+		Interval time.Duration `long:"interval" env:"INTERVAL" description:"Cleanup interval" default:"1m"`
+		Depth    time.Duration `long:"depth" env:"DEPTH" description:"History depth" default:"48h"`
+	} `group:"Stats" namespace:"stats" env-namespace:"STATS"`
 }
 
 type HttpServer struct {
@@ -111,11 +117,48 @@ func main() {
 		os.Exit(1)
 	}
 
-	gctx, closer := internal.SignalContext()
-	defer closer()
-	err = run(gctx, config)
+	statsDB, err := stats.Open(config.StatsFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Panicln(err)
+	}
+	defer statsDB.Close()
+
+	wrk, err := workspace.NewReloadable(workspace.Config{
+		Creds:    nil, // TODO: flags
+		QueueDir: config.Queues.Directory,
+		CacheDir: ".cache", // TODO: flags
+	}, config.Dir)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	//gctx, closer := internal.SignalContext()
+	//defer closer()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var wg multierror.Group
+	wg.Go(func() error {
+		defer cancel()
+		return wrk.Run(ctx)
+	})
+	wg.Go(func() error {
+		defer cancel()
+		for {
+			if err := stats.RunGC(ctx, statsDB, config.Stats.Depth); err != nil {
+				log.Println("failed  GC stats:", err)
+			}
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(config.Stats.Interval):
+			}
+		}
+	})
+
+	err = wg.Wait().ErrorOrNil()
+	if err != nil {
+		log.Panicln(err)
 	}
 }
 

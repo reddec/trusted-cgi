@@ -9,3 +9,5 @@
 /MANUAL.md
 /*.gz
 /MANUAL.html
+/.cache
+/.stats

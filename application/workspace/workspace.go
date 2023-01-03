@@ -51,10 +51,10 @@ func New(cfg Config, dir string) (*Workspace, error) {
 			continue
 		}
 		file := filepath.Join(dir, entry.Name(), ProjectFile)
-		pr, err := newProject(file, cfg, cache)
-		if errors.Is(err, os.ErrNotExist) {
+		if stat, err := os.Stat(file); err != nil || stat.IsDir() {
 			continue
 		}
+		pr, err := newProject(file, cfg, cache)
 		if err != nil {
 			return nil, fmt.Errorf("add file %s: %w", file, err)
 		}
@@ -131,12 +131,13 @@ func (r *ReloadableWorkspace) Reload() error {
 }
 
 func (r *ReloadableWorkspace) Run(global context.Context) error {
-	for global.Err() != nil {
+	for global.Err() == nil {
 		current := r.workspace.Load()
 		err := r.runCurrent(global, current)
-		if err != nil && !errors.Is(err, context.Canceled) {
-			return err
+		if err == nil || errors.Is(err, context.Canceled) {
+			continue
 		}
+		return err
 	}
 	return nil
 }

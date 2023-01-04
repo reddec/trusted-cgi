@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/reddec/trusted-cgi/application/stats"
 	"github.com/reddec/trusted-cgi/internal"
 	"github.com/reddec/trusted-cgi/types"
 	"github.com/robfig/cron"
@@ -18,9 +19,10 @@ import (
 const ProjectFile = "cgi.hcl"
 
 type Config struct {
-	Creds    *types.Credential // optional, which credentials to use for executing (su)
-	QueueDir string            // optional, default is 'queues'. Place where to store queues
-	CacheDir string            // optional, default is 'cache'. Place where to store requests payloads (cache).
+	Creds    *types.Credential       // optional, which credentials to use for executing (su)
+	QueueDir string                  // optional, default is 'queues'. Place where to store queues
+	CacheDir string                  // optional, default is 'cache'. Place where to store requests payloads (cache).
+	Monitor  *stats.WorkspaceMonitor // optional
 }
 
 func New(cfg Config, dir string) (*Workspace, error) {
@@ -54,7 +56,7 @@ func New(cfg Config, dir string) (*Workspace, error) {
 		if stat, err := os.Stat(file); err != nil || stat.IsDir() {
 			continue
 		}
-		pr, err := newProject(file, cfg, cache)
+		pr, err := newProject(file, cfg, cache, cfg.Monitor.Project(entry.Name()))
 		if err != nil {
 			return nil, fmt.Errorf("add file %s: %w", file, err)
 		}

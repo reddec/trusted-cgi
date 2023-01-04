@@ -25,7 +25,7 @@ type Project struct {
 	monitor       *stats.ProjectMonitor
 }
 
-func newProject(file string, cfg Config, cache CacheStorage) (*Project, error) {
+func newProject(file string, cfg Config, cache CacheStorage, monitor *stats.ProjectMonitor) (*Project, error) {
 	projectConfig, err := config.ParseFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
@@ -39,6 +39,7 @@ func newProject(file string, cfg Config, cache CacheStorage) (*Project, error) {
 		settings:      cfg,
 		cache:         cache,
 		queuesDaemons: internal.NewDaemonSet(true),
+		monitor:       monitor,
 	}
 
 	if err := pr.indexLambdas(); err != nil {

@@ -238,7 +238,7 @@ func (rc *endpointContext) Query() url.Values {
 	if rc.query != nil {
 		return rc.query
 	}
-	rc.query = rc.req.URL.Query()
+	rc.query, _ = url.ParseQuery(rc.req.URL.RawQuery)
 	return rc.query
 }
 

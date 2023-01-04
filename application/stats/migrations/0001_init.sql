@@ -9,10 +9,10 @@ CREATE TABLE endpoint_stat
     started_at       TIMESTAMP NOT NULL DEFAULT current_timestamp,
     finished_at      TIMESTAMP NOT NULL DEFAULT current_timestamp,
     request_headers  TEXT      NOT NULL, -- JSON
-    request_body     BLOB      NOT NULL, -- Could be truncated: len(body) < size
+    request_body     BLOB,               -- Could be truncated: len(body) < size
     request_size     BIGINT    NOT NULL,
     response_headers TEXT      NOT NULL, -- JSON
-    response_body    BLOB      NOT NULL, -- Could be truncated: len(body) < size
+    response_body    BLOB,               -- Could be truncated: len(body) < size
     response_size    BIGINT    NOT NULL,
     status           INTEGER   NOT NULL
 );

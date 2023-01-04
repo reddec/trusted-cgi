@@ -62,7 +62,7 @@ func (pm *ProjectMonitor) Endpoint(method, path string, handler http.Handler) ht
 	}
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		started := time.Now()
-		outputTrack := &responseTrack{wrap: writer, sniff: sniffer{max: pm.w.maxBody}}
+		outputTrack := &responseTrack{wrap: writer, sniff: sniffer{max: pm.w.maxBody}, headers: writer.Header()}
 		inputTrack := &requestBodyTrack{reader: request.Body, sniff: sniffer{max: pm.w.maxBody}}
 		request.Body = inputTrack
 
@@ -83,7 +83,7 @@ func (pm *ProjectMonitor) Endpoint(method, path string, handler http.Handler) ht
 			return
 		}
 
-		_ = pm.w.q.AddEndpointStat(ctx, AddEndpointStatParams{
+		err = pm.w.q.AddEndpointStat(ctx, AddEndpointStatParams{
 			Project:         pm.project,
 			Method:          method,
 			Path:            path,
@@ -98,6 +98,9 @@ func (pm *ProjectMonitor) Endpoint(method, path string, handler http.Handler) ht
 			ResponseBody:    outputTrack.sniff.data,
 			Status:          int64(outputTrack.status),
 		})
+		if err != nil {
+			log.Println("failed save stats:", err)
+		}
 	})
 }
 
@@ -218,9 +221,6 @@ type responseTrack struct {
 }
 
 func (rt *responseTrack) Header() http.Header {
-	if rt.headers == nil {
-		rt.headers = rt.wrap.Header()
-	}
 	return rt.headers
 }
 

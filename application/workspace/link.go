@@ -120,7 +120,7 @@ func parseEnvTemplate(envTemplates map[string]string) (map[string]*template.Temp
 }
 
 func parseTemplate(text string) (*template.Template, error) {
-	return template.New("").Funcs(sprig.TxtFuncMap()).Parse(text)
+	return template.New("").Option("missingkey=zero").Funcs(sprig.TxtFuncMap()).Parse(text)
 }
 
 func renderTemplate(t *template.Template, dataContext any) (string, error) {

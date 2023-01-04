@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/reddec/trusted-cgi/application/stats"
@@ -9,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"time"
 
@@ -48,9 +50,12 @@ type Config struct {
 	StatsFile            string        `long:"stats-file" env:"STATS_FILE" description:"Binary file for statistics dump" default:".stats"`
 	StatsInterval        time.Duration `long:"stats-interval" env:"STATS_INTERVAL" description:"Interval for dumping stats to file" default:"30s"`
 	SchedulerInterval    time.Duration `long:"scheduler-interval" env:"SCHEDULER_INTERVAL" description:"Interval to check cron records" default:"30s"`
+	CacheDir             string        `long:"cache-dir" env:"CACHE_DIR" description:"Cache directory, default is randomly generated in temp"`
 	Stats                struct {
 		Interval time.Duration `long:"interval" env:"INTERVAL" description:"Cleanup interval" default:"1m"`
 		Depth    time.Duration `long:"depth" env:"DEPTH" description:"History depth" default:"48h"`
+		File     string        `long:"file" env:"FILE" description:"Path to stats file" default:"stats.db"`
+		MaxBody  int64         `long:"max-body" env:"MAX_BODY" description:"Max bytes of body (request and response) to store in stats" default:"1024"`
 	} `group:"Stats" namespace:"stats" env-namespace:"STATS"`
 }
 
@@ -117,7 +122,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	statsDB, err := stats.Open(config.StatsFile)
+	if config.CacheDir == "" {
+		dir, err := os.MkdirTemp("", "")
+		if err != nil {
+			log.Panicln(err)
+		}
+		defer os.RemoveAll(dir)
+		config.CacheDir = dir
+	}
+
+	statsDB, err := stats.Open(config.Stats.File)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -126,15 +140,14 @@ func main() {
 	wrk, err := workspace.NewReloadable(workspace.Config{
 		Creds:    nil, // TODO: flags
 		QueueDir: config.Queues.Directory,
-		CacheDir: ".cache", // TODO: flags
+		CacheDir: config.CacheDir,
+		Monitor:  stats.NewMonitor(statsDB, config.Stats.MaxBody),
 	}, config.Dir)
 	if err != nil {
 		log.Panicln(err)
 	}
 
-	//gctx, closer := internal.SignalContext()
-	//defer closer()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Kill, os.Interrupt)
 	defer cancel()
 
 	var wg multierror.Group
@@ -154,6 +167,14 @@ func main() {
 			case <-time.After(config.Stats.Interval):
 			}
 		}
+	})
+	wg.Go(func() error {
+		defer cancel()
+		err := config.Serve(ctx, wrk)
+		if errors.Is(err, http.ErrServerClosed) {
+			err = nil
+		}
+		return err
 	})
 
 	err = wg.Wait().ErrorOrNil()

@@ -23,10 +23,11 @@ var ProjectFiles = []string{
 }
 
 type Config struct {
-	Creds     *types.Credential // optional, which credentials to use for executing (su)
-	QueueDir  string            // optional, default is 'queues'. Place where to store queues
-	SniffSize int64             // optional, max size of input and output to be stored in stats
-	Shell     string            // optional, execute command in shell (should support -c arg)
+	Creds        *types.Credential // optional, which credentials to use for executing (su)
+	QueueDir     string            // optional, default is 'queues'. Place where to store queues
+	SniffSize    int64             // optional, max size of input and output to be stored in stats
+	Shell        string            // optional, execute command in shell (should support -c arg)
+	LegacyStatic bool              // DEPRECATED, optional, mounts static files to the same prefix as lambdas
 }
 
 func New(cfg Config, dir string) (*Workspace, error) {
@@ -87,6 +88,13 @@ func (wrk *Workspace) QueuesDir() string {
 
 func (wrk *Workspace) SniffSize() int64 {
 	return wrk.settings.SniffSize
+}
+
+func (wrk *Workspace) StaticPrefix() string {
+	if wrk.settings.LegacyStatic {
+		return "/a/"
+	}
+	return "/s/"
 }
 
 func (wrk *Workspace) Run(ctx context.Context) error {

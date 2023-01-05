@@ -101,7 +101,7 @@ func (pr *Project) addEndpoints() error {
 		}
 	}
 	if pr.config.Static != "" {
-		staticPrefix := "/s/" + pr.config.Name
+		staticPrefix := pr.workspace.StaticPrefix() + pr.config.Name
 		staticDir := filepath.Join(pr.dir, filepath.Clean(pr.config.Static))
 		pr.workspace.router.Mount(staticPrefix, http.StripPrefix(staticPrefix, http.FileServer(http.Dir(staticDir))))
 	}

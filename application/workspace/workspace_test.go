@@ -22,6 +22,10 @@ endpoints:
   - method: GET
     exec: echo -n today is a great day
 
+  - method: GET
+    path: /out.txt
+    exec: echo -n it is everywhere
+
   - method: POST
     path: "calc"
     exec: "bc"
@@ -164,6 +168,60 @@ endpoints:
 	require.NoError(t, wg.Wait().ErrorOrNil())
 }
 
+func TestWorkspace_LegacyStatic(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+	workspaceDir := filepath.Join(tmpDir, "workspace")
+	err = os.MkdirAll(workspaceDir, 0755)
+	require.NoError(t, err)
+
+	addProject(workspaceDir, "project-a", map[string]string{
+		workspace.ProjectFiles[0]: projA,
+		"done/test.txt":           "hello world",
+		"out.txt":                 "hell in world",
+	})
+	assert.FileExists(t, filepath.Join(workspaceDir, "project-a", "done/test.txt"))
+
+	t.Run("non-legacy version should work by-default", func(t *testing.T) {
+		wrk, err := workspace.New(workspace.Config{}, workspaceDir)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodGet, "/s/project-a/test.txt", nil)
+		rec := httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Equal(t, "hello world", rec.Body.String())
+	})
+
+	t.Run("legacy version should work over lambda prefix", func(t *testing.T) {
+		wrk, err := workspace.New(workspace.Config{
+			LegacyStatic: true,
+		}, workspaceDir)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodGet, "/a/project-a/test.txt", nil)
+		rec := httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Equal(t, "hello world", rec.Body.String())
+	})
+
+	t.Run("in legacy, lambda has higher priority than static file", func(t *testing.T) {
+		wrk, err := workspace.New(workspace.Config{
+			LegacyStatic: true,
+			Shell:        "/bin/bash",
+		}, workspaceDir)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodGet, "/a/project-a/out.txt", nil)
+		rec := httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		require.Equal(t, "it is everywhere", rec.Body.String())
+	})
+}
+
 func addProject(rootDir, name string, files map[string]string) {
 	p := filepath.Join(rootDir, name)
 	err := os.MkdirAll(p, 0755)
@@ -172,7 +230,11 @@ func addProject(rootDir, name string, files map[string]string) {
 	}
 
 	for fname, content := range files {
-		err = os.WriteFile(filepath.Join(p, fname), []byte(content), 0755)
+		path := filepath.Join(p, fname)
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(path, []byte(content), 0755)
 		if err != nil {
 			panic(err)
 		}

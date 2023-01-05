@@ -3,25 +3,23 @@ package workspace
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/ohler55/ojg/jp"
-	"github.com/reddec/trusted-cgi/application/config"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"text/template"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/reddec/trusted-cgi/application/config"
+	"github.com/reddec/trusted-cgi/trace"
 )
 
-type CacheStorage interface {
-	Write(data io.Reader) (string, error)
-	Open(string) (io.ReadCloser, error)
-	Remove(string) error
+type Function interface {
+	Call(ctx context.Context, renderCtx any, payload io.Reader) (io.ReadCloser, error)
 }
 
-func NewEndpoint(cfg config.Endpoint, cache CacheStorage, sync []*Sync, async []*Async) (http.Handler, error) {
+func NewHandler(project *Project, cfg *config.HTTP, fn Function) (http.Handler, error) {
 	headers, err := parseEnvTemplate(cfg.Headers)
 	if err != nil {
 		return nil, fmt.Errorf("parse header: %w", err)
@@ -30,54 +28,36 @@ func NewEndpoint(cfg config.Endpoint, cache CacheStorage, sync []*Sync, async []
 	if err != nil {
 		return nil, fmt.Errorf("parse vars: %w", err)
 	}
-	if cfg.Status <= 0 {
-		if len(async) > 0 && len(sync) == 0 {
-			cfg.Status = http.StatusCreated
-		} else if len(async) == 0 && len(sync) == 0 {
-			cfg.Status = http.StatusNoContent
-		} else {
-			cfg.Status = http.StatusOK
-		}
-	}
-	return sizeLimit(cfg.Body, &Endpoint{
-		status:  cfg.Status,
-		sync:    sync,
-		async:   async,
-		headers: headers,
-		cache:   cache,
+	return sizeLimit(cfg.Body, &Handler{
+		project: project,
+		config:  cfg,
+		fn:      fn,
 		vars:    vars,
+		headers: headers,
 	}), nil
 }
 
-type Endpoint struct {
-	status  int
-	sync    []*Sync
-	async   []*Async
+type Handler struct {
+	project *Project
+	config  *config.HTTP
 	vars    map[string]*template.Template
 	headers map[string]*template.Template
-	cache   CacheStorage
+	fn      Function
 }
 
-func (ep *Endpoint) ServeHTTP(original http.ResponseWriter, request *http.Request) {
-	writer := &writeStatusOnce{wrapped: original}
+func (ep *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	tracer := ep.project.Trace()
+	tracer.Set("path", ep.config.Path)
+	tracer.Set("method", ep.config.Method)
+	// TODO: tracer.Set("address",)
+	tracer.Set("headers", request.Header)
+	tracer.Set("request_uri", request.RequestURI)
 
 	defer request.Body.Close()
-	cacheID, err := ep.cache.Write(request.Body)
-	if errors.Is(err, ErrTooLarge) {
-		writer.WriteHeader(http.StatusRequestEntityTooLarge)
-		return
-	}
-	if err != nil {
-		log.Println("failed write request data to cache:", err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer ep.cache.Remove(cacheID)
+
 	ec := &endpointContext{
-		req:     request,
-		cacheID: cacheID,
-		cache:   ep.cache,
-		vars:    map[string]string{},
+		req:  request,
+		vars: map[string]string{},
 	}
 
 	// render vars
@@ -91,7 +71,25 @@ func (ep *Endpoint) ServeHTTP(original http.ResponseWriter, request *http.Reques
 		ec.vars[k] = v
 	}
 
-	ctx := request.Context()
+	// render env
+	for k, t := range ep.vars {
+		v, err := renderTemplate(t, ec)
+		if err != nil {
+			log.Println("failed render var:", err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		ec.vars[k] = v
+	}
+
+	ctx := trace.WithTrace(request.Context(), tracer)
+	out, err := ep.fn.Call(ctx, ec, request.Body)
+	if err != nil {
+		log.Println("failed call:", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer out.Close()
 
 	// render response headers
 	for k, t := range ep.headers {
@@ -104,67 +102,29 @@ func (ep *Endpoint) ServeHTTP(original http.ResponseWriter, request *http.Reques
 		writer.Header().Set(k, v)
 	}
 
-	// push to queue
-	for _, async := range ep.async {
-		data, err := ep.cache.Open(cacheID)
-		if err != nil {
-			log.Println("failed read cache:", err)
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		err = async.Push(nil, data, ec)
-		_ = data.Close()
-		if err != nil {
-			log.Println("failed push to queue:", err)
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
+	writer.WriteHeader(ep.status())
 
-	if len(ep.sync) == 0 {
-		writer.WriteHeader(ep.status)
-	}
-
-	// call and pipe results
-	for _, sync := range ep.sync {
-		if err := ep.callSync(ctx, sync, ec, writer); err != nil {
-			log.Println("failed read cache:", err)
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	_, err = io.Copy(writer, out)
+	if err != nil {
+		log.Println("failed pipe response:", err)
+		return
 	}
 }
 
-func (ep *Endpoint) callSync(ctx context.Context, sync *Sync, ec *endpointContext, writer http.ResponseWriter) error {
-	data, err := ep.cache.Open(ec.cacheID)
-	if err != nil {
-		return fmt.Errorf("open cache: %w", err)
+func (ep *Handler) status() int {
+	if s := ep.config.Status; s > 0 {
+		return s
 	}
-	defer data.Close()
-
-	out, err := sync.Call(ctx, nil, data, ec)
-	if err != nil {
-		return fmt.Errorf("call lambda: %w", err)
-	}
-
-	writer.WriteHeader(ep.status)
-
-	// pipe result
-	if _, err := io.Copy(writer, out); err != nil {
-		return fmt.Errorf("pipe lambda result: %w", err)
-	}
-	return nil
+	return http.StatusOK
 }
 
 // lazy-caching thread-unsafe context for data source.
 type endpointContext struct {
-	cache   CacheStorage
-	cacheID string
-	req     *http.Request
-	form    url.Values
-	query   url.Values
-	vars    map[string]string
-	path    struct {
+	req   *http.Request
+	form  url.Values
+	query url.Values
+	vars  map[string]string
+	path  struct {
 		parsed bool
 		data   map[string]string
 	}
@@ -205,10 +165,6 @@ func (rc *endpointContext) JSON() (interface{}, error) {
 		return rc.json.value, nil
 	}
 
-	if err := rc.resetBody(); err != nil {
-		return nil, fmt.Errorf("reset body: %w", err)
-	}
-
 	var value interface{}
 	if err := json.NewDecoder(rc.req.Body).Decode(&value); err != nil {
 		return nil, err
@@ -216,22 +172,6 @@ func (rc *endpointContext) JSON() (interface{}, error) {
 	rc.json.parsed = true
 	rc.json.value = value
 	return rc.json, nil
-}
-
-func (rc *endpointContext) JSONPath(path string) (interface{}, error) {
-	expr, err := jp.ParseString(path)
-	if err != nil {
-		return nil, err
-	}
-	obj, err := rc.JSON()
-	if err != nil {
-		return nil, err
-	}
-	items := expr.Get(obj)
-	if len(items) == 0 {
-		return nil, nil
-	}
-	return items[0], nil
 }
 
 func (rc *endpointContext) Query() url.Values {
@@ -246,12 +186,9 @@ func (rc *endpointContext) Body() ([]byte, error) {
 	if rc.body.cached {
 		return rc.body.data, nil
 	}
-	if err := rc.resetBody(); err != nil {
-		return nil, fmt.Errorf("reset body: %w", err)
-	}
 	data, err := io.ReadAll(rc.req.Body)
 	if err != nil {
-		return nil, fmt.Errorf("read body: %w", err)
+		return nil, fmt.Errorf("read Body: %w", err)
 	}
 	rc.body.cached = true
 	rc.body.data = data
@@ -265,48 +202,11 @@ func (rc *endpointContext) Form() (url.Values, error) {
 	if rc.req.Method == http.MethodGet {
 		return rc.Query(), nil
 	}
-	if err := rc.resetBody(); err != nil {
-		return nil, fmt.Errorf("reset body: %w", err)
-	}
 	if err := rc.req.ParseForm(); err != nil {
 		return nil, err
 	}
 	rc.form = rc.req.PostForm
 	return rc.form, nil
-}
-
-func (rc *endpointContext) resetBody() error {
-	if err := rc.req.Body.Close(); err != nil {
-		return fmt.Errorf("close old body: %w", err)
-	}
-	in, err := rc.cache.Open(rc.cacheID)
-	if err != nil {
-		return fmt.Errorf("get from cache: %w", err)
-	}
-	rc.req.Body = in
-	return nil
-}
-
-type writeStatusOnce struct {
-	status  bool
-	wrapped http.ResponseWriter
-}
-
-func (ws *writeStatusOnce) Header() http.Header {
-	return ws.wrapped.Header()
-}
-
-func (ws *writeStatusOnce) Write(bytes []byte) (int, error) {
-	ws.status = true
-	return ws.wrapped.Write(bytes)
-}
-
-func (ws *writeStatusOnce) WriteHeader(statusCode int) {
-	if ws.status {
-		return
-	}
-	ws.status = true
-	ws.wrapped.WriteHeader(statusCode)
 }
 
 func sizeLimit(maxSize int64, handler http.Handler) http.Handler {

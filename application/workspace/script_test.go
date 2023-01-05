@@ -56,7 +56,7 @@ func TestLambda_Invoke(t *testing.T) {
 		assert.Equal(t, "1234\n", string(data))
 	})
 
-	t.Run("timeout", func(t *testing.T) {
+	t.Run("Timeout", func(t *testing.T) {
 		cfg := config.Lambda{
 			Exec:    []string{"sleep", "1000"},
 			Timeout: 1,

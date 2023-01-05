@@ -49,7 +49,7 @@ post "async-calc" {
 		"X-Correlation-Id" = "{{.Var.request_id}}"
 	}
 	enqueue "lazy-calc" {
-		environment = {
+		Environment = {
 			"CORRELATION_ID" = "{{.Var.request_id}}"
 		}
 	}

@@ -138,10 +138,9 @@ func main() {
 	defer statsDB.Close()
 
 	wrk, err := workspace.NewReloadable(workspace.Config{
-		Creds:    nil, // TODO: flags
-		QueueDir: config.Queues.Directory,
-		CacheDir: config.CacheDir,
-		Monitor:  stats.NewMonitor(statsDB, config.Stats.MaxBody),
+		Creds:     nil, // TODO: flags
+		QueueDir:  config.Queues.Directory,
+		SniffSize: 1024,
 	}, config.Dir)
 	if err != nil {
 		log.Panicln(err)

@@ -1,0 +1,41 @@
+endpoints:
+  - method: GET # no path is default path
+    exec:
+      command: ping
+      args: ["-c", "3", "1.1.1.1"]
+
+  - method: GET
+    path: "ping/{host}" # params are supported
+    exec:
+      command: sh
+      args: [ "-c", "ping -c 3 $DHOST" ]
+      environment:
+        DHOST: '{{.Path.host}}'
+
+  - method: POST
+    path: echo
+    exec:
+      command: cat
+      args: ["-"]
+
+  - method: GET
+    path: date
+    aliases:
+      - what-time-is-it
+    exec:
+      command: ./time.sh
+      environment:
+        FORMAT: '{{.Query.Get "format"}}'
+
+queues:
+  - method: POST
+    path: calc
+    exec:
+      command: ping
+      args: ["-c", "3", "1.1.1.1"]
+
+crons:
+  - schedule: "@hourly"
+    exec:
+      command: wall
+      args: ["hello world!"]

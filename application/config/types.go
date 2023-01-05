@@ -2,72 +2,71 @@ package config
 
 import (
 	"fmt"
-	"github.com/hashicorp/hcl/v2/hclsimple"
+	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 var QueueNameReg = regexp.MustCompile(`^[a-z0-9A-Z-]{3,64}$`)
 
-type Lambda struct {
-	Name    string   `hcl:"name,label"`
-	Exec    []string `hcl:"exec"`
-	Timeout Seconds  `hcl:"timeout,optional"`
-	WorkDir string   `hcl:"workDir,optional"`
-}
-
-type Invoke struct {
-	Payload     *string           `hcl:"payload,optional"`
-	Environment map[string]string `hcl:"environment,optional"`
-}
-
-type Call struct {
-	Lambda string `hcl:"lambda,label"`
-	Invoke `hcl:",remain"`
-}
-
-type Enqueue struct {
-	Queue  string `hcl:"queue,label"`
-	Invoke `hcl:",remain"`
+type Script struct {
+	Command     string            `json:"command" yaml:"command"`
+	Args        []string          `json:"args,omitempty" yaml:"args,omitempty"`
+	Timeout     Seconds           `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	WorkDir     string            `json:"work_dir,omitempty" yaml:"work_dir,omitempty"`
+	Payload     *string           `json:"payload,omitempty" yaml:"payload,omitempty"`
+	Environment map[string]string `json:"environment,omitempty" yaml:"environment,omitempty"`
 }
 
 type Cron struct {
-	Schedule string    `hcl:"schedule,label"`
-	Enqueues []Enqueue `hcl:"enqueue,block"`
-	Calls    []Call    `hcl:"call,block"`
+	Schedule string `json:"schedule"`
+	Script   Script `json:"exec" yaml:"exec"`
 }
 
 type Queue struct {
-	Name     string  `hcl:"name,label"`
-	Call     Call    `hcl:"call,block"` // reserve for future extension: multiple calls, enqueue, etc
-	Interval Seconds `hcl:"interval,optional"`
-	Size     int64   `hcl:"size,optional"`
-	Retry    int64   `hcl:"retry,optional"`
+	Endpoint `yaml:",inline"`
+	Interval time.Duration `json:"interval,omitempty" yaml:"interval,omitempty"`
+	Size     int64         `json:"size,omitempty" yaml:"size,omitempty"`
+	Retry    int64         `json:"retry,omitempty" yaml:"retry,omitempty"`
+}
+
+func (q *Queue) Name() string {
+	return q.Method + " " + url.PathEscape(q.Path)
+}
+
+type HTTP struct {
+	Method  string            `json:"method" yaml:"method"`
+	Path    string            `json:"path" yaml:"path"`
+	Alias   []string          `json:"aliases,omitempty" yaml:"aliases,omitempty"`
+	Body    int64             `json:"body,omitempty" yaml:"body,omitempty"`
+	Status  int               `json:"status,omitempty" yaml:"status,omitempty"`
+	Vars    map[string]string `json:"vars,omitempty" yaml:"vars,omitempty"` // parsed and stored before headers and calls
+	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
+}
+
+func (http *HTTP) NormPath() string {
+	if !strings.HasPrefix(http.Path, "/") {
+		return "/" + http.Path
+	}
+	return http.Path
 }
 
 type Endpoint struct {
-	Path     string            `hcl:"path,label"`
-	Body     int64             `hcl:"body,optional"`
-	Status   int               `hcl:"status,optional"`
-	Vars     map[string]string `hcl:"vars,optional"` // parsed and stored before headers and calls
-	Headers  map[string]string `hcl:"headers,optional"`
-	Enqueues []Enqueue         `hcl:"enqueue,block"`
-	Calls    []Call            `hcl:"call,block"`
+	HTTP   `yaml:",inline"`
+	Script Script `json:"exec" yaml:"exec"`
 }
 
 type Project struct {
-	Name   string     // to be filled by directory name
-	Static string     `hcl:"static,optional"`
-	Get    []Endpoint `hcl:"get,block"`
-	Post   []Endpoint `hcl:"post,block"`
-	Patch  []Endpoint `hcl:"patch,block"`
-	Delete []Endpoint `hcl:"delete,block"`
-	Put    []Endpoint `hcl:"put,block"`
-
-	Cron   []Cron   `hcl:"cron,block"`
-	Queue  []Queue  `hcl:"queue,block"`
-	Lambda []Lambda `hcl:"lambda,block"`
+	Name      string     `json:"-" yaml:"-"` // to be filled by directory name
+	Static    string     `json:"static,omitempty" yaml:"static,omitempty"`
+	Endpoints []Endpoint `json:"endpoints,omitempty" yaml:"endpoints,omitempty"`
+	Crons     []Cron     `json:"crons,omitempty" yaml:"crons,omitempty"`
+	Queues    []Queue    `json:"queues,omitempty" yaml:"queues,omitempty"`
 }
 
 type Seconds int64
@@ -79,8 +78,12 @@ func (s Seconds) Duration() time.Duration {
 // ParseFile scans all configuration from the file and updates paths in [Lambda.WorkDir].
 func ParseFile(file string) (*Project, error) {
 	var p Project
-	err := hclsimple.DecodeFile(file, nil, &p)
+	f, err := os.Open(file)
 	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
@@ -91,22 +94,33 @@ func ParseFile(file string) (*Project, error) {
 
 	rootPath := filepath.Dir(rootFilePath)
 
-	// calculate work dirs
-	for i, l := range p.Lambda {
-		l.WorkDir = filepath.Join(rootPath, filepath.Clean(l.WorkDir))
-		p.Lambda[i] = l
-	}
-
 	// calculate static dir
 	if p.Static != "" {
 		p.Static = filepath.Join(rootPath, filepath.Clean(p.Static))
 	}
 
 	// check queues
-	for _, q := range p.Queue {
-		if !QueueNameReg.MatchString(q.Name) {
-			return nil, fmt.Errorf("queue name '%s' is not allowed", q.Name)
+	var usedQueues = make(map[string]bool, len(p.Queues))
+	for i, q := range p.Queues {
+		q.Method = strings.ToUpper(q.Method)
+		p.Queues[i] = q
+		key := q.Method + " " + q.Path
+		if usedQueues[key] {
+			return nil, fmt.Errorf("queue %s %s declared more than once", q.Method, q.Path)
 		}
+		usedQueues[key] = true
+	}
+
+	// check endpoints
+	var usedEndpoint = make(map[string]bool, len(p.Endpoints))
+	for i, ep := range p.Endpoints {
+		ep.Method = strings.ToUpper(ep.Method)
+		p.Endpoints[i] = ep
+		key := ep.Method + " " + ep.Path
+		if usedEndpoint[key] {
+			return nil, fmt.Errorf("endpoint %s %s declared more than once", ep.Method, ep.Path)
+		}
+		usedEndpoint[key] = true
 	}
 	p.Name = filepath.Base(rootPath)
 	return &p, nil

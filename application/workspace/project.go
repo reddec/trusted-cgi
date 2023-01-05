@@ -2,52 +2,34 @@ package workspace
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/reddec/trusted-cgi/application/config"
-	"github.com/reddec/trusted-cgi/application/stats"
-	"github.com/reddec/trusted-cgi/internal"
-	"github.com/robfig/cron"
-	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/reddec/trusted-cgi/application/config"
+	"github.com/reddec/trusted-cgi/trace"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 // Project contains resolved and ready-to-use instance of single configuration (ie: single file).
 type Project struct {
-	lambdas       map[string]*Lambda
-	queues        map[string]*Queue
-	scheduler     *cron.Cron
-	router        chi.Router
-	config        *config.Project
-	settings      Config
-	cache         CacheStorage
-	queuesDaemons *internal.DaemonSet
-	monitor       *stats.ProjectMonitor
+	config    *config.Project
+	workspace *Workspace
+	dir       string
 }
 
-func newProject(file string, cfg Config, cache CacheStorage, monitor *stats.ProjectMonitor) (*Project, error) {
+func NewProject(workspace *Workspace, file string) (*Project, error) {
 	projectConfig, err := config.ParseFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("parse: %w", err)
 	}
 	pr := &Project{
-		lambdas:       map[string]*Lambda{},
-		queues:        map[string]*Queue{},
-		scheduler:     cron.New(),
-		router:        chi.NewMux(),
-		config:        projectConfig,
-		settings:      cfg,
-		cache:         cache,
-		queuesDaemons: internal.NewDaemonSet(true),
-		monitor:       monitor,
+		config:    projectConfig,
+		workspace: workspace,
+		dir:       filepath.Dir(file),
 	}
 
-	if err := pr.indexLambdas(); err != nil {
-		return nil, fmt.Errorf("index lambdas: %w", err)
-	}
-
-	if err := pr.indexQueues(); err != nil {
-		return nil, fmt.Errorf("index queues: %w", err)
+	if err := pr.addQueues(); err != nil {
+		return nil, fmt.Errorf("add queues: %w", err)
 	}
 
 	if err := pr.addEndpoints(); err != nil {
@@ -60,85 +42,73 @@ func newProject(file string, cfg Config, cache CacheStorage, monitor *stats.Proj
 	return pr, nil
 }
 
-func (pr *Project) indexLambdas() error {
-	for _, lambda := range pr.config.Lambda {
-		instance, err := NewLambda(lambda, pr.settings.Creds, pr.monitor.Lambda(lambda.Name))
-		if err != nil {
-			return fmt.Errorf("create lambda %s: %w", lambda.Name, err)
-		}
-		pr.lambdas[lambda.Name] = instance
-	}
-	return nil
+func (pr *Project) Trace() *trace.Trace {
+	t := pr.workspace.Trace()
+	t.Set("project", pr.config.Name)
+	return t
 }
 
-func (pr *Project) indexQueues() error {
-	queueDir := filepath.Join(pr.settings.QueueDir, pr.config.Name)
-	for _, queue := range pr.config.Queue {
-		sync, err := pr.resolveCall(queue.Call)
-		if err != nil {
-			return fmt.Errorf("resolve call '%s' referenced in queue '%s: %w'", queue.Call.Lambda, queue.Name, err)
-		}
-		instance, err := NewQueue(queueDir, queue, sync)
+func (pr *Project) QueuesDir() string {
+	return filepath.Join(pr.workspace.QueuesDir(), pr.config.Name)
+}
+
+func (pr *Project) Credentials() *types.Credential {
+	if pr.workspace != nil {
+		return nil
+	}
+	return pr.workspace.creds
+}
+
+func (pr *Project) addQueues() error {
+	for _, queue := range pr.config.Queues {
+		queue := queue
+		instance, err := NewQueue(pr, &queue)
 		if err != nil {
 			return fmt.Errorf("create queue %s: %w", queue.Name, err)
 		}
-		pr.queues[queue.Name] = instance
-		pr.queuesDaemons.Add(instance)
+		pr.workspace.queues.Add(instance)
+		handler, err := NewHandler(pr, &queue.HTTP, instance)
+		if err != nil {
+			return fmt.Errorf("create queue %s handler: %w", queue.Name, err)
+		}
+
+		path := queue.HTTP.NormPath()
+		pr.workspace.router.Method(queue.HTTP.Method, "/q/"+pr.config.Name+path, handler) //TODO: policies
+		for _, alias := range queue.Alias {
+			pr.workspace.router.Method(queue.HTTP.Method, "/l"+pr.config.Name+normPath(alias), handler)
+		}
 	}
 	return nil
 }
 
 func (pr *Project) addEndpoints() error {
-	group := pr.router
-	if err := pr.mountEndpoints(group, http.MethodGet, pr.config.Get, pr.cache); err != nil {
-		return fmt.Errorf("add GET endpoints: %w", err)
-	}
-	if err := pr.mountEndpoints(group, http.MethodPost, pr.config.Post, pr.cache); err != nil {
-		return fmt.Errorf("add POST endpoints: %w", err)
-	}
-	if err := pr.mountEndpoints(group, http.MethodPut, pr.config.Put, pr.cache); err != nil {
-		return fmt.Errorf("add PUT endpoints: %w", err)
-	}
-	if err := pr.mountEndpoints(group, http.MethodPatch, pr.config.Patch, pr.cache); err != nil {
-		return fmt.Errorf("add PATCH endpoints: %w", err)
-	}
-	if err := pr.mountEndpoints(group, http.MethodDelete, pr.config.Delete, pr.cache); err != nil {
-		return fmt.Errorf("add DELETE endpoints: %w", err)
-	}
-	if pr.config.Static != "" {
-		group.Handle("/*", http.FileServer(http.Dir(pr.config.Static)))
-	}
-	return nil
-}
+	for _, ep := range pr.config.Endpoints {
+		ep := ep
+		script, err := NewScript(pr, &ep.Script)
+		if err != nil {
+			return fmt.Errorf("create script in endpoint %s %s: %w", ep.Method, ep.Path, err)
+		}
+		handler, err := NewHandler(pr, &ep.HTTP, script) //TODO: policies
+		if err != nil {
+			return fmt.Errorf("create endpoint %s %s: %w", ep.Method, ep.Path, err)
+		}
+		path := ep.HTTP.NormPath()
 
-func (pr *Project) mountEndpoints(router chi.Router, method string, endpoints []config.Endpoint, cache CacheStorage) error {
-	for _, ep := range endpoints {
-		queues, calls, err := pr.resolve(ep.Enqueues, ep.Calls)
-		if err != nil {
-			return fmt.Errorf("resolve endpoint %s %s: %w", method, ep.Path, err)
+		pr.workspace.router.Method(ep.HTTP.Method, "/a/"+pr.config.Name+path, handler)
+		for _, alias := range ep.Alias {
+			pr.workspace.router.Method(ep.HTTP.Method, "/l"+pr.config.Name+normPath(alias), handler)
 		}
-		//TODO: mount policies
-		handler, err := NewEndpoint(ep, cache, calls, queues)
-		if err != nil {
-			return fmt.Errorf("create endpoint %s %s: %w", method, ep.Path, err)
-		}
-		path := ep.Path
-		if !strings.HasPrefix(path, "/") {
-			path = "/" + path
-		}
-		router.Method(method, path, pr.monitor.Endpoint(method, ep.Path, handler))
 	}
 	return nil
 }
 
 func (pr *Project) addCronTabs() error {
-	for _, cronTab := range pr.config.Cron {
-		queues, calls, err := pr.resolve(cronTab.Enqueues, cronTab.Calls)
+	for _, cronTab := range pr.config.Crons {
+		instance, err := NewCron(pr, &cronTab)
 		if err != nil {
-			return fmt.Errorf("resolve cron %s: %w", cronTab.Schedule, err)
+			return fmt.Errorf("create cron task %s: %w", cronTab.Schedule, err)
 		}
-
-		err = pr.scheduler.AddJob(cronTab.Schedule, NewCron(calls, queues, pr.monitor.Cron(cronTab.Schedule)))
+		err = pr.workspace.scheduler.AddJob(cronTab.Schedule, instance)
 		if err != nil {
 			return fmt.Errorf("add cron task %s: %w", cronTab.Schedule, err)
 		}
@@ -146,40 +116,9 @@ func (pr *Project) addCronTabs() error {
 	return nil
 }
 
-func (pr *Project) resolve(toEnqueue []config.Enqueue, toCall []config.Call) ([]*Async, []*Sync, error) {
-	var asyncs []*Async
-	var syncs []*Sync
-	// resolve queues
-	for _, queue := range toEnqueue {
-		q, ok := pr.queues[queue.Queue]
-		if !ok {
-			return nil, nil, fmt.Errorf("refernce to uknown queue '%s'", queue.Queue)
-		}
-		async, err := NewAsync(queue, q)
-		if err != nil {
-			return nil, nil, fmt.Errorf("create async link to queue %s: %w", queue.Queue, err)
-		}
-		asyncs = append(asyncs, async)
+func normPath(path string) string {
+	if strings.HasPrefix(path, "/") {
+		return path
 	}
-	// resolve lambdas (sync call)
-	for _, lambda := range toCall {
-		sync, err := pr.resolveCall(lambda)
-		if err != nil {
-			return nil, nil, err
-		}
-		syncs = append(syncs, sync)
-	}
-	return asyncs, syncs, nil
-}
-
-func (pr *Project) resolveCall(lambda config.Call) (*Sync, error) {
-	l, ok := pr.lambdas[lambda.Lambda]
-	if !ok {
-		return nil, fmt.Errorf("refernce to uknown lambda '%s'", lambda.Lambda)
-	}
-	sync, err := NewSync(lambda, l)
-	if err != nil {
-		return nil, fmt.Errorf("create sync link to lambda %s: %w", lambda.Lambda, err)
-	}
-	return sync, nil
+	return "/" + path
 }

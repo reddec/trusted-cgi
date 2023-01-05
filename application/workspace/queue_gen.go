@@ -7,7 +7,7 @@ import (
 )
 
 // DecodeMsg implements msgp.Decodable
-func (z *Message) DecodeMsg(dc *msgp.Reader) (err error) {
+func (z *Task) DecodeMsg(dc *msgp.Reader) (err error) {
 	var field []byte
 	_ = field
 	var zb0001 uint32
@@ -24,7 +24,7 @@ func (z *Message) DecodeMsg(dc *msgp.Reader) (err error) {
 			return
 		}
 		switch msgp.UnsafeString(field) {
-		case "env":
+		case "environment":
 			var zb0002 uint32
 			zb0002, err = dc.ReadMapHeader()
 			if err != nil {
@@ -66,10 +66,10 @@ func (z *Message) DecodeMsg(dc *msgp.Reader) (err error) {
 }
 
 // EncodeMsg implements msgp.Encodable
-func (z *Message) EncodeMsg(en *msgp.Writer) (err error) {
+func (z *Task) EncodeMsg(en *msgp.Writer) (err error) {
 	// map header, size 1
-	// write "env"
-	err = en.Append(0x81, 0xa3, 0x65, 0x6e, 0x76)
+	// write "environment"
+	err = en.Append(0x81, 0xab, 0x65, 0x6e, 0x76, 0x69, 0x72, 0x6f, 0x6e, 0x6d, 0x65, 0x6e, 0x74)
 	if err != nil {
 		return
 	}
@@ -93,83 +93,9 @@ func (z *Message) EncodeMsg(en *msgp.Writer) (err error) {
 	return
 }
 
-// MarshalMsg implements msgp.Marshaler
-func (z *Message) MarshalMsg(b []byte) (o []byte, err error) {
-	o = msgp.Require(b, z.Msgsize())
-	// map header, size 1
-	// string "env"
-	o = append(o, 0x81, 0xa3, 0x65, 0x6e, 0x76)
-	o = msgp.AppendMapHeader(o, uint32(len(z.Environment)))
-	for za0001, za0002 := range z.Environment {
-		o = msgp.AppendString(o, za0001)
-		o = msgp.AppendString(o, za0002)
-	}
-	return
-}
-
-// UnmarshalMsg implements msgp.Unmarshaler
-func (z *Message) UnmarshalMsg(bts []byte) (o []byte, err error) {
-	var field []byte
-	_ = field
-	var zb0001 uint32
-	zb0001, bts, err = msgp.ReadMapHeaderBytes(bts)
-	if err != nil {
-		err = msgp.WrapError(err)
-		return
-	}
-	for zb0001 > 0 {
-		zb0001--
-		field, bts, err = msgp.ReadMapKeyZC(bts)
-		if err != nil {
-			err = msgp.WrapError(err)
-			return
-		}
-		switch msgp.UnsafeString(field) {
-		case "env":
-			var zb0002 uint32
-			zb0002, bts, err = msgp.ReadMapHeaderBytes(bts)
-			if err != nil {
-				err = msgp.WrapError(err, "Environment")
-				return
-			}
-			if z.Environment == nil {
-				z.Environment = make(map[string]string, zb0002)
-			} else if len(z.Environment) > 0 {
-				for key := range z.Environment {
-					delete(z.Environment, key)
-				}
-			}
-			for zb0002 > 0 {
-				var za0001 string
-				var za0002 string
-				zb0002--
-				za0001, bts, err = msgp.ReadStringBytes(bts)
-				if err != nil {
-					err = msgp.WrapError(err, "Environment")
-					return
-				}
-				za0002, bts, err = msgp.ReadStringBytes(bts)
-				if err != nil {
-					err = msgp.WrapError(err, "Environment", za0001)
-					return
-				}
-				z.Environment[za0001] = za0002
-			}
-		default:
-			bts, err = msgp.Skip(bts)
-			if err != nil {
-				err = msgp.WrapError(err)
-				return
-			}
-		}
-	}
-	o = bts
-	return
-}
-
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
-func (z *Message) Msgsize() (s int) {
-	s = 1 + 4 + msgp.MapHeaderSize
+func (z *Task) Msgsize() (s int) {
+	s = 1 + 12 + msgp.MapHeaderSize
 	if z.Environment != nil {
 		for za0001, za0002 := range z.Environment {
 			_ = za0002

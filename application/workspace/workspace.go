@@ -4,25 +4,28 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/reddec/trusted-cgi/application/stats"
-	"github.com/reddec/trusted-cgi/internal"
-	"github.com/reddec/trusted-cgi/types"
-	"github.com/robfig/cron"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync/atomic"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/reddec/trusted-cgi/internal"
+	"github.com/reddec/trusted-cgi/trace"
+	"github.com/reddec/trusted-cgi/types"
+	"github.com/robfig/cron"
 )
 
-const ProjectFile = "cgi.hcl"
+var ProjectFiles = []string{
+	"cgi.yaml",
+	"cgi.yml",
+	"cgi.json",
+}
 
 type Config struct {
-	Creds    *types.Credential       // optional, which credentials to use for executing (su)
-	QueueDir string                  // optional, default is 'queues'. Place where to store queues
-	CacheDir string                  // optional, default is 'cache'. Place where to store requests payloads (cache).
-	Monitor  *stats.WorkspaceMonitor // optional
+	Creds     *types.Credential // optional, which credentials to use for executing (su)
+	QueueDir  string            // optional, default is 'queues'. Place where to store queues
+	SniffSize int64             // optional, max size of input and output to be stored in stats
 }
 
 func New(cfg Config, dir string) (*Workspace, error) {
@@ -34,16 +37,9 @@ func New(cfg Config, dir string) (*Workspace, error) {
 	if cfg.QueueDir == "" {
 		cfg.QueueDir = "queues"
 	}
-	if cfg.CacheDir == "" {
-		cfg.CacheDir = "cache"
-	}
-
-	cache, err := NewFileCache(cfg.CacheDir)
-	if err != nil {
-		return nil, fmt.Errorf("create cache in %s: %w", cfg.CacheDir, err)
-	}
 
 	wp := &Workspace{
+		settings:  &cfg,
 		scheduler: cron.New(),
 		router:    chi.NewRouter(),
 		queues:    internal.NewDaemonSet(true),
@@ -52,15 +48,17 @@ func New(cfg Config, dir string) (*Workspace, error) {
 		if !entry.IsDir() {
 			continue
 		}
-		file := filepath.Join(dir, entry.Name(), ProjectFile)
-		if stat, err := os.Stat(file); err != nil || stat.IsDir() {
-			continue
+		for _, projectFile := range ProjectFiles {
+			file := filepath.Join(dir, entry.Name(), projectFile)
+			if stat, err := os.Stat(file); err != nil || stat.IsDir() {
+				continue
+			}
+			_, err := NewProject(wp, file)
+			if err != nil {
+				return nil, fmt.Errorf("add file %s: %w", file, err)
+			}
+			break
 		}
-		pr, err := newProject(file, cfg, cache, cfg.Monitor.Project(entry.Name()))
-		if err != nil {
-			return nil, fmt.Errorf("add file %s: %w", file, err)
-		}
-		wp.addProject(pr)
 	}
 
 	return wp, nil
@@ -70,6 +68,24 @@ type Workspace struct {
 	scheduler *cron.Cron
 	router    chi.Router
 	queues    *internal.DaemonSet
+	creds     *types.Credential
+	settings  *Config
+	traces    trace.TraceStorage
+}
+
+func (wrk *Workspace) Trace() *trace.Trace {
+	//TODO: workspace name
+	tp := trace.NewTrace(wrk.traces)
+	tp.Set("workspace", "default")
+	return tp
+}
+
+func (wrk *Workspace) QueuesDir() string {
+	return wrk.settings.QueueDir
+}
+
+func (wrk *Workspace) SniffSize() int64 {
+	return wrk.settings.SniffSize
 }
 
 func (wrk *Workspace) Run(ctx context.Context) error {
@@ -80,17 +96,6 @@ func (wrk *Workspace) Run(ctx context.Context) error {
 
 func (wrk *Workspace) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	wrk.router.ServeHTTP(writer, request)
-}
-
-func (wrk *Workspace) addProject(project *Project) {
-	path := "/" + strings.ToLower(project.config.Name)
-	wrk.router.Mount(path, http.StripPrefix(path, project.router))
-
-	for _, entry := range project.scheduler.Entries() {
-		wrk.scheduler.Schedule(entry.Schedule, entry.Job)
-	}
-
-	wrk.queues.Add(project.queuesDaemons.Jobs()...)
 }
 
 func NewReloadable(cfg Config, rootDir string) (*ReloadableWorkspace, error) {

@@ -2,21 +2,18 @@ package config
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
-var QueueNameReg = regexp.MustCompile(`^[a-z0-9A-Z-]{3,64}$`)
-
 type Script struct {
-	Command     string            `json:"command" yaml:"command"`
-	Args        []string          `json:"args,omitempty" yaml:"args,omitempty"`
+	Exec        string            `json:"exec" yaml:"exec"`
 	Timeout     Seconds           `json:"timeout,omitempty" yaml:"timeout,omitempty"`
 	WorkDir     string            `json:"work_dir,omitempty" yaml:"work_dir,omitempty"`
 	Payload     *string           `json:"payload,omitempty" yaml:"payload,omitempty"`
@@ -25,11 +22,12 @@ type Script struct {
 
 type Cron struct {
 	Schedule string `json:"schedule"`
-	Script   Script `json:"exec" yaml:"exec"`
+	Script   `yaml:",inline"`
 }
 
 type Queue struct {
-	Endpoint `yaml:",inline"`
+	HTTP     `yaml:",inline"`
+	Script   `yaml:",inline"`
 	Interval time.Duration `json:"interval,omitempty" yaml:"interval,omitempty"`
 	Size     int64         `json:"size,omitempty" yaml:"size,omitempty"`
 	Retry    int64         `json:"retry,omitempty" yaml:"retry,omitempty"`
@@ -49,16 +47,9 @@ type HTTP struct {
 	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
 }
 
-func (http *HTTP) NormPath() string {
-	if !strings.HasPrefix(http.Path, "/") {
-		return "/" + http.Path
-	}
-	return http.Path
-}
-
 type Endpoint struct {
 	HTTP   `yaml:",inline"`
-	Script Script `json:"exec" yaml:"exec"`
+	Script `yaml:",inline"`
 }
 
 type Project struct {
@@ -94,15 +85,13 @@ func ParseFile(file string) (*Project, error) {
 
 	rootPath := filepath.Dir(rootFilePath)
 
-	// calculate static dir
-	if p.Static != "" {
-		p.Static = filepath.Join(rootPath, filepath.Clean(p.Static))
-	}
-
 	// check queues
 	var usedQueues = make(map[string]bool, len(p.Queues))
 	for i, q := range p.Queues {
 		q.Method = strings.ToUpper(q.Method)
+		if q.Status <= 0 {
+			q.Status = http.StatusAccepted
+		}
 		p.Queues[i] = q
 		key := q.Method + " " + q.Path
 		if usedQueues[key] {

@@ -1,41 +1,40 @@
 endpoints:
   - method: GET # no path is default path
-    exec:
-      command: ping
-      args: ["-c", "3", "1.1.1.1"]
+    exec: ping -c 3 1.1.1.1
 
   - method: GET
     path: "ping/{host}" # params are supported
-    exec:
-      command: sh
-      args: [ "-c", "ping -c 3 $DHOST" ]
-      environment:
-        DHOST: '{{.Path.host}}'
+    exec: "ping -c 3 $DHOST"
+    environment:
+      DHOST: '{{.Path.host}}'
 
   - method: POST
     path: echo
-    exec:
-      command: cat
-      args: ["-"]
+    exec: cat -
 
   - method: GET
     path: date
     aliases:
       - what-time-is-it
-    exec:
-      command: ./time.sh
-      environment:
-        FORMAT: '{{.Query.Get "format"}}'
+    exec: ./time.sh
+    environment:
+      FORMAT: '{{.Query.Get "format"}}'
 
 queues:
   - method: POST
-    path: calc
-    exec:
-      command: ping
-      args: ["-c", "3", "1.1.1.1"]
+    path: ping
+    exec: "ping -c 3 1.1.1.1"
+
+  - method: POST
+    path: "calc"
+    vars:
+      request_id: "{{uuidv4}}"
+    exec: "mkdir -p out && bc - > out/$REQUEST_ID"
+    environment:
+      REQUEST_ID: "{{.Var.request_id}}"
+    headers:
+      "X-Correlation-Id": "{{.Var.request_id}}"
 
 crons:
   - schedule: "@hourly"
-    exec:
-      command: wall
-      args: ["hello world!"]
+    exec: 'wall "hello world"'

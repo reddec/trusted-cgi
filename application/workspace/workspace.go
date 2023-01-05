@@ -26,6 +26,7 @@ type Config struct {
 	Creds     *types.Credential // optional, which credentials to use for executing (su)
 	QueueDir  string            // optional, default is 'queues'. Place where to store queues
 	SniffSize int64             // optional, max size of input and output to be stored in stats
+	Shell     string            // optional, execute command in shell (should support -c arg)
 }
 
 func New(cfg Config, dir string) (*Workspace, error) {
@@ -96,6 +97,14 @@ func (wrk *Workspace) Run(ctx context.Context) error {
 
 func (wrk *Workspace) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	wrk.router.ServeHTTP(writer, request)
+}
+
+func (wrk *Workspace) BuildArgs(command string) (bin string, args []string) {
+	if shell := wrk.settings.Shell; shell != "" {
+		return shell, []string{"-c", command}
+	}
+	bin = command
+	return
 }
 
 func NewReloadable(cfg Config, rootDir string) (*ReloadableWorkspace, error) {

@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -64,16 +65,16 @@ func (pr *Project) addQueues() error {
 		queue := queue
 		instance, err := NewQueue(pr, &queue)
 		if err != nil {
-			return fmt.Errorf("create queue %s: %w", queue.Name, err)
+			return fmt.Errorf("create queue %s %s: %w", queue.Method, queue.Path, err)
 		}
 		pr.workspace.queues.Add(instance)
-		handler, err := NewHandler(pr, &queue.HTTP, instance)
+		handler, err := NewHandler(pr, &queue.HTTP, instance) //TODO: policies
 		if err != nil {
-			return fmt.Errorf("create queue %s handler: %w", queue.Name, err)
+			return fmt.Errorf("create queue %s %s handler: %w", queue.Method, queue.Path, err)
 		}
 
-		path := queue.HTTP.NormPath()
-		pr.workspace.router.Method(queue.HTTP.Method, "/q/"+pr.config.Name+path, handler) //TODO: policies
+		path := normPath(queue.HTTP.Path)
+		pr.workspace.router.Method(queue.HTTP.Method, "/q/"+pr.config.Name+path, handler)
 		for _, alias := range queue.Alias {
 			pr.workspace.router.Method(queue.HTTP.Method, "/l"+pr.config.Name+normPath(alias), handler)
 		}
@@ -92,12 +93,17 @@ func (pr *Project) addEndpoints() error {
 		if err != nil {
 			return fmt.Errorf("create endpoint %s %s: %w", ep.Method, ep.Path, err)
 		}
-		path := ep.HTTP.NormPath()
+		path := normPath(ep.HTTP.Path)
 
 		pr.workspace.router.Method(ep.HTTP.Method, "/a/"+pr.config.Name+path, handler)
 		for _, alias := range ep.Alias {
 			pr.workspace.router.Method(ep.HTTP.Method, "/l"+pr.config.Name+normPath(alias), handler)
 		}
+	}
+	if pr.config.Static != "" {
+		staticPrefix := "/s/" + pr.config.Name
+		staticDir := filepath.Join(pr.dir, filepath.Clean(pr.config.Static))
+		pr.workspace.router.Mount(staticPrefix, http.StripPrefix(staticPrefix, http.FileServer(http.Dir(staticDir))))
 	}
 	return nil
 }
@@ -117,6 +123,9 @@ func (pr *Project) addCronTabs() error {
 }
 
 func normPath(path string) string {
+	if path == "" {
+		return path
+	}
 	if strings.HasPrefix(path, "/") {
 		return path
 	}

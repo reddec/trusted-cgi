@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/reddec/trusted-cgi/application/config"
-	"github.com/reddec/trusted-cgi/internal"
-	"github.com/reddec/trusted-cgi/trace"
-	"github.com/reddec/trusted-cgi/types"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"text/template"
+
+	"github.com/reddec/trusted-cgi/application/config"
+	"github.com/reddec/trusted-cgi/internal"
+	"github.com/reddec/trusted-cgi/trace"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 func NewScript(project *Project, script *config.Script) (*Script, error) {
@@ -88,15 +89,14 @@ func (s *Script) Call(ctx context.Context, renderCtx any, payload io.Reader) (io
 // Invoke lambda. Close MUST be called.
 func (s *Script) Invoke(global context.Context, environment map[string]string, payload io.Reader) (io.ReadCloser, error) {
 	tracer := trace.NewTraceFromContext(global)
-	tracer.Set("command", s.config.Command)
-	tracer.Set("args", s.config.Args)
+	tracer.Set("exec", s.config.Exec)
 	ctx, cancel := s.createContext(global)
 	rd, wr := io.Pipe()
 
 	inputSniffer := trace.NewSniffer(payload, s.project.workspace.SniffSize())
 	outputSniffer := trace.NewSniffer(rd, s.project.workspace.SniffSize())
-
-	cmd := exec.CommandContext(ctx, s.config.Command, s.config.Args...)
+	bin, args := s.project.workspace.BuildArgs(s.config.Exec)
+	cmd := exec.CommandContext(ctx, bin, args...)
 	cmd.Dir = s.WorkDir()
 	cmd.Stdin = payload
 	cmd.Stdout = wr
@@ -124,6 +124,7 @@ func (s *Script) Invoke(global context.Context, environment map[string]string, p
 		defer close(done)
 		defer inputSniffer.Report(tracer, "input")
 		defer outputSniffer.Report(tracer, "output")
+		defer internal.Reap(cmd.Process.Pid)
 		err := cmd.Wait()
 		_ = wr.CloseWithError(err)
 		done <- err

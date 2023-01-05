@@ -49,7 +49,7 @@ func (t *Trace) getStorage() TraceStorage {
 	if t.parent != nil {
 		return t.parent.getStorage()
 	}
-	return &LoggingStorage{}
+	return &NoopStorage{}
 }
 
 func NewTrace(storage TraceStorage) *Trace {
@@ -74,5 +74,11 @@ type LoggingStorage struct{}
 
 func (ls LoggingStorage) Store(started, stopped time.Time, entity, name string, meta map[string]any) error {
 	log.Printf("[%s:%s] started: %v, finished: %v, duration: %v, meta: %+v", entity, name, started, stopped, stopped.Sub(started), meta)
+	return nil
+}
+
+type NoopStorage struct{}
+
+func (ns *NoopStorage) Store(started, stopped time.Time, entity, name string, meta map[string]any) error {
 	return nil
 }

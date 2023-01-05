@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
-	"github.com/reddec/trusted-cgi/application/stats"
-	"github.com/reddec/trusted-cgi/application/workspace"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/reddec/trusted-cgi/application/stats"
+	"github.com/reddec/trusted-cgi/application/workspace"
 
 	"github.com/jessevdk/go-flags"
 
@@ -57,6 +58,7 @@ type Config struct {
 		File     string        `long:"file" env:"FILE" description:"Path to stats file" default:"stats.db"`
 		MaxBody  int64         `long:"max-body" env:"MAX_BODY" description:"Max bytes of body (request and response) to store in stats" default:"1024"`
 	} `group:"Stats" namespace:"stats" env-namespace:"STATS"`
+	Shell string `long:"shell" env:"SHELL" description:"Shell which should be used to run command"`
 }
 
 type HttpServer struct {
@@ -115,6 +117,7 @@ func (qs *HttpServer) Serve(globalCtx context.Context, handler http.Handler) err
 
 func main() {
 	var config Config
+	config.Shell = internal2.Shell
 	parser := flags.NewParser(&config, flags.Default)
 	parser.LongDescription = "Easy CGI-like server for development\nAuthor: Baryshnikov Aleksandr <dev@baryshnikov.net>\nVersion: " + version
 	_, err := parser.Parse()

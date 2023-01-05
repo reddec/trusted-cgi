@@ -3,57 +3,40 @@ package workspace_test
 import (
 	"bytes"
 	"context"
-	"github.com/hashicorp/go-multierror"
-	"github.com/reddec/trusted-cgi/application/workspace"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/reddec/trusted-cgi/application/workspace"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const projA = `
-static = "public"
-lambda "date" {
-	exec = ["echo", "-n", "today is a great day"]
-}
+static: "done"
+endpoints:
+  - method: GET
+    exec: echo -n today is a great day
 
-lambda "calc" {
-	exec = ["bc"]
-}
+  - method: POST
+    path: "calc"
+    exec: "bc"
 
-lambda "lazy-calc" {
-	exec = ["sh", "-c", "echo ${"$"}CORRELATION_ID 1>&2; mkdir -p public/out && bc > public/out/${"$"}CORRELATION_ID"]
-}
+queues:
+  - method: POST
+    path: "calc"
+    vars:
+      request_id: "{{uuidv4}}"
+    exec: "mkdir -p done/out && bc > done/out/$REQUEST_ID"
+    environment:
+      REQUEST_ID: "{{.Var.request_id}}"
+    headers:
+      "X-Correlation-Id": "{{.Var.request_id}}"
 
-queue "lazy-calc" {
-	call "lazy-calc" {}
-}
-
-get "" {
-	call "date" {}
-}
-
-post "calc" {
-	call "calc" {}
-}
-
-post "async-calc" {
-	vars = {
-		request_id = "{{uuidv4}}"
-	}
-	headers = {
-		"X-Correlation-Id" = "{{.Var.request_id}}"
-	}
-	enqueue "lazy-calc" {
-		Environment = {
-			"CORRELATION_ID" = "{{.Var.request_id}}"
-		}
-	}
-}
 `
 
 func TestNew_Workspace(t *testing.T) {
@@ -62,17 +45,16 @@ func TestNew_Workspace(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 	workspaceDir := filepath.Join(tmpDir, "workspace")
 	queueDir := filepath.Join(tmpDir, "queues")
-	cacheDir := filepath.Join(tmpDir, "cache")
 	err = os.MkdirAll(workspaceDir, 0755)
 	require.NoError(t, err)
 
 	addProject(workspaceDir, "project-a", map[string]string{
-		workspace.ProjectFile: projA,
+		workspace.ProjectFiles[0]: projA,
 	})
 
 	wrk, err := workspace.New(workspace.Config{
 		QueueDir: queueDir,
-		CacheDir: cacheDir,
+		Shell:    "/bin/bash",
 	}, workspaceDir)
 	require.NoError(t, err)
 
@@ -86,7 +68,7 @@ func TestNew_Workspace(t *testing.T) {
 	})
 
 	t.Run("endpoints should work", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/project-a", nil)
+		req := httptest.NewRequest(http.MethodGet, "/a/project-a", nil)
 		rec := httptest.NewRecorder()
 		wrk.ServeHTTP(rec, req)
 		require.Equal(t, http.StatusOK, rec.Code)
@@ -94,7 +76,7 @@ func TestNew_Workspace(t *testing.T) {
 	})
 
 	t.Run("payload should work", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/project-a/calc", bytes.NewBufferString("1+2+3\n3*3*2"))
+		req := httptest.NewRequest(http.MethodPost, "/a/project-a/calc", bytes.NewBufferString("1+2+3\n3*3*2"))
 		rec := httptest.NewRecorder()
 		wrk.ServeHTTP(rec, req)
 		require.Equal(t, http.StatusOK, rec.Code)
@@ -102,26 +84,20 @@ func TestNew_Workspace(t *testing.T) {
 	})
 
 	t.Run("async call", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/project-a/async-calc", bytes.NewBufferString("1+2+3\n3*3*2"))
+		req := httptest.NewRequest(http.MethodPost, "/q/project-a/calc", bytes.NewBufferString("1+2+3\n3*3*2"))
 		rec := httptest.NewRecorder()
 		wrk.ServeHTTP(rec, req)
-		require.Equal(t, http.StatusCreated, rec.Code)
+		require.Equal(t, http.StatusAccepted, rec.Code)
 		requestID := rec.Header().Get("X-Correlation-ID")
 		assert.NotEmpty(t, requestID)
 
 		time.Sleep(time.Second)
 
-		req = httptest.NewRequest(http.MethodGet, "/project-a/out/"+requestID, nil)
+		req = httptest.NewRequest(http.MethodGet, "/s/project-a/out/"+requestID, nil)
 		rec = httptest.NewRecorder()
 		wrk.ServeHTTP(rec, req)
 		require.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "6\n18\n", rec.Body.String())
-	})
-
-	t.Run("check that there are no left-over cache", func(t *testing.T) {
-		list, err := os.ReadDir(cacheDir)
-		require.NoError(t, err)
-		assert.Empty(t, list)
 	})
 
 	cancel()
@@ -134,17 +110,16 @@ func TestNewReloadable(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 	workspaceDir := filepath.Join(tmpDir, "workspace")
 	queueDir := filepath.Join(tmpDir, "queues")
-	cacheDir := filepath.Join(tmpDir, "cache")
 	err = os.MkdirAll(workspaceDir, 0755)
 	require.NoError(t, err)
 
 	addProject(workspaceDir, "project-a", map[string]string{
-		workspace.ProjectFile: projA,
+		workspace.ProjectFiles[0]: projA,
 	})
 
 	wrk, err := workspace.NewReloadable(workspace.Config{
 		QueueDir: queueDir,
-		CacheDir: cacheDir,
+		Shell:    "/bin/bash",
 	}, workspaceDir)
 	require.NoError(t, err)
 
@@ -159,20 +134,17 @@ func TestNewReloadable(t *testing.T) {
 
 	t.Run("reload should point to the new endpoint", func(t *testing.T) {
 		// first should not work
-		req := httptest.NewRequest(http.MethodGet, "/project-b", nil)
+		req := httptest.NewRequest(http.MethodGet, "/a/project-b", nil)
 		rec := httptest.NewRecorder()
 		wrk.ServeHTTP(rec, req)
 		require.Equal(t, http.StatusNotFound, rec.Code)
 
 		addProject(workspaceDir, "project-b", map[string]string{
-			workspace.ProjectFile: `
-lambda "hell" {
-	exec = ["echo", "-n", "hell in world"]
-}
+			workspace.ProjectFiles[0]: `
+endpoints:
+  - method: GET # no path is default path
+    exec: echo -n hell in world
 
-get "" {
-	call "hell" {}
-}
 `,
 		})
 
@@ -180,7 +152,7 @@ get "" {
 		require.NoError(t, err)
 
 		// after the reload this endpoint should work (we added project)
-		req = httptest.NewRequest(http.MethodGet, "/project-b", nil)
+		req = httptest.NewRequest(http.MethodGet, "/a/project-b", nil)
 		rec = httptest.NewRecorder()
 		wrk.ServeHTTP(rec, req)
 		require.Equal(t, http.StatusOK, rec.Code)

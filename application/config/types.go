@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/reddec/trusted-cgi/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,18 +34,31 @@ type Queue struct {
 	Retry    int64         `json:"retry,omitempty" yaml:"retry,omitempty"`
 }
 
+type Policy struct {
+	Name    string              `json:"name" yaml:"name"`
+	IPs     types.JsonStringSet `json:"ips,omitempty" yaml:"ips,omitempty"`         // limit incoming connections from list of IP
+	Origins types.JsonStringSet `json:"origins,omitempty" yaml:"origins,omitempty"` // limit incoming connections by origin header
+	Tokens  []Token             `json:"tokens,omitempty" yaml:"tokens,omitempty"`   // limit request by value in Authorization header (token => title)
+}
+
+type Token struct {
+	Title string `json:"title,omitempty" yaml:"title,omitempty"`
+	Hash  string `json:"hash" yaml:"hash"`
+}
+
 func (q *Queue) Name() string {
 	return q.Method + " " + url.PathEscape(q.Path)
 }
 
 type HTTP struct {
-	Method  string            `json:"method" yaml:"method"`
-	Path    string            `json:"path" yaml:"path"`
-	Alias   []string          `json:"aliases,omitempty" yaml:"aliases,omitempty"`
-	Body    int64             `json:"body,omitempty" yaml:"body,omitempty"`
-	Status  int               `json:"status,omitempty" yaml:"status,omitempty"`
-	Vars    map[string]string `json:"vars,omitempty" yaml:"vars,omitempty"` // parsed and stored before headers and calls
-	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
+	Method   string            `json:"method" yaml:"method"`
+	Path     string            `json:"path" yaml:"path"`
+	Alias    []string          `json:"aliases,omitempty" yaml:"aliases,omitempty"`
+	Body     int64             `json:"body,omitempty" yaml:"body,omitempty"`
+	Status   int               `json:"status,omitempty" yaml:"status,omitempty"`
+	Vars     map[string]string `json:"vars,omitempty" yaml:"vars,omitempty"` // parsed and stored before headers and calls
+	Headers  map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
+	Policies []string          `json:"policies,omitempty" yaml:"policies,omitempty"`
 }
 
 type Endpoint struct {
@@ -58,6 +72,7 @@ type Project struct {
 	Endpoints []Endpoint `json:"endpoints,omitempty" yaml:"endpoints,omitempty"`
 	Crons     []Cron     `json:"crons,omitempty" yaml:"crons,omitempty"`
 	Queues    []Queue    `json:"queues,omitempty" yaml:"queues,omitempty"`
+	Policies  []Policy   `json:"policies,omitempty" yaml:"policies,omitempty"`
 }
 
 type Seconds int64
@@ -85,6 +100,15 @@ func ParseFile(file string) (*Project, error) {
 
 	rootPath := filepath.Dir(rootFilePath)
 
+	// check policies
+	var usedPolicy = make(map[string]bool, len(p.Policies))
+	for _, pl := range p.Policies {
+		if usedPolicy[pl.Name] {
+			return nil, fmt.Errorf("policy %s declared more than once", pl.Name)
+		}
+		usedPolicy[pl.Name] = true
+	}
+
 	// check queues
 	var usedQueues = make(map[string]bool, len(p.Queues))
 	for i, q := range p.Queues {
@@ -111,6 +135,7 @@ func ParseFile(file string) (*Project, error) {
 		}
 		usedEndpoint[key] = true
 	}
+
 	p.Name = filepath.Base(rootPath)
 	return &p, nil
 }

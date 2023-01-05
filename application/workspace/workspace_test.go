@@ -173,6 +173,8 @@ func TestWorkspace_LegacyStatic(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 	workspaceDir := filepath.Join(tmpDir, "workspace")
+	queueDir := filepath.Join(tmpDir, "queues")
+
 	err = os.MkdirAll(workspaceDir, 0755)
 	require.NoError(t, err)
 
@@ -184,7 +186,7 @@ func TestWorkspace_LegacyStatic(t *testing.T) {
 	assert.FileExists(t, filepath.Join(workspaceDir, "project-a", "done/test.txt"))
 
 	t.Run("non-legacy version should work by-default", func(t *testing.T) {
-		wrk, err := workspace.New(workspace.Config{}, workspaceDir)
+		wrk, err := workspace.New(workspace.Config{QueueDir: queueDir}, workspaceDir)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodGet, "/s/project-a/test.txt", nil)
@@ -197,6 +199,7 @@ func TestWorkspace_LegacyStatic(t *testing.T) {
 	t.Run("legacy version should work over lambda prefix", func(t *testing.T) {
 		wrk, err := workspace.New(workspace.Config{
 			LegacyStatic: true,
+			QueueDir:     queueDir,
 		}, workspaceDir)
 		require.NoError(t, err)
 
@@ -211,6 +214,7 @@ func TestWorkspace_LegacyStatic(t *testing.T) {
 		wrk, err := workspace.New(workspace.Config{
 			LegacyStatic: true,
 			Shell:        "/bin/bash",
+			QueueDir:     queueDir,
 		}, workspaceDir)
 		require.NoError(t, err)
 

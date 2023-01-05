@@ -59,10 +59,10 @@ type Queue struct {
 }
 
 type PolicyDefinition struct {
-	AllowedIP     types.JsonStringSet `json:"allowed_ip,omitempty"`     // limit incoming connections from list of IP
-	AllowedOrigin types.JsonStringSet `json:"allowed_origin,omitempty"` // limit incoming connections by origin header
-	Public        bool                `json:"public"`                   // if public, tokens are ignores
-	Tokens        map[string]string   `json:"tokens,omitempty"`         // limit request by value in Authorization header (token => title)
+	IP     types.JsonStringSet `json:"allowed_ip,omitempty"`     // limit incoming connections from list of IP
+	Origin types.JsonStringSet `json:"allowed_origin,omitempty"` // limit incoming connections by origin header
+	Public bool                `json:"public"`                   // if public, tokens are ignores
+	Tokens map[string]string   `json:"tokens,omitempty"`         // limit request by value in Authorization header (token => title)
 }
 
 type Policy struct {

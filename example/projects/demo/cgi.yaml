@@ -11,6 +11,8 @@ endpoints:
   - method: POST
     path: echo
     exec: cat -
+    policies:
+      - local_admin
 
   - method: GET
     path: date
@@ -24,6 +26,8 @@ queues:
   - method: POST
     path: ping
     exec: "ping -c 3 1.1.1.1"
+    policies:
+      - local_admin
 
   - method: POST
     path: "calc"
@@ -34,6 +38,21 @@ queues:
       REQUEST_ID: "{{.Var.request_id}}"
     headers:
       "X-Correlation-Id": "{{.Var.request_id}}"
+
+policy:
+  - name: local_admin
+    ips:
+      - 127.0.0.1
+    origins:
+      - 127.0.0.1:3434
+      - localhost:3434
+      - localhost
+      - 127.0.0.1
+    tokens:
+      - title: "Default token"
+        hash: "$apr1$lkIddIBx$h9m9mPGzJv0.fD8chW78b1" # admin
+      - hash: "$apr1$TyJMAZz/$5LAF57zcAtVbpQru9BPBU0" # qwerty
+
 
 crons:
   - schedule: "@hourly"

@@ -30,6 +30,38 @@ endpoints:
     path: "calc"
     exec: "bc"
 
+  - method: GET
+    path: /protected-by-ip
+    exec: echo this is sparta
+    policies:
+    - admin
+
+  - method: GET
+    path: /protected-by-origin
+    exec: echo this is sparta
+    policies:
+    - user
+
+  - method: GET
+    path: /protected-by-token
+    exec: echo this is sparta
+    policies:
+    - guest
+policies:
+- name: admin
+  ips:
+  - 123.123.123.123
+
+- name: user
+  origins:
+  - localhost
+
+- name: guest
+  tokens:
+  - title: "Default token"
+    hash: "$2y$05$c5ni7snUE38JZX2goNlt5eJm/evwJRGlP3rEjF849ZEwG0mrw0boK" # admin
+  - hash: "$2y$05$DPiLrfbNT6hKvLVVxmnpdOvJfYzDEHc7I3/g43zs7gS0vn80v2haW" # qwerty
+
 queues:
   - method: POST
     path: "calc"
@@ -224,6 +256,80 @@ func TestWorkspace_LegacyStatic(t *testing.T) {
 		require.Equal(t, http.StatusOK, rec.Code)
 		require.Equal(t, "it is everywhere", rec.Body.String())
 	})
+}
+
+func TestPolicies(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+	workspaceDir := filepath.Join(tmpDir, "workspace")
+	queueDir := filepath.Join(tmpDir, "queues")
+	err = os.MkdirAll(workspaceDir, 0755)
+	require.NoError(t, err)
+
+	addProject(workspaceDir, "project-a", map[string]string{
+		workspace.ProjectFiles[0]: projA,
+	})
+
+	wrk, err := workspace.New(workspace.Config{
+		QueueDir: queueDir,
+		Shell:    "/bin/bash",
+	}, workspaceDir)
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var wg multierror.Group
+
+	wg.Go(func() error {
+		return wrk.Run(ctx)
+	})
+
+	t.Run("block by IP", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/a/project-a/protected-by-ip", nil)
+		rec := httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusUnauthorized, rec.Code)
+
+		req = httptest.NewRequest(http.MethodGet, "/a/project-a/protected-by-ip", nil)
+		req.RemoteAddr = "123.123.123.123"
+		rec = httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, "this is sparta\n", rec.Body.String())
+	})
+
+	t.Run("block by origin", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/a/project-a/protected-by-origin", nil)
+		rec := httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusUnauthorized, rec.Code)
+
+		req = httptest.NewRequest(http.MethodGet, "/a/project-a/protected-by-origin", nil)
+		req.Header.Set("Origin", "localhost")
+		rec = httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, "this is sparta\n", rec.Body.String())
+	})
+
+	t.Run("block by token", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/a/project-a/protected-by-token", nil)
+		rec := httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusUnauthorized, rec.Code)
+
+		req = httptest.NewRequest(http.MethodGet, "/a/project-a/protected-by-token", nil)
+		req.Header.Set("Authorization", "admin")
+		rec = httptest.NewRecorder()
+		wrk.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, "this is sparta\n", rec.Body.String())
+	})
+
+	cancel()
+	require.NoError(t, wg.Wait().ErrorOrNil())
 }
 
 func addProject(rootDir, name string, files map[string]string) {

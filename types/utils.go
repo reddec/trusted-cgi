@@ -1,6 +1,10 @@
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"gopkg.in/yaml.v3"
+)
 
 type JsonStringSet map[string]bool
 
@@ -33,6 +37,28 @@ func (s *JsonStringSet) UnmarshalJSON(bytes []byte) error {
 		(*s)[k] = true
 	}
 	return nil
+}
+
+func (s *JsonStringSet) UnmarshalYAML(value *yaml.Node) error {
+	var keys []string
+	if err := value.Decode(&keys); err != nil {
+		return err
+	}
+	if *s == nil {
+		*s = make(map[string]bool, len(keys))
+	}
+	for _, k := range keys {
+		(*s)[k] = true
+	}
+	return nil
+}
+
+func (s *JsonStringSet) MarshalYAML() (interface{}, error) {
+	var keys = make([]string, 0, len(*s))
+	for k := range *s {
+		keys = append(keys, k)
+	}
+	return keys, nil
 }
 
 func (s *JsonStringSet) Has(key string) bool { return (*s)[key] }

@@ -89,7 +89,9 @@ func ParseFile(file string) (*Project, error) {
 		return nil, err
 	}
 	defer f.Close()
-	if err := yaml.NewDecoder(f).Decode(&p); err != nil {
+	dec := yaml.NewDecoder(f)
+	dec.KnownFields(true)
+	if err := dec.Decode(&p); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
 

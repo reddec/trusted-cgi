@@ -63,6 +63,9 @@ func New(cfg Config, dir string) (*Workspace, error) {
 		}
 	}
 
+	// remove policies map (could be unused) to reduce memory
+	wp.policies = nil
+
 	return wp, nil
 }
 
@@ -73,6 +76,7 @@ type Workspace struct {
 	creds     *types.Credential
 	settings  *Config
 	traces    trace.TraceStorage
+	policies  map[string]*Policy // TODO: global policy
 }
 
 func (wrk *Workspace) Trace() *trace.Trace {

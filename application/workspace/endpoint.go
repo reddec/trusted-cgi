@@ -46,12 +46,16 @@ type Handler struct {
 }
 
 func (ep *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	policy := PolicyFromCtx(request.Context())
 	tracer := ep.project.Trace()
 	tracer.Set("path", ep.config.Path)
 	tracer.Set("method", ep.config.Method)
 	// TODO: tracer.Set("address",)
 	tracer.Set("headers", request.Header)
 	tracer.Set("request_uri", request.RequestURI)
+	if policy != nil {
+		tracer.Set("policy", policy.Name)
+	}
 
 	defer request.Body.Close()
 

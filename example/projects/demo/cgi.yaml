@@ -26,7 +26,7 @@ queues:
   - method: POST
     path: ping
     exec: "ping -c 3 1.1.1.1"
-    policies:
+    policies: # multiple policies joined by OR: if at least one policy passed, request is allowed
       - local_admin
 
   - method: POST
@@ -49,10 +49,10 @@ policy:
       - localhost
       - 127.0.0.1
     tokens:
+      # all tokens are hashed by bcrypt. Ex: `htpasswd -nbB user <password> | cut -f 2 -d ':'`
       - title: "Default token"
-        hash: "$apr1$lkIddIBx$h9m9mPGzJv0.fD8chW78b1" # admin
-      - hash: "$apr1$TyJMAZz/$5LAF57zcAtVbpQru9BPBU0" # qwerty
-
+        hash: "$2y$05$c5ni7snUE38JZX2goNlt5eJm/evwJRGlP3rEjF849ZEwG0mrw0boK" # admin
+      - hash: "$2y$05$DPiLrfbNT6hKvLVVxmnpdOvJfYzDEHc7I3/g43zs7gS0vn80v2haW" # qwerty
 
 crons:
   - schedule: "@hourly"

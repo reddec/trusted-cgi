@@ -2,7 +2,7 @@
 Description=Lightweight self-hosted serverless-functions engine
 
 [Service]
-ExecStart=/usr/local/bin/trusted-cgi
+ExecStart=/usr/bin/trusted-cgi
 EnvironmentFile=/etc/trusted-cgi/trusted-cgi.env
 Restart=always
 RestartSec=3

@@ -194,6 +194,11 @@ func (local *localLambda) writeStaticFile(path string, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	dir, err := f.Readdir(1)
+	if len(dir) > 0 {
+		f.Close()
+		return local.writeStaticFile( path + "/index.html", out )
+	}
 	defer f.Close()
 	_, err = io.Copy(out, f)
 	return err

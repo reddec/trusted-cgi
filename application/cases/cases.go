@@ -3,16 +3,17 @@ package cases
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/reddec/trusted-cgi/application"
-	"github.com/reddec/trusted-cgi/application/lambda"
-	"github.com/reddec/trusted-cgi/templates"
-	"github.com/reddec/trusted-cgi/types"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/reddec/trusted-cgi/application"
+	"github.com/reddec/trusted-cgi/application/lambda"
+	"github.com/reddec/trusted-cgi/templates"
+	"github.com/reddec/trusted-cgi/types"
 )
 
 func New(platform application.Platform, queues application.Queues, policies application.Policies, dir, templateDir string) (*casesImpl, error) {
@@ -25,11 +26,12 @@ func New(platform application.Platform, queues application.Queues, policies appl
 		return nil, fmt.Errorf("resolve root dir: %w", err)
 	}
 	cs := &casesImpl{
-		directory:    aDir,
-		templatesDir: aTemplateDir,
-		platform:     platform,
-		queues:       queues,
-		policies:     policies,
+		directory:     aDir,
+		templatesDir:  aTemplateDir,
+		platform:      platform,
+		queues:        queues,
+		policies:      policies,
+		lastScheduler: time.Now(), // avoid running scheduled tasks immediately
 	}
 	return cs, cs.Scan()
 }

@@ -7,36 +7,36 @@ before:
     - gzip -f trusted-cgi.1
 
 builds:
-- main: ./cmd/trusted-cgi/main.go
-  id: server
-  binary: trusted-cgi
-  env:
-  - CGO_ENABLED=0
-  goarch:
-    - amd64
-    - arm
-    - arm64
-  goos:
-    - linux
-    - windows
-    - darwin
-  flags:
-    - -trimpath
-- main: ./cmd/cgi-ctl
-  id: client
-  binary: cgi-ctl
-  env:
-    - CGO_ENABLED=0
-  goarch:
-    - amd64
-    - arm
-    - arm64
-  goos:
-    - linux
-    - windows
-    - darwin
-  flags:
-    - -trimpath
+  - main: ./cmd/trusted-cgi/main.go
+    id: server
+    binary: trusted-cgi
+    env:
+      - CGO_ENABLED=0
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goos:
+      - linux
+      - windows
+      - darwin
+    flags:
+      - -trimpath
+  - main: ./cmd/cgi-ctl
+    id: client
+    binary: cgi-ctl
+    env:
+      - CGO_ENABLED=0
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goos:
+      - linux
+      - windows
+      - darwin
+    flags:
+      - -trimpath
 nfpms:
   - id: debian
     package_name: "trusted-cgi"
@@ -56,7 +56,7 @@ nfpms:
     file_name_template: "{{ .ProjectName }}-server_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     homepage: https://github.com/reddec/trusted-cgi
     maintainer: Baryshnikov Aleksandr <owner@reddec.net>
-    description:  Lightweigt runner for lambda functions/apps in CGI like mode
+    description: Lightweigt runner for lambda functions/apps in CGI like mode
     license: MIT
     builds:
       - server
@@ -99,16 +99,17 @@ nfpms:
     builds:
       - client
 archives:
-- name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-  files:
-    - LICENSE
-    - README.md
-    - MANUAL.md
-    - MANUAL.html
-  format: tar.gz
-  format_overrides:
-    - goos: windows
-      format: zip
+  - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    files:
+      - LICENSE
+      - README.md
+      - MANUAL.md
+      - MANUAL.html
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+
 dockers:
   # build full images for ARM and AMD64
   - image_templates:
@@ -186,12 +187,16 @@ docker_manifests:
     image_templates:
       - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-amd64"
       - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-arm64v8"
-uploads:
+publishers:
   - name: production
-    method: POST
-    exts:
-      - deb
-    target: "https://apt.reddec.net/api/files/{{ .ProjectName }}"
+    ids:
+      - debian
+      - debian-server
+      - debian-client
+    checksum: false
+    signature: false
+    cmd: "curl -X POST -u '{{.Env.UPLOAD_PRODUCTION_USERNAME}}:{{.Env.UPLOAD_PRODUCTION_SECRET}}'  -F file=@{{.ArtifactPath}} https://apt.reddec.net/api/files/{{ .ProjectName }}"
+
 checksum:
   name_template: 'checksums.txt'
 snapshot:

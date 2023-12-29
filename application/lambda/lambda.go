@@ -67,8 +67,7 @@ func (local *localLambda) Invoke(ctx context.Context, request types.Request, res
 	defer request.Body.Close()
 
 	if local.staticDir != "" && request.Method == http.MethodGet {
-		path := strings.SplitN(request.Path, "/", 2)[1]
-		return local.writeStaticFile(path, response)
+		return local.serveStaticFile(request, response)
 	}
 
 	if len(local.manifest.Run) == 0 {
@@ -123,6 +122,13 @@ func (local *localLambda) Invoke(ctx context.Context, request types.Request, res
 		return fmt.Errorf("run failed: %w", err)
 	}
 	return nil
+}
+
+func (local *localLambda) serveStaticFile(request types.Request, response io.Writer) error {
+	// poor man path trimming
+	// trailing slash always removed (later replaced by index.html)
+	_, file, _ := strings.Cut(strings.Trim(request.Path, "/"), "/")
+	return local.writeStaticFile(file, response)
 }
 
 func (local *localLambda) Remove() error {

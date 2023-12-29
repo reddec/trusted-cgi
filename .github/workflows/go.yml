@@ -54,9 +54,9 @@ jobs:
         curl -X POST -H 'Content-Type: application/json' -u "${UPLOAD_PRODUCTION_USERNAME}:${UPLOAD_PRODUCTION_SECRET}" \
           "https://apt.reddec.net/api/repos/reddec/file/${PROJECT}"
         # publish
-        curl -X POST --keepalive-time 10 --max-time 240 -H 'Content-Type: application/json' -u "${UPLOAD_PRODUCTION_USERNAME}:${UPLOAD_PRODUCTION_SECRET}" \
+        curl -X PUT --keepalive-time 10 --max-time 240 -H 'Content-Type: application/json' -u "${UPLOAD_PRODUCTION_USERNAME}:${UPLOAD_PRODUCTION_SECRET}" \
                   --data '{"SourceKind": "local", "Sources": [{"Name":"reddec"}]}' \
-                  https://apt.reddec.net/api/publish/s3:r2:
+                  https://apt.reddec.net/api/publish/s3:r2:/all
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         UPLOAD_PRODUCTION_USERNAME: ${{ secrets.UPLOAD_PRODUCTION_USERNAME }}

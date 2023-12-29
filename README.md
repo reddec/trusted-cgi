@@ -91,3 +91,17 @@ and should be easy for newcomers. Caveats and tips for backend check [here](http
 For UI check [sub-repo](https://github.com/reddec/trusted-cgi-ui)
 
 Any PR (docs, code, styles, features, ...) will be very helpful!
+
+Please note, that Linux (including WSL2) or Darwin is mainly used for developing, therefore most helper scripts
+designed for those OS.
+
+Requirements:
+- go 1.21 (actual version check in `go.mod`)
+- python3
+- pandoc
+- docker
+
+
+For [multiplatform build](https://docs.docker.com/build/building/multi-platform/) you may need bintools:
+
+    docker run --privileged --rm tonistiigi/binfmt --install all

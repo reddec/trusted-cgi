@@ -1,4 +1,10 @@
 project_name: trusted-cgi
+before:
+  hooks:
+    - python3 assemble_md.py ./docs --output MANUAL.md --exclude ./docs/vendor ./docs/.bundle ./docs/.jekyll-cache ./docs/_site
+    - pandoc MANUAL.md -s -t man -o trusted-cgi.1
+    - pandoc --metadata title="Trusted-CGI manual" MANUAL.md -s --include-in-header=./docs/assets/github-pandoc.css --toc -o MANUAL.html
+    - gzip -f trusted-cgi.1
 builds:
 - main: ./cmd/trusted-cgi/main.go
   id: server

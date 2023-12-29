@@ -1,3 +1,29 @@
+export GOBIN := $(PWD)/.bin
+export PATH := $(GOBIN):$(PATH)
+
+PLATFORM := $(shell uname)
+ARCH     := $(shell uname -m)
+
+## Tools
+GORELEASER_VERSION := 1.23.0
+GORELEASER         := $(GOBIN)/goreleaser
+
+$(GOBIN):
+	mkdir -p $(GOBIN)
+
+$(GORELEASER): $(GOBIN)
+ifeq ($(PLATFORM),Linux)
+	curl -L --fail -o $(GOBIN)/goreleaser.tar.gz https://github.com/goreleaser/goreleaser/releases/download/v$(GORELEASER_VERSION)/goreleaser_Linux_$(ARCH).tar.gz
+else
+	curl -L --fail -o $(GOBIN)/goreleaser.tar.gz https://github.com/goreleaser/goreleaser/releases/download/v$(GORELEASER_VERSION)/goreleaser_Darwin_all.tar.gz
+endif
+	cd $(GOBIN) && tar -xvf $(GOBIN)/goreleaser.tar.gz goreleaser
+	rm -rf $(GOBIN)/goreleaser.tar.gz
+	touch $(GOBIN)/goreleaser
+
+snapshot: $(GORELEASER)
+	$(GORELEASER) release --clean --snapshot
+
 clean:
 	rm -rf dist ui/*
 
@@ -18,13 +44,6 @@ update_ui:
 	git submodule foreach --recursive git reset --hard
 	git submodule update --init --recursive
 	cd ui && git pull origin master && git lfs pull && npm install . && npx @quasar/cli build
-
-snapshot:
-	python3 assemble_md.py ./docs --exclude ./docs/vendor ./docs/.bundle ./docs/.jekyll-cache ./docs/_site  > MANUAL.md
-	pandoc MANUAL.md -s -t man -o trusted-cgi.1
-	pandoc --metadata title="Trusted-CGI manual" MANUAL.md -s --include-in-header=./docs/assets/github-pandoc.css --toc -o MANUAL.html
-	gzip -f trusted-cgi.1
-	goreleaser --snapshot --rm-dist
 
 regen: json-rpc2
 	go generate api/handlers/*.go

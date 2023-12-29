@@ -101,7 +101,7 @@ So, 'cause I am a developer I decided to make my own wheels ;-)
 
 TL;DR;
 
-* for production for debian servers - use ~~bintray repository~~ github release (recommend)
+* for production for debian servers - use `apt.reddec.net`
 * locally or non-debian server - [download binary](https://github.com/reddec/trusted-cgi/releases) and run
 * for quick tests or for limited production - use docker image (`docker run --rm -p 3434:3434 reddec/trusted-cgi`)
 

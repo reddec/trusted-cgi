@@ -32,7 +32,7 @@ Since `0.3.3` Linux, Darwin and even Windows OS supported: pre-built binaries co
 
 TL;DR;
 
-* for production for debian servers - use ~~bintray repository~~ github release (recommend)
+* for production for debian servers - use `apt.reddec.dev` (see docs)
 * locally or non-debian server - [download binary](https://github.com/reddec/trusted-cgi/releases) and run
 * for quick tests or for limited production - use docker image (`docker run --rm -p 3434:3434 reddec/trusted-cgi`)
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -173,7 +172,7 @@ func (local *localLambda) reloadManifest() error {
 }
 
 func (local *localLambda) readIgnore() ([]string, error) {
-	content, err := ioutil.ReadFile(filepath.Join(local.rootDir, internal.CGIIgnore))
+	content, err := os.ReadFile(filepath.Join(local.rootDir, internal.CGIIgnore))
 	if err == nil {
 		return strings.Split(string(content), "\n"), nil
 	}

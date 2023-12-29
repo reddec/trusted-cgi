@@ -2,16 +2,23 @@ package templates
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
-	"github.com/reddec/trusted-cgi/internal"
-	"github.com/reddec/trusted-cgi/types"
+	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/reddec/trusted-cgi/internal"
+	"github.com/reddec/trusted-cgi/types"
 )
+
+//go:embed assets/**
+var assets embed.FS
 
 func Read(filename string) (*Template, error) {
 	f, err := os.Open(filename)
@@ -29,7 +36,7 @@ type Template struct {
 	Manifest    types.Manifest    `json:"manifest" yaml:"manifest"`               // manifest to copy
 	PostClone   string            `json:"post_clone,omitempty" yaml:"post_clone"` // action (make target) name that should be invoked after clone
 	Check       [][]string        `json:"check,omitempty" yaml:"check,omitempty"` // check availability (one line - one check)
-	Files       map[string]string `json:"files" yaml:"files,omitempty"`           //only for embedded
+	Files       map[string]string `json:"files,omitempty"`
 }
 
 func (t *Template) IsAvailable(ctx context.Context) bool {
@@ -89,12 +96,7 @@ func ListEmbedded() map[string]*Template {
 				{"which", "python3"},
 				{"python3", "-m", "venv", "--help"},
 			},
-			Files: map[string]string{
-				"app.py":           pythonScript,
-				"Makefile":         pythonMake,
-				"requirements.txt": "requests",
-				".cgiignore":       "venv",
-			},
+			Files: mustEmbed("assets/python"),
 			Manifest: types.Manifest{
 				Name: "Example Python Function",
 				Description: `### Usage
@@ -288,3 +290,31 @@ build:
 	mkdir -p bin
 	mv -f lambda bin/
 `
+
+func mustEmbed(root string) map[string]string {
+	sub, err := fs.Sub(assets, root)
+	if err != nil {
+		panic(err)
+	}
+	var out = make(map[string]string)
+	err = fs.WalkDir(sub, ".", func(asset string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		content, err := fs.ReadFile(sub, asset)
+		if err != nil {
+			return fmt.Errorf("read %q: %w", asset, err)
+		}
+		p := strings.Trim(asset, "/.")
+
+		out[p] = string(content)
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	return out
+}

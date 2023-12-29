@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -58,7 +57,7 @@ func FromTemplate(ctx context.Context, template templates.Template, path string)
 		if err != nil {
 			return nil, fmt.Errorf("create file %s directory: %w", fileName, err)
 		}
-		err = ioutil.WriteFile(destFile, []byte(content), 0755)
+		err = os.WriteFile(destFile, []byte(content), 0755)
 		if err != nil {
 			return nil, fmt.Errorf("write file %s content: %w", fileName, err)
 		}

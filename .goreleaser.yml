@@ -5,6 +5,7 @@ before:
     - pandoc MANUAL.md -s -t man -o trusted-cgi.1
     - pandoc --metadata title="Trusted-CGI manual" MANUAL.md -s --include-in-header=./docs/assets/github-pandoc.css --toc -o MANUAL.html
     - gzip -f trusted-cgi.1
+
 builds:
 - main: ./cmd/trusted-cgi/main.go
   id: server
@@ -185,6 +186,12 @@ docker_manifests:
     image_templates:
       - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-amd64"
       - "reddec/trusted-cgi:v{{ .Major }}.{{ .Minor }}-light-arm64v8"
+uploads:
+  - name: production
+    method: POST
+    exts:
+      - deb
+    target: "https://apt.reddec.net/api/files/{{ .ProjectName }}"
 checksum:
   name_template: 'checksums.txt'
 snapshot:

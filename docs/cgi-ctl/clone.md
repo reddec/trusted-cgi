@@ -4,7 +4,7 @@ title: clone
 parent: Control util
 nav_order: 203
 ---
-# upload
+# clone
 
 From `0.3.2`
 

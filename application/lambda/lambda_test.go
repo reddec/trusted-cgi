@@ -152,6 +152,7 @@ func TestStaticFile(t *testing.T) {
 	require.NoError(t, os.WriteFile(filepath.Join(d, "static", "foo", "foo"), []byte("foo page"), 0755))
 	require.NoError(t, os.Mkdir(filepath.Join(d, "static", "foo", "bar"), 0755))
 	require.NoError(t, os.WriteFile(filepath.Join(d, "static", "foo", "bar", "bar"), []byte("bar page"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "static", "foo","index.html"), []byte("sub index page"), 0755))
 
 	fn, err := DummyPublic(d, "cat", "-")
 	require.NoError(t, err)
@@ -188,6 +189,21 @@ func TestStaticFile(t *testing.T) {
 		content, err := testRequest(fn, http.MethodGet, "/f/foo/bar/bar", nil)
 		require.NoError(t, err)
 		assert.Equal(t, "bar page", string(content))
+	})
+	t.Run("sub path with index.html served (no trailing slash)", func(t *testing.T) {
+		content, err := testRequest(fn, http.MethodGet, "/f/foo", nil)
+		require.NoError(t, err)
+		assert.Equal(t, "sub index page", string(content))
+	})
+	t.Run("sub path with index.html served (with trailing slash)", func(t *testing.T) {
+		content, err := testRequest(fn, http.MethodGet, "/f/foo/", nil)
+		require.NoError(t, err)
+		assert.Equal(t, "sub index page", string(content))
+	})
+	t.Run("sub path with index.html served (with trailing slash + index.html)", func(t *testing.T) {
+		content, err := testRequest(fn, http.MethodGet, "/f/foo/index.html", nil)
+		require.NoError(t, err)
+		assert.Equal(t, "sub index page", string(content))
 	})
 }
 

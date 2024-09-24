@@ -6,24 +6,24 @@ nav_order: 1
 ---
 # Actions
 
-Actions is optional arbitrary commands defined in [Makefile](https://www.gnu.org/software/make/manual/make.html#Rule-Example) as targets and can be invoked
+Actions are optional arbitrary commands defined in a [Makefile](https://www.gnu.org/software/make/manual/make.html#Rule-Example) as targets and can be invoked
 by UI, admin API or during template cloning operations.
 
-Main purpose is to prepare environment or function out of general flow procedure (HTTP call): 
+The main purpose is to prepare the environment or a function out of general flow procedure (HTTP call): 
 build binary, download dependencies, etc.
 
 UI:
  
-1. click to any created application
-2. click to actions tab
+1. click on any created application
+2. click on the `Actions` tab
 
 
 Basic example - update from git.
 
-For example, your lambda source code hosted somewhere in Git repo and you already
-initialized function from Git clone.
+For example, your lambda source code is hosted somewhere in a Git repo and you already
+initialized the function from Git clone.
 
-You can put `update` action in Makefile that will pull latest `master` branch.
+You can put an `update` action in the Makefile that will pull the latest `master` branch.
 
 `makefile`
 ```makefile
@@ -34,10 +34,10 @@ update:
 That's it!
 
 
-You will in UI/{Lambda}/Actions button `update`. If you will push it, the `update`
+You will see the button `update` in the `Actions` tab. If you push it, the `update`
 target will be invoked.
 
-You also can schedule automatic update in a `Schedule` tab!
+You also can schedule an automatic update in the `Schedule` tab!
 
-Bonus: if you used `create from git` button for new lambda in UI, the `update` target
-will be automatically generated for your convenience.
+Bonus: if you used the `create from git` button for a new lambda in the UI, the `update` target
+will automatically be generated for your convenience.

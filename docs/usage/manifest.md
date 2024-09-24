@@ -6,10 +6,10 @@ nav_order: 0
 ---
 # Manifest
 
-Manifest is the entrypoint for the server. File `manifest.json` is required for each
+The Manifest is the entrypoint for the server. The file `manifest.json` is required for each
 lambda.
 
-Minimal manifest looks like 
+A minimal manifest looks like 
 
 ```json
 {
@@ -17,7 +17,7 @@ Minimal manifest looks like
 }
 ```
 
-where `/bin/sh` is runner and `./myscript.sh` is argument for it.
+where `/bin/sh` is executable and `./myscript.sh` is the argument for it.
 
 
 Example: for python with virtualenv with main script `app.py` it will look like:
@@ -32,8 +32,8 @@ Example: for python with virtualenv with main script `app.py` it will look like:
 
 ### Manifest
 
-* **name** (optional, string): information field, a caption that will displayed in UI
-* **description** (optional, string): information field, markdown based description, displayed in UI in overview
+* **name** (optional, string): information field, a caption that will be displayed in the UI
+* **description** (optional, string): information field, markdown based description, displayed in the UI in the `Overview` tab
 * **run** (required, array of string): command and arguments that will be executed (shell specific operations like pipes are not allowed)
 * **output_headers** (optional, map of strings): output headers and values - key is header name, value is header value
 * **input_headers** (optional, map of strings): input headers mapping, where key is header name and value is environment variable name to be fulfilled
@@ -58,9 +58,9 @@ Example: for python with virtualenv with main script `app.py` it will look like:
 
 Uses [Go time.Duration](https://golang.org/pkg/time/#ParseDuration): string with suffixes:
  
-* `ns` - nano seconds
-* `us` - micro seconds
-* `ms` - millisecond
+* `ns` - nanoseconds
+* `us` - microseconds
+* `ms` - milliseconds
 * `s` - seconds
 * `m` - minutes
 * `h` - hours

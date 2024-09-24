@@ -11,11 +11,11 @@ application/lambda.
 
 Requirements:
 
-* read-only access for the key (could be found in ui in Settings)
+* read-only access for the key (could be found in UI in the Settings)
 * manifest.json in repo
 
 How to:
 
 1. Add public key as allowed. 
 For github: repo -> settings -> deploy keys
-2. Put remote origin to field in repo and push {create from git} in UI in Dashboard
+2. Put the remote origin URL into the field `Git repository` and push {create from git} in UI in Dashboard

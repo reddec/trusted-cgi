@@ -6,14 +6,14 @@ nav_order: 4
 ---
 # Scheduler
 
-Each action could be automatically called in cron-tab like style.
+Each action can be automatically called in a cron-tab like style.
 
 Accuracy is +/- 30 seconds.
 
-Each schedule task invoke sequentially (to reduce resource usage), so
-ensure that you set maximum execution time properly.
+Each schedule task is invoked sequentially (to reduce resource usage), so
+ensure that you set the maximum execution time properly.
 
-If any error occurred during execution - error will be printed in a log. 
+If any error occurred during execution - it will be printed in a log. 
 
 UI:
  

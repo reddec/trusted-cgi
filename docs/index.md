@@ -8,18 +8,18 @@ Lightweight self-hosted lambda/applications/cgi/serverless-functions engine.
 
 ![Download](./assets/interaction.svg)
 
-The process flow is quite straightforward: one light daemon in background listens for requests and launches scripts/apps
-on demand. An executable shall read standard input (stdin) for request data and write a response to standard output (stdout).
+The process flow is quite straightforward: one light daemon in the background listens for requests and launches scripts/apps
+on demand. An executable reads standard input (stdin) for request data and writes a response to standard output (stdout).
 
-Technically any script/application that can parse STDIN and write something to STDOUT should be capable of the execution.
+Technically any script/application that can parse STDIN and write something to STDOUT should be capable of execution.
 
-Trusted-cgi designed keeping in mind that input and output data is quite small and contains structured data (json/xml),
-however, there are no restrictions on the platform itself.
+Trusted-cgi is designed keeping in mind that input and output data is quite small and contains structured data (json/xml),
+however, there are no restrictions on the platform itself (see "Limits" tab in Lambda UI).
 
 Key differences with classic CGI:
 
-* Only request body is being piped to scripts input (CGI pipes everything, and application has to parse it by itself - it could be very not trivial and slow (it depends))
-* Request headers, form fields, and query params are pre-parsed by the platform and can be passed as an environment variable (see mapping)
+* Only the request body is being piped to scripts input (CGI pipes everything, and application has to parse it by itself - it could be very non-trivial and slow (it depends))
+* Request headers, form fields, and query params are pre-parsed by the platform and can be passed as environment variables (see mapping)
 * Response headers are pre-defined in manifest
 
 Due to changes, it's possible to make the simplest script with JSON input and output like this:
@@ -39,12 +39,12 @@ Keep in mind, the platform also adds a growing number of new features - see feat
 
 It's best (but not limited) for
 
-* for hobby projects
-* for experiments
-* for projects with a low number of requests: webhooks, scheduled processing, etc..
-* for a project working on low-end machines: raspberry pi, cheapest VPS, etc..
+* hobby projects
+* experiments
+* projects with a low number of requests: webhooks, scheduled processing, etc..
+* projects working on low-end machines: raspberry pi, cheapest VPS, etc..
 
-However, if your projects have overgrown the platform limitations, it should be quite easy to migrate to any other solutions, because
+However, if your projects have exceeded the platform limitations, it should be quite easy to migrate to any other solutions, because
 most low-level details are hidden and could be replaced in a few days (basically - just wrap script to HTTP service)  
 
 Also, it is possible to scale the platform performance by just launching the same instances of the platform
@@ -57,13 +57,13 @@ with a shared file system (or docker images) with a balancer in front of it.
 
 The idea came from the past: CGI. At the beginning of the Internet, people have been making a simple script that receives incoming bytes over STDIN 
 (standard input) and writes to STDOUT (standard output). The application server (aka CGI server), accepts clients,
-invokes scripts and redirects socket input/output to the script. There are a lot of details here but this is a brief explanation.
+invokes scripts and redirects socket input/output to the script. There are a lot more details here but this is a brief explanation.
 
 After more than 20 years the world spin around and arrived at the beginning: serverless functions/lambda and so on.
 It is almost CGI, except scripts became docker containers, and we need many more servers to do the same things as before.
 
 So let's cut the corners a bit: we have a trusted developer (our self, company workers - means it's not arbitrary clients), 
-so we don't need a heavy restriction for the application, so let's throw away docker and another heavy staff.
+so we don't need a heavy restriction for the application, so let's throw away docker and other heavy stuff.
 
 ## Docs and features
 
@@ -90,12 +90,12 @@ Each function contains at least one URL: `<base URL>/a/<UID>` and any number of 
 
 ## Why I did it?
  
-Because I want to write small handlers that will be 99% of the time just do nothing. I am already paying for the cheapest
+Because I want to write small handlers that will 99% of the time just do nothing. I am already paying for the cheapest
 Digital Ocean (thanks guys for your existence) and do not want to pay additionally to Lambda providers like Google/Amazon/Azure.
 
 I also tried self-hosted solutions based on k3s but it too heavy for 1GB server (yep, it is, don't believe in marketing).
 
-So, 'cause I am a developer I decided to make my own wheels ;-)
+So, 'cause I am a developer, I decided to make my own wheels ;-)
 
 # Installation
 
@@ -109,7 +109,7 @@ See [installation manual](administrating/installation)
 
 # Contributing
 
-The platform is quite simple Golang project with Vue + Quasar frontend 
+The platform is a quite simple Golang project with Vue + Quasar frontend 
 and should be easy for newcomers. Caveats and tips for backend check [here](development)
 
 For UI check [sub-repo](https://github.com/reddec/trusted-cgi-ui)

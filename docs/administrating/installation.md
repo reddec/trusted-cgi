@@ -120,12 +120,11 @@ By-default, the service will be available over http://127.0.0.1:3434 with creden
 There are several exposed parameters (see Dockerfile), however, data stored in `/data` and
 initial admin password is `admin` (change it!).
 
-The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let experiment with default
+The docker image contains pre-installed python3 (+requests), node js (+axios) and php to let you experiment with default
 functions.
 
-There is light (around 8MB) docker image: `reddec/trusted-cgi:latest-light`. It contains only minimal set of
-pre-installed
-packages and could be useful to run pre-compiled binary functions or shell lambdas. Or to use as a base image.
+There is a light (around 8MB) docker image: `reddec/trusted-cgi:latest-light`. It contains only the minimal set of
+pre-installed packages and could be useful to run pre-compiled binary functions or shell lambdas. Or to use as a base image.
 
 ## From source
 

@@ -6,17 +6,17 @@ nav_order: 1
 ---
 # Blog example
 
-This is basic public comment board example: 
+This is a basic public comment board example: 
 
-* anyone can post comment with any name
+* anyone can post comments with any name
 * only last N post will be displayed
 * comments stored in SQLite
 
-**Do not use the example in production!** Comments board without authorization it's a bad, very bad idea.
+**Do not use the example in production!** The comments board is without authorization! It's a bad, a very bad idea.
 However, the example should be safe for XSS attacks due to user data escaping.
 
-* Create new project based on python template (UI-> Dashboard -> Python)
-* Click files, then click on app.py file. Copy following content:
+* Create a new project based on python template (UI -> Dashboard -> Python)
+* Click `Files`, then click on `app.py` file. Copy following content:
 
 ```python
 import os
@@ -67,7 +67,7 @@ with sqlite3.connect(db_name) as conn:
         f.write(page)
 ```
 
-* In UI create directory `static`, click on it, create file `index.html` and put following content:
+* In the UI create the directory `static`, click on it, create the file `index.html` and put the following content:
 
 ```html
 <html><body>
@@ -81,7 +81,7 @@ with sqlite3.connect(db_name) as conn:
 </body></html>
 ```
 
-* Setup mapping for form values: click on Mapping tab and add:
+* Setup mapping for form values: click on the `Mapping` tab and add:
   * output headers: `Content-Type: text/html` 
   * query params should be mapped as: comment to `COMMENT` and name to `NAME`
   * set static dir to `static`
@@ -92,5 +92,5 @@ with sqlite3.connect(db_name) as conn:
 
 Done!
 
-Now open URL from overview section by browser and try to post something.
+Now open the URL from the `Overview` section by browser and try to post something.
 
